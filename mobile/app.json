@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Nutri Lu",
+    "slug": "nutri-lu",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Precisamos da câmera para fotografar suas receitas e pratos.",
+        "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para importar receitas e pratos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F6F6F6",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["android.permission.CAMERA", "android.permission.READ_EXTERNAL_STORAGE"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permita acesso à câmera para fotografar suas receitas."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permita acesso à galeria para importar receitas e pratos."
+        }
+      ]
+    ]
+  }
+}

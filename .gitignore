@@ -1,0 +1,54 @@
+# ─── Dependencies (instaladas via npm) ──────────────────────────
+node_modules/
+**/node_modules/
+
+# ─── Secrets — NUNCA commitar ───────────────────────────────────
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+
+# ─── Build outputs ──────────────────────────────────────────────
+dist/
+build/
+.expo/
+.expo-shared/
+web-build/
+expo-env.d.ts
+
+# ─── Native (Expo prebuild) ─────────────────────────────────────
+ios/
+android/
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# ─── Metro ──────────────────────────────────────────────────────
+.metro-health-check*
+
+# ─── Logs / debug ───────────────────────────────────────────────
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# ─── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── IDE ───────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+
+# ─── TypeScript ────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ─── Claude / agent files (configs locais) ──────────────────────
+.claude/
