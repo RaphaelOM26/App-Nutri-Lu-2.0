@@ -21,7 +21,9 @@ import {
   NunitoSans_700Bold,
 } from '@expo-google-fonts/nunito-sans';
 import { AppProvider } from './src/state/AppContext';
+import { ToastProvider } from './src/state/ToastContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { MacrosWatcher } from './src/components/MacrosWatcher';
 import { useTheme } from './src/theme';
 
 export const navigationRef = createNavigationContainerRef();
@@ -63,7 +65,18 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AppProvider>{fontsLoaded ? <AppContent /> : <SplashFallback />}</AppProvider>
+        <AppProvider>
+          <ToastProvider>
+            {fontsLoaded ? (
+              <>
+                <MacrosWatcher />
+                <AppContent />
+              </>
+            ) : (
+              <SplashFallback />
+            )}
+          </ToastProvider>
+        </AppProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

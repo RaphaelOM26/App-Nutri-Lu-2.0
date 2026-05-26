@@ -14,12 +14,14 @@ type Props = {
 
 export const MacroBar: React.FC<Props> = ({ value, color, label, val, target }) => {
   const theme = useTheme();
+  const over = val > target;
+  const OVER_RED = '#D67373';
   return (
     <View style={{ flexDirection: 'column', gap: 6 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <Text style={{ fontFamily: FONT.bodyMedium, fontSize: 12, fontWeight: '600', color: theme.text }}>{label}</Text>
         <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted }}>
-          <Text style={{ color: theme.text, fontWeight: '600' }}>{val}</Text>
+          <Text style={{ color: over ? OVER_RED : theme.text, fontWeight: '700' }}>{val}</Text>
           {`/${target}g`}
         </Text>
       </View>
@@ -35,7 +37,7 @@ export const MacroBar: React.FC<Props> = ({ value, color, label, val, target }) 
           style={{
             height: '100%',
             width: `${Math.min(100, value * 100)}%`,
-            backgroundColor: color,
+            backgroundColor: over ? OVER_RED : color,
             borderRadius: 100,
           }}
         />

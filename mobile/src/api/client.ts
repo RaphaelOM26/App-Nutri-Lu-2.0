@@ -94,4 +94,65 @@ export function analyzeFood(imageBase64: string): Promise<FoodAnalysis> {
   return postJSON<FoodAnalysis>('/analyze-food', { image: imageBase64 });
 }
 
+// ─── Chat com a Lu ──────────────────────────────────────────────
+
+export type ChatMessage = { role: 'lu' | 'user'; text: string };
+
+export type InsightTone = 'good' | 'alert';
+
+export type LuContext = {
+  profile?: {
+    name?: string;
+    goal?: string;
+    weightKg?: number;
+    goalWeightKg?: number;
+  };
+  macros?: {
+    kcal: { value: number; target: number };
+    p: { value: number; target: number };
+    c: { value: number; target: number };
+    f: { value: number; target: number };
+  };
+  meals?: Array<{
+    name: string;
+    items: Array<{ name: string; portion: string; kcal: number }>;
+  }>;
+  water?: number; // copos de 250ml
+  /** Quando 'alert', o backend gera uma mensagem de atenção (sem elogios). */
+  tone?: InsightTone;
+};
+
+/**
+ * Determina o tom do insight a partir dos macros do dia.
+ * - alert: kcal estourou, OU 2+ macros estouraram, OU proteína passou de 130%.
+ * - good: caso contrário.
+ */
+export function computeInsightTone(macros: LuContext['macros']): InsightTone {
+  if (!macros) return 'good';
+  const overK = macros.kcal.value > macros.kcal.target;
+  const overP = macros.p.value > macros.p.target;
+  const overC = macros.c.value > macros.c.target;
+  const overF = macros.f.value > macros.f.target;
+  const overCount = [overK, overP, overC, overF].filter(Boolean).length;
+  if (overK) return 'alert';
+  if (overCount >= 2) return 'alert';
+  if (overP && macros.p.value > macros.p.target * 1.3) return 'alert';
+  return 'good';
+}
+
+/** Envia mensagens à Lu e recebe a próxima resposta dela. */
+export function chatWithLu(messages: ChatMessage[], context?: LuContext): Promise<{ reply: string }> {
+  return postJSON<{ reply: string }>('/chat', { messages, context });
+}
+
+/** Gera o insight curto da Home (1-2 frases) com base no contexto do dia. */
+export function generateInsight(context: LuContext): Promise<{ text: string; tone: InsightTone }> {
+  return postJSON<{ text: string; tone: InsightTone }>('/insight', { context });
+}
+
+/** Análise detalhada de fim de dia (resumo + oportunidades + fechamento). */
+export function generateDayReview(context: LuContext): Promise<{ text: string }> {
+  return postJSON<{ text: string }>('/day-review', { context });
+}
+
 export { BASE_URL };

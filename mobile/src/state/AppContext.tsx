@@ -40,11 +40,23 @@ import {
   SEED_WEIGHT_ENTRIES,
   type WeightEntry,
 } from '../storage/weightEntries';
+import {
+  loadFavorites,
+  saveFavorites,
+  loadRecents,
+  saveRecents,
+  MAX_RECENTS,
+} from '../storage/foodPrefs';
+import { loadReadIds, saveReadIds } from '../storage/notifications';
+import { seedNotifications, type AppNotification } from '../data/notifications';
+import { loadCompletedDays, saveCompletedDays, todayKey } from '../storage/completedDays';
 
 // ─── Tipos ───────────────────────────────────────────────────────
-// "Hoje" no MVP é o dia 25 (alinhado com a data do mock).
-// Dias diferentes de 25 mostram empty state — historico real virá com backend.
-export const TODAY = 25;
+// "Hoje" usa a data REAL do dispositivo. Mock de macros/refeições continua o
+// mesmo pro dia atual; dias passados mostram empty state (até ter backend).
+export const TODAY = new Date().getDate();
+export const TODAY_MONTH = new Date().getMonth() + 1; // 1-12
+export const TODAY_YEAR = new Date().getFullYear();
 
 type State = {
   water: number;
@@ -53,6 +65,16 @@ type State = {
   recipes: Recipe[]; // receitas seed (mock)
   savedRecipes: SavedRecipe[]; // receitas extraídas/salvas pelo usuário
   foodDB: Food[];
+  /** IDs de alimentos favoritados (Food.id). Persistido. */
+  favoriteFoodIds: string[];
+  /** IDs de alimentos vistos recentemente, mais recente primeiro (cap em MAX_RECENTS). Persistido. */
+  recentFoodIds: string[];
+  /** Notificações das últimas 24h (mock no MVP — backend depois). */
+  notifications: AppNotification[];
+  /** IDs de notificações que o user já leu (persistido). */
+  readNotificationIds: string[];
+  /** dayKeys (YYYY-MM-DD) de dias que o usuário marcou como completos. */
+  completedDays: string[];
   shoppingList: ShoppingListItem[];
   weightEntries: WeightEntry[];
   weightGoalKg: number;
@@ -64,6 +86,8 @@ type State = {
 
 type Action =
   | { type: 'ADD_WATER' }
+  | { type: 'REMOVE_WATER' }
+  | { type: 'REPLACE_DAY'; mealsItems: Record<string, NewMealItemInput[]> }
   | { type: 'ADD_TO_MEAL'; mealId: string; items: NewMealItemInput[]; total: { kcal: number; p: number; c: number; f: number } }
   | { type: 'SET_SAVED_RECIPES'; recipes: SavedRecipe[] }
   | { type: 'ADD_SAVED_RECIPE'; recipe: SavedRecipe }
@@ -78,6 +102,16 @@ type Action =
   | { type: 'SET_WEIGHT_ENTRIES'; entries: WeightEntry[] }
   | { type: 'ADD_WEIGHT_ENTRY'; entry: WeightEntry }
   | { type: 'REMOVE_WEIGHT_ENTRY'; id: string }
+  | { type: 'SET_FAVORITE_FOODS'; ids: string[] }
+  | { type: 'TOGGLE_FAVORITE_FOOD'; id: string }
+  | { type: 'SET_RECENT_FOODS'; ids: string[] }
+  | { type: 'ADD_RECENT_FOOD'; id: string }
+  | { type: 'SET_READ_NOTIFICATIONS'; ids: string[] }
+  | { type: 'MARK_NOTIFICATION_READ'; id: string }
+  | { type: 'MARK_ALL_NOTIFICATIONS_READ' }
+  | { type: 'SET_COMPLETED_DAYS'; days: string[] }
+  | { type: 'COMPLETE_DAY'; dayKey: string }
+  | { type: 'UNCOMPLETE_DAY'; dayKey: string }
   | { type: 'HYDRATED' };
 
 type NewMealItemInput = {
@@ -97,6 +131,11 @@ const INITIAL_STATE: State = {
   recipes: INITIAL_RECIPES,
   savedRecipes: [],
   foodDB: FOOD_DB,
+  favoriteFoodIds: [],
+  recentFoodIds: [],
+  notifications: seedNotifications(),
+  readNotificationIds: [],
+  completedDays: [],
   shoppingList: [],
   weightEntries: [],
   weightGoalKg: 82.0,
@@ -117,7 +156,46 @@ const EMPTY_MEALS: Meal[] = INITIAL_MEALS.map((m) => ({ ...m, kcal: 0, items: []
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'ADD_WATER':
-      return { ...state, water: Math.min(8, state.water + 1) };
+      // Sem limite — 8 copos (2000ml) é só a meta diária; o usuário pode beber mais.
+      return { ...state, water: state.water + 1 };
+
+    case 'REMOVE_WATER':
+      // Pra desfazer cliques acidentais. Nunca vai abaixo de 0.
+      return { ...state, water: Math.max(0, state.water - 1) };
+
+    case 'REPLACE_DAY': {
+      // Substitui completamente os items de cada refeição. Recalcula totais.
+      const totals = { kcal: 0, p: 0, c: 0, f: 0 };
+      const newMeals = state.meals.map((meal) => {
+        const items = action.mealsItems[meal.id] || [];
+        const mealItems: MealItem[] = items.map((it, idx) => ({
+          id: Date.now() + idx + Math.random(),
+          q: 'food',
+          name: it.name,
+          portion: `${Math.round(parseInt(it.portion, 10) * it.amount)}g`,
+          kcal: Math.round(it.kcal * it.amount),
+          p: Math.round(it.p * it.amount),
+          c: Math.round(it.c * it.amount),
+          f: Math.round(it.f * it.amount),
+        }));
+        const mealKcal = mealItems.reduce((s, x) => s + x.kcal, 0);
+        totals.kcal += mealKcal;
+        totals.p += mealItems.reduce((s, x) => s + x.p, 0);
+        totals.c += mealItems.reduce((s, x) => s + x.c, 0);
+        totals.f += mealItems.reduce((s, x) => s + x.f, 0);
+        return { ...meal, items: mealItems, kcal: mealKcal };
+      });
+      return {
+        ...state,
+        meals: newMeals,
+        dailyMacros: {
+          kcal: { ...state.dailyMacros.kcal, value: totals.kcal },
+          p: { ...state.dailyMacros.p, value: totals.p },
+          c: { ...state.dailyMacros.c, value: totals.c },
+          f: { ...state.dailyMacros.f, value: totals.f },
+        },
+      };
+    }
 
     case 'ADD_TO_MEAL': {
       const { mealId, items, total } = action;
@@ -212,6 +290,47 @@ function reducer(state: State, action: Action): State {
     case 'REMOVE_WEIGHT_ENTRY':
       return { ...state, weightEntries: state.weightEntries.filter((e) => e.id !== action.id) };
 
+    case 'SET_FAVORITE_FOODS':
+      return { ...state, favoriteFoodIds: action.ids };
+
+    case 'TOGGLE_FAVORITE_FOOD': {
+      const exists = state.favoriteFoodIds.includes(action.id);
+      const next = exists
+        ? state.favoriteFoodIds.filter((id) => id !== action.id)
+        : [action.id, ...state.favoriteFoodIds];
+      return { ...state, favoriteFoodIds: next };
+    }
+
+    case 'SET_RECENT_FOODS':
+      return { ...state, recentFoodIds: action.ids };
+
+    case 'ADD_RECENT_FOOD': {
+      // Move pro topo se já existir; senão adiciona; corta em MAX_RECENTS.
+      const filtered = state.recentFoodIds.filter((id) => id !== action.id);
+      return { ...state, recentFoodIds: [action.id, ...filtered].slice(0, MAX_RECENTS) };
+    }
+
+    case 'SET_READ_NOTIFICATIONS':
+      return { ...state, readNotificationIds: action.ids };
+
+    case 'MARK_NOTIFICATION_READ': {
+      if (state.readNotificationIds.includes(action.id)) return state;
+      return { ...state, readNotificationIds: [...state.readNotificationIds, action.id] };
+    }
+
+    case 'MARK_ALL_NOTIFICATIONS_READ':
+      return { ...state, readNotificationIds: state.notifications.map((n) => n.id) };
+
+    case 'SET_COMPLETED_DAYS':
+      return { ...state, completedDays: action.days };
+
+    case 'COMPLETE_DAY':
+      if (state.completedDays.includes(action.dayKey)) return state;
+      return { ...state, completedDays: [...state.completedDays, action.dayKey] };
+
+    case 'UNCOMPLETE_DAY':
+      return { ...state, completedDays: state.completedDays.filter((d) => d !== action.dayKey) };
+
     case 'HYDRATED':
       return { ...state, hydrated: true };
 
@@ -223,6 +342,9 @@ function reducer(state: State, action: Action): State {
 // ─── Context ─────────────────────────────────────────────────────
 type AppContextValue = State & {
   addWater: () => void;
+  removeWater: () => void;
+  /** Substitui completamente as refeições do dia. Usado pelo "Copiar dia anterior". */
+  replaceDay: (mealsItems: Record<string, NewMealItemInput[]>) => void;
   addToMeal: (mealId: string, items: NewMealItemInput[], total: { kcal: number; p: number; c: number; f: number }) => void;
   addSavedRecipe: (recipe: SavedRecipe) => Promise<void>;
   removeSavedRecipe: (id: string) => Promise<void>;
@@ -236,6 +358,19 @@ type AppContextValue = State & {
   // Weight tracking
   addWeightEntry: (kg: number, date?: number) => void;
   removeWeightEntry: (id: string) => void;
+  // Favoritos e recentes de alimentos
+  toggleFavoriteFood: (id: string) => void;
+  addRecentFood: (id: string) => void;
+  // Notificações
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+  /** Quantidade de notificações ainda não lidas. */
+  unreadNotificationsCount: number;
+  // Completar dia
+  completeDay: (dayKey: string) => void;
+  uncompleteDay: (dayKey: string) => void;
+  /** true se HOJE já está marcado como completo. */
+  todayCompleted: boolean;
   /** Macros do dia selecionado (today = real, outros = zero). */
   displayedMacros: DailyMacros;
   /** Refeições do dia selecionado (today = real, outros = vazias). */
@@ -249,19 +384,31 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
 
-  // Hidratação inicial: carrega receitas + lista de compras + pesagens do AsyncStorage
+  // Em dev, expõe o dispatcher no window pra testes via preview_eval.
+  // @ts-expect-error - __DEV__ é global do RN
+  if (__DEV__ && typeof window !== 'undefined') (window as any).__appDispatch = dispatch;
+
+  // Hidratação inicial: carrega receitas + lista de compras + pesagens + prefs de alimento
   useEffect(() => {
     (async () => {
       try {
-        const [recipes, list, weights] = await Promise.all([
+        const [recipes, list, weights, favs, recents, readNotifs, completed] = await Promise.all([
           loadRecipes(),
           loadShoppingList(),
           loadWeightEntries(),
+          loadFavorites(),
+          loadRecents(),
+          loadReadIds(),
+          loadCompletedDays(),
         ]);
         dispatch({ type: 'SET_SAVED_RECIPES', recipes });
         dispatch({ type: 'SET_SHOPPING_LIST', items: list });
         // Se nunca registrou nada, usa seed pra demo
         dispatch({ type: 'SET_WEIGHT_ENTRIES', entries: weights.length > 0 ? weights : SEED_WEIGHT_ENTRIES });
+        dispatch({ type: 'SET_FAVORITE_FOODS', ids: favs });
+        dispatch({ type: 'SET_RECENT_FOODS', ids: recents });
+        dispatch({ type: 'SET_READ_NOTIFICATIONS', ids: readNotifs });
+        dispatch({ type: 'SET_COMPLETED_DAYS', days: completed });
       } catch (err) {
         console.warn('[app] falha ao hidratar:', err);
       } finally {
@@ -286,6 +433,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   }, [state.weightEntries, state.hydrated]);
 
+  // Persistência: favoritos e recentes
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveFavorites(state.favoriteFoodIds).catch((err) =>
+      console.warn('[app] falha ao persistir favoritos:', err),
+    );
+  }, [state.favoriteFoodIds, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveRecents(state.recentFoodIds).catch((err) =>
+      console.warn('[app] falha ao persistir recentes:', err),
+    );
+  }, [state.recentFoodIds, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveReadIds(state.readNotificationIds).catch((err) =>
+      console.warn('[app] falha ao persistir notificações lidas:', err),
+    );
+  }, [state.readNotificationIds, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveCompletedDays(state.completedDays).catch((err) =>
+      console.warn('[app] falha ao persistir dias completos:', err),
+    );
+  }, [state.completedDays, state.hydrated]);
+
   const isToday = state.selectedDay === TODAY;
   const value: AppContextValue = {
     ...state,
@@ -293,6 +469,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     displayedMacros: isToday ? state.dailyMacros : EMPTY_MACROS,
     displayedMeals: isToday ? state.meals : EMPTY_MEALS,
     addWater: () => dispatch({ type: 'ADD_WATER' }),
+    removeWater: () => dispatch({ type: 'REMOVE_WATER' }),
+    replaceDay: (mealsItems) => dispatch({ type: 'REPLACE_DAY', mealsItems }),
     addToMeal: (mealId, items, total) => dispatch({ type: 'ADD_TO_MEAL', mealId, items, total }),
     addSavedRecipe: async (recipe) => {
       await saveRecipe(recipe);
@@ -311,6 +489,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addWeightEntry: (kg, date) =>
       dispatch({ type: 'ADD_WEIGHT_ENTRY', entry: { id: newEntryId(), date: date ?? Date.now(), kg } }),
     removeWeightEntry: (id) => dispatch({ type: 'REMOVE_WEIGHT_ENTRY', id }),
+    toggleFavoriteFood: (id) => dispatch({ type: 'TOGGLE_FAVORITE_FOOD', id }),
+    addRecentFood: (id) => dispatch({ type: 'ADD_RECENT_FOOD', id }),
+    markNotificationRead: (id) => dispatch({ type: 'MARK_NOTIFICATION_READ', id }),
+    markAllNotificationsRead: () => dispatch({ type: 'MARK_ALL_NOTIFICATIONS_READ' }),
+    unreadNotificationsCount: state.notifications.filter(
+      (n) => !state.readNotificationIds.includes(n.id),
+    ).length,
+    completeDay: (dayKey) => dispatch({ type: 'COMPLETE_DAY', dayKey }),
+    uncompleteDay: (dayKey) => dispatch({ type: 'UNCOMPLETE_DAY', dayKey }),
+    todayCompleted: state.completedDays.includes(todayKey()),
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

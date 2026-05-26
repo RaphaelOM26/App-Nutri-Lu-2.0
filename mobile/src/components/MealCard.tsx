@@ -17,6 +17,8 @@ type Props = {
   defaultExpanded?: boolean;
   /** Se true, mostra o chevron pra colapsar/expandir manualmente. */
   collapsible?: boolean;
+  /** Se true, esconde o botão "+" e mostra um cadeado sutil (dia completado). */
+  locked?: boolean;
 };
 
 export const MealCard: React.FC<Props> = ({
@@ -24,6 +26,7 @@ export const MealCard: React.FC<Props> = ({
   onAdd,
   defaultExpanded = false,
   collapsible = true,
+  locked = false,
 }) => {
   const theme = useTheme();
   const [open, setOpen] = useState(defaultExpanded);
@@ -91,7 +94,13 @@ export const MealCard: React.FC<Props> = ({
               </Svg>
             </Pressable>
           )}
-          <IconBtn icon={Icon.plus} onPress={onAdd} />
+          {locked ? (
+            <View style={{ width: 38, height: 38, alignItems: 'center', justifyContent: 'center' }}>
+              <Icon.lock size={16} color={theme.textFaint} stroke={1.8} />
+            </View>
+          ) : onAdd ? (
+            <IconBtn icon={Icon.plus} onPress={onAdd} />
+          ) : null}
         </View>
       </View>
 
@@ -99,7 +108,6 @@ export const MealCard: React.FC<Props> = ({
         <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.border, gap: 10 }}>
           {meal.items.map((item) => (
             <View key={item.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <FoodImg q={item.q} w={36} h={36} style={{ borderRadius: 10 }} />
               <View style={{ flex: 1 }}>
                 <Text
                   style={{ fontFamily: FONT.body, fontSize: 13, fontWeight: '600', color: theme.text }}

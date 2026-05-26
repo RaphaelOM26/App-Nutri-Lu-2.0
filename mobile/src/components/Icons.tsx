@@ -73,6 +73,18 @@ const plus: I = (p) => (
   </Wrap>
 );
 
+const minus: I = (p) => (
+  <Wrap {...p}>
+    <Path d="M5 12h14" />
+  </Wrap>
+);
+
+const lock: I = (p) => (
+  <Wrap {...p}>
+    <Path d="M5 11h14v10H5zM8 11V7a4 4 0 018 0v4" />
+  </Wrap>
+);
+
 const close: I = (p) => (
   <Wrap {...p}>
     <Path d="M6 6l12 12M18 6L6 18" />
@@ -406,6 +418,8 @@ export const Icon = {
   recipe,
   user,
   plus,
+  minus,
+  lock,
   close,
   back,
   forward,
