@@ -108,7 +108,7 @@ const MyRecipes: React.FC<{
         {recipes.map((r) => (
           <SeedCard key={r.id} recipe={r} onPress={() => nav.navigate('RecipeDetail', { recipe: r })} />
         ))}
-        {savedRecipes.length === 0 && (
+        {savedRecipes.length === 0 && recipes.length === 0 && (
           <View style={{ width: '100%', padding: 24, alignItems: 'center', gap: 8 }}>
             <Icon.sparkle size={28} color={theme.primary} stroke={1.5} />
             <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center' }}>

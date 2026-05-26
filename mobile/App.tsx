@@ -7,7 +7,7 @@ import 'react-native-gesture-handler';
 import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -24,12 +24,18 @@ import { AppProvider } from './src/state/AppContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { useTheme } from './src/theme';
 
+export const navigationRef = createNavigationContainerRef();
+
+if (__DEV__ && typeof window !== 'undefined') {
+  (window as any).__navRef = navigationRef;
+}
+
 function AppContent() {
   const theme = useTheme();
   return (
     <>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <RootNavigator />
       </NavigationContainer>
     </>

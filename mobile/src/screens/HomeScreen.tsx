@@ -104,7 +104,7 @@ export const HomeScreen: React.FC = () => {
                     <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: m.c }} />
                     <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, fontWeight: '600' }}>{m.label}</Text>
                   </View>
-                  <Text style={{ fontFamily: FONT.head, fontSize: 12, fontWeight: '700', color: theme.text, paddingLeft: 13 }}>{m.val}</Text>
+                  <Text numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: FONT.head, fontSize: 12, fontWeight: '700', color: theme.text }}>{m.val}</Text>
                 </View>
               ))}
             </View>
