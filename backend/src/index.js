@@ -6,6 +6,9 @@ import express from 'express';
 import cors from 'cors';
 import extractRecipeRouter from './routes/extractRecipe.js';
 import analyzeFoodRouter from './routes/analyzeFood.js';
+import chatRouter from './routes/chat.js';
+import insightRouter from './routes/insight.js';
+import dayReviewRouter from './routes/dayReview.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,6 +31,9 @@ app.get('/health', (req, res) => {
 // Rotas de IA
 app.use('/extract-recipe', extractRecipeRouter);
 app.use('/analyze-food', analyzeFoodRouter);
+app.use('/chat', chatRouter);
+app.use('/insight', insightRouter);
+app.use('/day-review', dayReviewRouter);
 
 // Handler de erro padrão (último na cadeia)
 app.use((err, req, res, next) => {
