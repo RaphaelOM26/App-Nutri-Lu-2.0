@@ -1,0 +1,1182 @@
+[
+  {
+    "name": "Café Expresso",
+    "category": "BEBIDAS QUENTES",
+    "portion": "60 mL",
+    "kcal": 18,
+    "p": 1,
+    "c": 0,
+    "f": 1,
+    "page": 1
+  },
+  {
+    "name": "Descafeinado",
+    "category": "BEBIDAS QUENTES",
+    "portion": "60 mL",
+    "kcal": 16,
+    "p": 1,
+    "c": 0,
+    "f": 1,
+    "page": 1
+  },
+  {
+    "name": "Café Americano",
+    "category": "BEBIDAS QUENTES",
+    "portion": "200 mL",
+    "kcal": 18,
+    "p": 1,
+    "c": 0,
+    "f": 1,
+    "page": 1
+  },
+  {
+    "name": "Meia de Leite",
+    "category": "BEBIDAS QUENTES",
+    "portion": "200 mL",
+    "kcal": 79,
+    "p": 5,
+    "c": 6,
+    "f": 3,
+    "page": 1
+  },
+  {
+    "name": "Cappuccino",
+    "category": "BEBIDAS QUENTES",
+    "portion": "200 mL",
+    "kcal": 62,
+    "p": 3,
+    "c": 6,
+    "f": 2,
+    "page": 1
+  },
+  {
+    "name": "Leite",
+    "category": "BEBIDAS QUENTES",
+    "portion": "200 mL",
+    "kcal": 91,
+    "p": 6,
+    "c": 10,
+    "f": 3,
+    "page": 1
+  },
+  {
+    "name": "Leite com Chocolate",
+    "category": "BEBIDAS QUENTES",
+    "portion": "200 mL",
+    "kcal": 118,
+    "p": 5,
+    "c": 18,
+    "f": 3,
+    "page": 1
+  },
+  {
+    "name": "Café com Gelado",
+    "category": "BEBIDAS QUENTES",
+    "portion": "93 mL",
+    "kcal": 68,
+    "p": 2,
+    "c": 8,
+    "f": 2,
+    "page": 1
+  },
+  {
+    "name": "Açúcar",
+    "category": "BEBIDAS QUENTES",
+    "portion": "5 g",
+    "kcal": 18,
+    "p": 0,
+    "c": 4,
+    "f": 0,
+    "page": 1
+  },
+  {
+    "name": "Croissant simples",
+    "category": "CROISSANTS E PANQUECAS",
+    "portion": "75 g",
+    "kcal": 278,
+    "p": 3,
+    "c": 29,
+    "f": 16,
+    "page": 2
+  },
+  {
+    "name": "Croissant com fiambre",
+    "category": "CROISSANTS E PANQUECAS",
+    "portion": "96 g",
+    "kcal": 299,
+    "p": 7,
+    "c": 29,
+    "f": 17,
+    "page": 2
+  },
+  {
+    "name": "Croissant com queijo",
+    "category": "CROISSANTS E PANQUECAS",
+    "portion": "103 g",
+    "kcal": 376,
+    "p": 9,
+    "c": 31,
+    "f": 24,
+    "page": 2
+  },
+  {
+    "name": "Croissant misto",
+    "category": "CROISSANTS E PANQUECAS",
+    "portion": "124 g",
+    "kcal": 397,
+    "p": 12,
+    "c": 31,
+    "f": 25,
+    "page": 2
+  },
+  {
+    "name": "Panquecas com topping caramelo",
+    "category": "CROISSANTS E PANQUECAS",
+    "portion": "143 g",
+    "kcal": 361,
+    "p": 7,
+    "c": 71,
+    "f": 5,
+    "page": 2
+  },
+  {
+    "name": "Panquecas com topping chocolate",
+    "category": "CROISSANTS E PANQUECAS",
+    "portion": "140 g",
+    "kcal": 351,
+    "p": 8,
+    "c": 63,
+    "f": 7,
+    "page": 2
+  },
+  {
+    "name": "Panquecas com topping morango",
+    "category": "CROISSANTS E PANQUECAS",
+    "portion": "139 g",
+    "kcal": 303,
+    "p": 7,
+    "c": 61,
+    "f": 3,
+    "page": 2
+  },
+  {
+    "name": "Panquecas com xarope",
+    "category": "CROISSANTS E PANQUECAS",
+    "portion": "122 g",
+    "kcal": 290,
+    "p": 7,
+    "c": 58,
+    "f": 3,
+    "page": 2
+  },
+  {
+    "name": "Panqueca",
+    "category": "CROISSANTS E PANQUECAS",
+    "portion": "51 g",
+    "kcal": 114,
+    "p": 3,
+    "c": 21,
+    "f": 2,
+    "page": 2
+  },
+  {
+    "name": "Bacon & Egg McMuffin®",
+    "category": "SANDUICHES E TOSTAS",
+    "portion": "134 g",
+    "kcal": 306,
+    "p": 17,
+    "c": 26,
+    "f": 15,
+    "page": 3
+  },
+  {
+    "name": "Meia torrada com manteiga",
+    "category": "SANDUICHES E TOSTAS",
+    "portion": "66 g",
+    "kcal": 210,
+    "p": 5,
+    "c": 26,
+    "f": 9,
+    "page": 3
+  },
+  {
+    "name": "Torrada com manteiga",
+    "category": "SANDUICHES E TOSTAS",
+    "portion": "132 g",
+    "kcal": 420,
+    "p": 9,
+    "c": 53,
+    "f": 18,
+    "page": 3
+  },
+  {
+    "name": "Tosta mista",
+    "category": "SANDUICHES E TOSTAS",
+    "portion": "166 g",
+    "kcal": 427,
+    "p": 18,
+    "c": 55,
+    "f": 14,
+    "page": 3
+  },
+  {
+    "name": "Hamburger",
+    "category": "MENU PRINCIPAL",
+    "portion": "106 g",
+    "kcal": 258,
+    "p": 13,
+    "c": 29,
+    "f": 9,
+    "page": 4
+  },
+  {
+    "name": "Cheeseburger",
+    "category": "MENU PRINCIPAL",
+    "portion": "121 g",
+    "kcal": 306,
+    "p": 16,
+    "c": 30,
+    "f": 13,
+    "page": 4
+  },
+  {
+    "name": "Double Cheeseburger",
+    "category": "MENU PRINCIPAL",
+    "portion": "179 g",
+    "kcal": 457,
+    "p": 27,
+    "c": 31,
+    "f": 24,
+    "page": 4
+  },
+  {
+    "name": "Big Mac®",
+    "category": "MENU PRINCIPAL",
+    "portion": "236 g",
+    "kcal": 544,
+    "p": 27,
+    "c": 42,
+    "f": 29,
+    "page": 4
+  },
+  {
+    "name": "Chicken McNuggets® (4)",
+    "category": "MENU PRINCIPAL",
+    "portion": "72 g",
+    "kcal": 175,
+    "p": 11,
+    "c": 14,
+    "f": 8,
+    "page": 4
+  },
+  {
+    "name": "Chicken McNuggets® (6)",
+    "category": "MENU PRINCIPAL",
+    "portion": "109 g",
+    "kcal": 262,
+    "p": 16,
+    "c": 21,
+    "f": 12,
+    "page": 4
+  },
+  {
+    "name": "Chicken McNuggets® (10)",
+    "category": "MENU PRINCIPAL",
+    "portion": "181 g",
+    "kcal": 437,
+    "p": 27,
+    "c": 34,
+    "f": 21,
+    "page": 4
+  },
+  {
+    "name": "Chicken McNuggets® (20)",
+    "category": "MENU PRINCIPAL",
+    "portion": "362 g",
+    "kcal": 873,
+    "p": 55,
+    "c": 68,
+    "f": 42,
+    "page": 4
+  },
+  {
+    "name": "Molho Agridoce",
+    "category": "MENU PRINCIPAL",
+    "portion": "25 mL",
+    "kcal": 51,
+    "p": 0,
+    "c": 12,
+    "f": 0,
+    "page": 4
+  },
+  {
+    "name": "Molho Barbecue",
+    "category": "MENU PRINCIPAL",
+    "portion": "25 mL",
+    "kcal": 48,
+    "p": 0,
+    "c": 11,
+    "f": 0,
+    "page": 4
+  },
+  {
+    "name": "Molho Sweet chili",
+    "category": "MENU PRINCIPAL",
+    "portion": "25 mL",
+    "kcal": 71,
+    "p": 0,
+    "c": 17,
+    "f": 0,
+    "page": 4
+  },
+  {
+    "name": "Molho Maionese com Alho",
+    "category": "MENU PRINCIPAL",
+    "portion": "25 mL",
+    "kcal": 79,
+    "p": 0,
+    "c": 2,
+    "f": 8,
+    "page": 4
+  },
+  {
+    "name": "Chicken Bacon",
+    "category": "MENU PRINCIPAL",
+    "portion": "143 g",
+    "kcal": 409,
+    "p": 20,
+    "c": 35,
+    "f": 20,
+    "page": 4
+  },
+  {
+    "name": "McChicken®",
+    "category": "MENU PRINCIPAL",
+    "portion": "182 g",
+    "kcal": 419,
+    "p": 19,
+    "c": 41,
+    "f": 19,
+    "page": 4
+  },
+  {
+    "name": "CBO®",
+    "category": "MENU PRINCIPAL",
+    "portion": "257 g",
+    "kcal": 703,
+    "p": 29,
+    "c": 61,
+    "f": 37,
+    "page": 4
+  },
+  {
+    "name": "CBO® Spicy Bacon",
+    "category": "MENU PRINCIPAL",
+    "portion": "267 g",
+    "kcal": 777,
+    "p": 30,
+    "c": 61,
+    "f": 45,
+    "page": 4
+  },
+  {
+    "name": "McRoyal® Bacon",
+    "category": "MENU PRINCIPAL",
+    "portion": "193 g",
+    "kcal": 606,
+    "p": 33,
+    "c": 34,
+    "f": 37,
+    "page": 4
+  },
+  {
+    "name": "McRoyal® Cheese",
+    "category": "MENU PRINCIPAL",
+    "portion": "213 g",
+    "kcal": 547,
+    "p": 33,
+    "c": 38,
+    "f": 29,
+    "page": 4
+  },
+  {
+    "name": "McRoyal® Deluxe",
+    "category": "MENU PRINCIPAL",
+    "portion": "248 g",
+    "kcal": 559,
+    "p": 30,
+    "c": 35,
+    "f": 33,
+    "page": 4
+  },
+  {
+    "name": "Big Tasty® Single",
+    "category": "MENU PRINCIPAL",
+    "portion": "288 g",
+    "kcal": 642,
+    "p": 36,
+    "c": 43,
+    "f": 36,
+    "page": 4
+  },
+  {
+    "name": "Big Tasty® Double",
+    "category": "MENU PRINCIPAL",
+    "portion": "403 g",
+    "kcal": 978,
+    "p": 60,
+    "c": 45,
+    "f": 62,
+    "page": 4
+  },
+  {
+    "name": "Big Tasty® Turbo Bacon Single",
+    "category": "MENU PRINCIPAL",
+    "portion": "314 g",
+    "kcal": 775,
+    "p": 45,
+    "c": 45,
+    "f": 45,
+    "page": 4
+  },
+  {
+    "name": "Big Tasty® Turbo Bacon Double",
+    "category": "MENU PRINCIPAL",
+    "portion": "429 g",
+    "kcal": 1112,
+    "p": 69,
+    "c": 47,
+    "f": 71,
+    "page": 4
+  },
+  {
+    "name": "Snack Wrap™ Chicken Cheese",
+    "category": "MENU PRINCIPAL",
+    "portion": "138 g",
+    "kcal": 359,
+    "p": 14,
+    "c": 33,
+    "f": 18,
+    "page": 4
+  },
+  {
+    "name": "Snack WRAP™ Mayo",
+    "category": "MENU PRINCIPAL",
+    "portion": "126 g",
+    "kcal": 314,
+    "p": 11,
+    "c": 32,
+    "f": 15,
+    "page": 4
+  },
+  {
+    "name": "Chicken Delights",
+    "category": "MENU PRINCIPAL",
+    "portion": "98 g",
+    "kcal": 216,
+    "p": 14,
+    "c": 19,
+    "f": 9,
+    "page": 4
+  },
+  {
+    "name": "McCrispy Original",
+    "category": "MENU PRINCIPAL",
+    "portion": "266 g",
+    "kcal": 626,
+    "p": 26,
+    "c": 74,
+    "f": 24,
+    "page": 4
+  },
+  {
+    "name": "McCrispy Mostarda e Mel",
+    "category": "MENU PRINCIPAL",
+    "portion": "254 g",
+    "kcal": 672,
+    "p": 29,
+    "c": 77,
+    "f": 27,
+    "page": 4
+  },
+  {
+    "name": "McPlant",
+    "category": "MENU PRINCIPAL",
+    "portion": "221 g",
+    "kcal": 470,
+    "p": 21,
+    "c": 39,
+    "f": 24,
+    "page": 4
+  },
+  {
+    "name": "McVeggie",
+    "category": "MENU PRINCIPAL",
+    "portion": "215 g",
+    "kcal": 454,
+    "p": 11,
+    "c": 50,
+    "f": 22,
+    "page": 4
+  },
+  {
+    "name": "Veggie Burger",
+    "category": "MENU PRINCIPAL",
+    "portion": "126 g",
+    "kcal": 332,
+    "p": 10,
+    "c": 43,
+    "f": 13,
+    "page": 4
+  },
+  {
+    "name": "Batatas Fritas (embalagem pequena)",
+    "category": "CONSUMO",
+    "portion": "80 g",
+    "kcal": 229,
+    "p": 3,
+    "c": 29,
+    "f": 11,
+    "page": 5
+  },
+  {
+    "name": "Batatas Fritas (embalagem média)",
+    "category": "CONSUMO",
+    "portion": "114 g",
+    "kcal": 327,
+    "p": 4,
+    "c": 41,
+    "f": 15,
+    "page": 5
+  },
+  {
+    "name": "McShaker Fries (embalagem média)",
+    "category": "CONSUMO",
+    "portion": "117 g",
+    "kcal": 335,
+    "p": 4,
+    "c": 42,
+    "f": 16,
+    "page": 5
+  },
+  {
+    "name": "Batatas Fritas (embalagem grande)",
+    "category": "CONSUMO",
+    "portion": "150 g",
+    "kcal": 430,
+    "p": 5,
+    "c": 54,
+    "f": 21,
+    "page": 5
+  },
+  {
+    "name": "McShaker Fries (embalagem grande)",
+    "category": "CONSUMO",
+    "portion": "153 g",
+    "kcal": 438,
+    "p": 6,
+    "c": 55,
+    "f": 20,
+    "page": 5
+  },
+  {
+    "name": "Mostarda Saqueta",
+    "category": "CONSUMO",
+    "portion": "5 g",
+    "kcal": 4,
+    "p": 0,
+    "c": 1,
+    "f": 0,
+    "page": 5
+  },
+  {
+    "name": "Molho para Batatas",
+    "category": "CONSUMO",
+    "portion": "25 mL",
+    "kcal": 46,
+    "p": 0,
+    "c": 5,
+    "f": 3,
+    "page": 5
+  },
+  {
+    "name": "Ketchup para Batatas",
+    "category": "CONSUMO",
+    "portion": "10 g",
+    "kcal": 12,
+    "p": 0,
+    "c": 3,
+    "f": 0,
+    "page": 5
+  },
+  {
+    "name": "Hamburger",
+    "category": "SANDUICHES SEM GLÚTEN",
+    "portion": "132 g",
+    "kcal": 288,
+    "p": 11,
+    "c": 37,
+    "f": 9,
+    "page": 5
+  },
+  {
+    "name": "Cheeseburger",
+    "category": "SANDUICHES SEM GLÚTEN",
+    "portion": "146 g",
+    "kcal": 337,
+    "p": 14,
+    "c": 38,
+    "f": 13,
+    "page": 5
+  },
+  {
+    "name": "Double Cheeseburger",
+    "category": "SANDUICHES SEM GLÚTEN",
+    "portion": "202 g",
+    "kcal": 488,
+    "p": 25,
+    "c": 39,
+    "f": 25,
+    "page": 5
+  },
+  {
+    "name": "Big Mac®",
+    "category": "SANDUICHES SEM GLÚTEN",
+    "portion": "227 g",
+    "kcal": 483,
+    "p": 23,
+    "c": 38,
+    "f": 26,
+    "page": 5
+  },
+  {
+    "name": "McRoyal® Deluxe",
+    "category": "SANDUICHES SEM GLÚTEN",
+    "portion": "261 g",
+    "kcal": 549,
+    "p": 27,
+    "c": 36,
+    "f": 32,
+    "page": 5
+  },
+  {
+    "name": "McRoyal® Cheese",
+    "category": "SANDUICHES SEM GLÚTEN",
+    "portion": "227 g",
+    "kcal": 542,
+    "p": 30,
+    "c": 40,
+    "f": 28,
+    "page": 5
+  },
+  {
+    "name": "Croutons",
+    "category": "SALADAS",
+    "portion": "14 g",
+    "kcal": 61,
+    "p": 2,
+    "c": 11,
+    "f": 1,
+    "page": 6
+  },
+  {
+    "name": "Mini Cenouras",
+    "category": "SALADAS",
+    "portion": "70 g",
+    "kcal": 18,
+    "p": 0,
+    "c": 3,
+    "f": 0,
+    "page": 6
+  },
+  {
+    "name": "Salada Nachos e Bacon",
+    "category": "SALADAS",
+    "portion": "180 g",
+    "kcal": 209,
+    "p": 10,
+    "c": 18,
+    "f": 10,
+    "page": 6
+  },
+  {
+    "name": "Salada Atum & Pasta",
+    "category": "SALADAS",
+    "portion": "230 g",
+    "kcal": 244,
+    "p": 21,
+    "c": 22,
+    "f": 7,
+    "page": 6
+  },
+  {
+    "name": "Salada Pasta & Mozzarella",
+    "category": "SALADAS",
+    "portion": "200 g",
+    "kcal": 254,
+    "p": 12,
+    "c": 30,
+    "f": 9,
+    "page": 6
+  },
+  {
+    "name": "Salada Mista - sem molho",
+    "category": "SALADAS",
+    "portion": "70 g",
+    "kcal": 8,
+    "p": 1,
+    "c": 1,
+    "f": 0,
+    "page": 6
+  },
+  {
+    "name": "Salada Mista - sem molho (nas Ilhas)",
+    "category": "SALADAS",
+    "portion": "80 g",
+    "kcal": 16,
+    "p": 1,
+    "c": 2,
+    "f": 0,
+    "page": 6
+  },
+  {
+    "name": "Molho Caesar",
+    "category": "SALADAS",
+    "portion": "60 mL",
+    "kcal": 44,
+    "p": 2,
+    "c": 6,
+    "f": 2,
+    "page": 6
+  },
+  {
+    "name": "Azeite Virgem Extra",
+    "category": "SALADAS",
+    "portion": "20 mL",
+    "kcal": 150,
+    "p": 0,
+    "c": 0,
+    "f": 17,
+    "page": 6
+  },
+  {
+    "name": "Vinagrete de Pesto",
+    "category": "SALADAS",
+    "portion": "50 mL",
+    "kcal": 133,
+    "p": 0,
+    "c": 2,
+    "f": 14,
+    "page": 6
+  },
+  {
+    "name": "Vinagrete",
+    "category": "SALADAS",
+    "portion": "20 mL",
+    "kcal": 135,
+    "p": 0,
+    "c": 0,
+    "f": 14,
+    "page": 6
+  },
+  {
+    "name": "Abacaxi",
+    "category": "SOBREMESAS",
+    "portion": "60 g",
+    "kcal": 33,
+    "p": 0,
+    "c": 6,
+    "f": 0,
+    "page": 7
+  },
+  {
+    "name": "Maçã Fatiada",
+    "category": "SOBREMESAS",
+    "portion": "70 g",
+    "kcal": 45,
+    "p": 0,
+    "c": 10,
+    "f": 0,
+    "page": 7
+  },
+  {
+    "name": "Polpa de Fruta",
+    "category": "SOBREMESAS",
+    "portion": "80 g",
+    "kcal": 48,
+    "p": 0,
+    "c": 10,
+    "f": 2,
+    "page": 7
+  },
+  {
+    "name": "Tarte de Maçã",
+    "category": "SOBREMESAS",
+    "portion": "80 g",
+    "kcal": 228,
+    "p": 1,
+    "c": 28,
+    "f": 12,
+    "page": 7
+  },
+  {
+    "name": "Mini McFlurry® M&M's",
+    "category": "SOBREMESAS",
+    "portion": "85 g",
+    "kcal": 171,
+    "p": 4,
+    "c": 25,
+    "f": 6,
+    "page": 7
+  },
+  {
+    "name": "McFlurry® M&M's",
+    "category": "SOBREMESAS",
+    "portion": "171 g",
+    "kcal": 342,
+    "p": 8,
+    "c": 49,
+    "f": 12,
+    "page": 7
+  },
+  {
+    "name": "Mini McFlurry® Oreo",
+    "category": "SOBREMESAS",
+    "portion": "79 g",
+    "kcal": 134,
+    "p": 3,
+    "c": 21,
+    "f": 4,
+    "page": 7
+  },
+  {
+    "name": "McFlurry® Oreo",
+    "category": "SOBREMESAS",
+    "portion": "158 g",
+    "kcal": 269,
+    "p": 6,
+    "c": 43,
+    "f": 8,
+    "page": 7
+  },
+  {
+    "name": "Mini McFlurry® KitKat",
+    "category": "SOBREMESAS",
+    "portion": "82 g",
+    "kcal": 154,
+    "p": 3,
+    "c": 23,
+    "f": 5,
+    "page": 7
+  },
+  {
+    "name": "McFlurry® KitKat",
+    "category": "SOBREMESAS",
+    "portion": "165 g",
+    "kcal": 307,
+    "p": 6,
+    "c": 46,
+    "f": 11,
+    "page": 7
+  },
+  {
+    "name": "Mini McFlurry® Snickers",
+    "category": "SOBREMESAS",
+    "portion": "96 g",
+    "kcal": 208,
+    "p": 5,
+    "c": 30,
+    "f": 8,
+    "page": 7
+  },
+  {
+    "name": "McFlurry® Snickers",
+    "category": "SOBREMESAS",
+    "portion": "188 g",
+    "kcal": 395,
+    "p": 9,
+    "c": 57,
+    "f": 15,
+    "page": 7
+  },
+  {
+    "name": "Mini McFlurry® Twix",
+    "category": "SOBREMESAS",
+    "portion": "92 g",
+    "kcal": 181,
+    "p": 3,
+    "c": 29,
+    "f": 6,
+    "page": 7
+  },
+  {
+    "name": "McFlurry® Twix",
+    "category": "SOBREMESAS",
+    "portion": "182 g",
+    "kcal": 354,
+    "p": 7,
+    "c": 56,
+    "f": 11,
+    "page": 7
+  },
+  {
+    "name": "McFlurry® Milka com Amêndoas",
+    "category": "SOBREMESAS",
+    "portion": "146 g",
+    "kcal": 422,
+    "p": 7,
+    "c": 59,
+    "f": 17,
+    "page": 7
+  },
+  {
+    "name": "Mini McFlurry® Milka com Amêndoas",
+    "category": "SOBREMESAS",
+    "portion": "133 g",
+    "kcal": 353,
+    "p": 6,
+    "c": 51,
+    "f": 13,
+    "page": 7
+  },
+  {
+    "name": "McFlurry® Milka com Oreo",
+    "category": "SOBREMESAS",
+    "portion": "144 g",
+    "kcal": 400,
+    "p": 5,
+    "c": 64,
+    "f": 13,
+    "page": 7
+  },
+  {
+    "name": "Mini McFlurry® Milka com Oreo",
+    "category": "SOBREMESAS",
+    "portion": "131 g",
+    "kcal": 330,
+    "p": 4,
+    "c": 56,
+    "f": 10,
+    "page": 7
+  },
+  {
+    "name": "Sundae Caramelo",
+    "category": "CONSUMO",
+    "portion": "154 g",
+    "kcal": 287,
+    "p": 5,
+    "c": 54,
+    "f": 6,
+    "page": 8
+  },
+  {
+    "name": "Sundae Chocolate",
+    "category": "CONSUMO",
+    "portion": "151 g",
+    "kcal": 277,
+    "p": 5,
+    "c": 45,
+    "f": 8,
+    "page": 8
+  },
+  {
+    "name": "Sundae Morango",
+    "category": "CONSUMO",
+    "portion": "150 g",
+    "kcal": 229,
+    "p": 4,
+    "c": 44,
+    "f": 4,
+    "page": 8
+  },
+  {
+    "name": "Sundae Natura",
+    "category": "CONSUMO",
+    "portion": "113 g",
+    "kcal": 155,
+    "p": 4,
+    "c": 25,
+    "f": 4,
+    "page": 8
+  },
+  {
+    "name": "Amêndoas - cobertura extra",
+    "category": "CONSUMO",
+    "portion": "10 g",
+    "kcal": 60,
+    "p": 2,
+    "c": 1,
+    "f": 5,
+    "page": 8
+  },
+  {
+    "name": "Bolo de Aniversário Pão de Ló",
+    "category": "CONSUMO",
+    "portion": "125 g",
+    "kcal": 363,
+    "p": 7,
+    "c": 69,
+    "f": 7,
+    "page": 8
+  },
+  {
+    "name": "Bolo de Aniversário Brigadeiro",
+    "category": "CONSUMO",
+    "portion": "125 g",
+    "kcal": 460,
+    "p": 7,
+    "c": 64,
+    "f": 19,
+    "page": 8
+  },
+  {
+    "name": "B! Limonada",
+    "category": "BEBIDAS",
+    "portion": "400 mL",
+    "kcal": 67,
+    "p": 0,
+    "c": 17,
+    "f": 0,
+    "page": 9
+  },
+  {
+    "name": "Compal Clássico Laranja do Algarve",
+    "category": "BEBIDAS",
+    "portion": "300 mL",
+    "kcal": 129,
+    "p": 2,
+    "c": 32,
+    "f": 1,
+    "page": 9
+  },
+  {
+    "name": "Compal Clássico Pêssego",
+    "category": "BEBIDAS",
+    "portion": "300 mL",
+    "kcal": 144,
+    "p": 1,
+    "c": 35,
+    "f": 1,
+    "page": 9
+  },
+  {
+    "name": "Compal Vital Equilíbrio Manga Laranja",
+    "category": "BEBIDAS",
+    "portion": "300 mL",
+    "kcal": 54,
+    "p": 1,
+    "c": 12,
+    "f": 1,
+    "page": 9
+  },
+  {
+    "name": "Compal Clássico Pêra (McCafé)",
+    "category": "BEBIDAS",
+    "portion": "300 mL",
+    "kcal": 135,
+    "p": 1,
+    "c": 32,
+    "f": 1,
+    "page": 9
+  },
+  {
+    "name": "Um Bongo - 8 Frutos",
+    "category": "BEBIDAS",
+    "portion": "200 mL",
+    "kcal": 84,
+    "p": 1,
+    "c": 20,
+    "f": 0,
+    "page": 9
+  },
+  {
+    "name": "Um Bongo - Manga",
+    "category": "BEBIDAS",
+    "portion": "200 mL",
+    "kcal": 82,
+    "p": 0,
+    "c": 20,
+    "f": 0,
+    "page": 9
+  },
+  {
+    "name": "Coca-Cola",
+    "category": "BEBIDAS",
+    "portion": "400 mL",
+    "kcal": 158,
+    "p": 0,
+    "c": 39,
+    "f": 0,
+    "page": 9
+  },
+  {
+    "name": "Coca-Cola Zero",
+    "category": "BEBIDAS",
+    "portion": "400 mL",
+    "kcal": 1,
+    "p": 0,
+    "c": 0,
+    "f": 0,
+    "page": 9
+  },
+  {
+    "name": "Fanta Laranja Zero",
+    "category": "BEBIDAS",
+    "portion": "400 mL",
+    "kcal": 8,
+    "p": 0,
+    "c": 2,
+    "f": 0,
+    "page": 9
+  },
+  {
+    "name": "Lipton Green Ice Tea - Hortelã",
+    "category": "BEBIDAS",
+    "portion": "330 mL",
+    "kcal": 33,
+    "p": 0,
+    "c": 8,
+    "f": 0,
+    "page": 9
+  },
+  {
+    "name": "Lipton Pêssego Zero",
+    "category": "BEBIDAS",
+    "portion": "400 mL",
+    "kcal": 4,
+    "p": 0,
+    "c": 0,
+    "f": 0,
+    "page": 9
+  },
+  {
+    "name": "Cerveja Sagres (Lata)",
+    "category": "BEBIDAS",
+    "portion": "330 mL",
+    "kcal": 132,
+    "p": 1,
+    "c": 10,
+    "f": 0,
+    "page": 9
+  },
+  {
+    "name": "Cerveja Coral",
+    "category": "BEBIDAS",
+    "portion": "300 mL",
+    "kcal": 141,
+    "p": 1,
+    "c": 9,
+    "f": 0,
+    "page": 9
+  },
+  {
+    "name": "Brisol Maracujá",
+    "category": "BEBIDAS",
+    "portion": "400 mL",
+    "kcal": 196,
+    "p": 0,
+    "c": 48,
+    "f": 0,
+    "page": 9
+  }
+]

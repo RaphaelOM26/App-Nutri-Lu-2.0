@@ -1,0 +1,686 @@
+[
+  {
+    "name": "Mediterrânica Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "549 g",
+    "kcal": 133,
+    "p": 6.4,
+    "c": 14.2,
+    "f": 4.9
+  },
+  {
+    "name": "Mediterrânica Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "881 g",
+    "kcal": 215,
+    "p": 9.5,
+    "c": 28.3,
+    "f": 6.1
+  },
+  {
+    "name": "Mediterrânica Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "444 g",
+    "kcal": 109,
+    "p": 5.5,
+    "c": 9.5,
+    "f": 4.7
+  },
+  {
+    "name": "Mediterrânica Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "601 g",
+    "kcal": 146,
+    "p": 7.1,
+    "c": 14.4,
+    "f": 5.7
+  },
+  {
+    "name": "Fiambre Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "460 g",
+    "kcal": 113,
+    "p": 6.2,
+    "c": 13.7,
+    "f": 3.6
+  },
+  {
+    "name": "Fiambre Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "760 g",
+    "kcal": 191,
+    "p": 9.5,
+    "c": 27.3,
+    "f": 4.7
+  },
+  {
+    "name": "Fiambre Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "375g",
+    "kcal": 90,
+    "p": 5.4,
+    "c": 9.2,
+    "f": 3.5
+  },
+  {
+    "name": "Fiambre Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "505 g",
+    "kcal": 123,
+    "p": 7.3,
+    "c": 13.7,
+    "f": 4.3
+  },
+  {
+    "name": "Funghi Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "525 g",
+    "kcal": 127,
+    "p": 6.4,
+    "c": 13.9,
+    "f": 4.9
+  },
+  {
+    "name": "Funghi Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "870 g",
+    "kcal": 207,
+    "p": 9.6,
+    "c": 27.9,
+    "f": 6.2
+  },
+  {
+    "name": "Funghi Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "420 g",
+    "kcal": 103,
+    "p": 5.6,
+    "c": 9.2,
+    "f": 4.7
+  },
+  {
+    "name": "Funghi Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "590 g",
+    "kcal": 138,
+    "p": 7.2,
+    "c": 1.5,
+    "f": 3.3
+  },
+  {
+    "name": "Fans de Pepperoni Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "465 g",
+    "kcal": 135,
+    "p": 6.3,
+    "c": 14.2,
+    "f": 5.7
+  },
+  {
+    "name": "Fans de Pepperoni Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "790 g",
+    "kcal": 223,
+    "p": 9.7,
+    "c": 28.3,
+    "f": 7.6
+  },
+  {
+    "name": "Fans de Pepperoni Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "360 g",
+    "kcal": 111,
+    "p": 5.5,
+    "c": 9.5,
+    "f": 5.6
+  },
+  {
+    "name": "Fans de Pepperoni Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "510 g",
+    "kcal": 154,
+    "p": 7.3,
+    "c": 14.4,
+    "f": 7.2
+  },
+  {
+    "name": "Bacon e Fiambre Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "490 g",
+    "kcal": 124,
+    "p": 6.5,
+    "c": 14.1,
+    "f": 4.7
+  },
+  {
+    "name": "Bacon e Fiambre Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "815 g",
+    "kcal": 205,
+    "p": 9.8,
+    "c": 28,
+    "f": 5.9
+  },
+  {
+    "name": "Bacon e Fiambre Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "385 g",
+    "kcal": 100,
+    "p": 5.7,
+    "c": 9.3,
+    "f": 4.5
+  },
+  {
+    "name": "Bacon e Fiambre Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "535 g",
+    "kcal": 135,
+    "p": 7.4,
+    "c": 14.2,
+    "f": 5.4
+  },
+  {
+    "name": "Carbonara Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "525 g",
+    "kcal": 150,
+    "p": 6.7,
+    "c": 14,
+    "f": 7.1
+  },
+  {
+    "name": "Carbonara Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "840 g",
+    "kcal": 239,
+    "p": 10.1,
+    "c": 27.7,
+    "f": 9.3
+  },
+  {
+    "name": "Carbonara Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "425 g",
+    "kcal": 120,
+    "p": 5.9,
+    "c": 9.4,
+    "f": 6.3
+  },
+  {
+    "name": "Carbonara Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "590 g",
+    "kcal": 168,
+    "p": 7.8,
+    "c": 14.3,
+    "f": 8.6
+  },
+  {
+    "name": "Frango BBQ Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "525 g",
+    "kcal": 129,
+    "p": 6.2,
+    "c": 17.6,
+    "f": 3.4
+  },
+  {
+    "name": "Frango BBQ Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "845 g",
+    "kcal": 214,
+    "p": 9.7,
+    "c": 32.7,
+    "f": 4.5
+  },
+  {
+    "name": "Frango BBQ Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "440 g",
+    "kcal": 106,
+    "p": 5.4,
+    "c": 12.7,
+    "f": 3.3
+  },
+  {
+    "name": "Frango BBQ Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "600 g",
+    "kcal": 146,
+    "p": 7.4,
+    "c": 18.9,
+    "f": 4
+  },
+  {
+    "name": "Americana Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "555 g",
+    "kcal": 127,
+    "p": 6,
+    "c": 14.7,
+    "f": 4.1
+  },
+  {
+    "name": "Americana Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "894 g",
+    "kcal": 210,
+    "p": 9.1,
+    "c": 28.8,
+    "f": 5.4
+  },
+  {
+    "name": "Americana Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "450 g",
+    "kcal": 103,
+    "p": 5.2,
+    "c": 10,
+    "f": 3.9
+  },
+  {
+    "name": "Americana Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "614 g",
+    "kcal": 140,
+    "p": 6.7,
+    "c": 15,
+    "f": 4.9
+  },
+  {
+    "name": "Vegetariana Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "598 g",
+    "kcal": 126,
+    "p": 5.6,
+    "c": 14.3,
+    "f": 4.3
+  },
+  {
+    "name": "Vegetariana Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "989 g",
+    "kcal": 214,
+    "p": 9,
+    "c": 28.5,
+    "f": 6
+  },
+  {
+    "name": "Vegetariana Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "493 g",
+    "kcal": 102,
+    "p": 4.8,
+    "c": 9.6,
+    "f": 4.1
+  },
+  {
+    "name": "Vegetariana Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "709 g",
+    "kcal": 145,
+    "p": 6.6,
+    "c": 14.6,
+    "f": 5.6
+  },
+  {
+    "name": "Tropicaliente Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "535 g",
+    "kcal": 120,
+    "p": 5.9,
+    "c": 14.9,
+    "f": 4
+  },
+  {
+    "name": "Tropicaliente Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "900 g",
+    "kcal": 204,
+    "p": 9.2,
+    "c": 29.3,
+    "f": 5.4
+  },
+  {
+    "name": "Tropicaliente Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "430 g",
+    "kcal": 96,
+    "p": 5.1,
+    "c": 10.1,
+    "f": 3.9
+  },
+  {
+    "name": "Tropicaliente Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "620 g",
+    "kcal": 134,
+    "p": 6.8,
+    "c": 15.4,
+    "f": 4.9
+  },
+  {
+    "name": "Pepperoni Passion Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "553 g",
+    "kcal": 171,
+    "p": 8.5,
+    "c": 14.5,
+    "f": 8.6
+  },
+  {
+    "name": "Pepperoni Passion Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "885 g",
+    "kcal": 261,
+    "p": 12,
+    "c": 28.5,
+    "f": 10.6
+  },
+  {
+    "name": "Pepperoni Passion Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "448 g",
+    "kcal": 147,
+    "p": 7.7,
+    "c": 9.7,
+    "f": 8.4
+  },
+  {
+    "name": "Pepperoni Passion Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "605 g",
+    "kcal": 191,
+    "p": 9.7,
+    "c": 14.7,
+    "f": 10.2
+  },
+  {
+    "name": "Campestre Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "515 g",
+    "kcal": 142,
+    "p": 7,
+    "c": 17.5,
+    "f": 4.6
+  },
+  {
+    "name": "Campestre Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "860 g",
+    "kcal": 233,
+    "p": 10.8,
+    "c": 32.7,
+    "f": 6.1
+  },
+  {
+    "name": "Campestre Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "430 g",
+    "kcal": 118,
+    "p": 6.2,
+    "c": 12.7,
+    "f": 4.5
+  },
+  {
+    "name": "Campestre Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "615 g",
+    "kcal": 165,
+    "p": 8.5,
+    "c": 18.9,
+    "f": 5.7
+  },
+  {
+    "name": "Festim de Queijo Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "508 g",
+    "kcal": 164,
+    "p": 7.5,
+    "c": 13.4,
+    "f": 8.9
+  },
+  {
+    "name": "Festim de Queijo Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "830 g",
+    "kcal": 262,
+    "p": 11.4,
+    "c": 27,
+    "f": 11.9
+  },
+  {
+    "name": "Festim de Queijo Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "408 g",
+    "kcal": 135,
+    "p": 6.7,
+    "c": 8.8,
+    "f": 8
+  },
+  {
+    "name": "Festim de Queijo Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "580 g",
+    "kcal": 192,
+    "p": 9.1,
+    "c": 13.5,
+    "f": 11.2
+  },
+  {
+    "name": "Extravaganzza Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "690 g",
+    "kcal": 163,
+    "p": 8.9,
+    "c": 15.2,
+    "f": 7
+  },
+  {
+    "name": "Extravaganzza Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "1088 g",
+    "kcal": 256,
+    "p": 12.6,
+    "c": 29.5,
+    "f": 9.2
+  },
+  {
+    "name": "Extravaganzza Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "585 g",
+    "kcal": 139,
+    "p": 8.1,
+    "c": 10.5,
+    "f": 6.9
+  },
+  {
+    "name": "Extravaganzza Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "808 g",
+    "kcal": 186,
+    "p": 10.3,
+    "c": 15.6,
+    "f": 8.7
+  },
+  {
+    "name": "Buffalo Queen Média Original",
+    "portion": "1 fatia",
+    "portionVenda": "570 g",
+    "kcal": 141,
+    "p": 7.2,
+    "c": 14.6,
+    "f": 5.9
+  },
+  {
+    "name": "Buffalo Queen Grande Original",
+    "portion": "1 fatia",
+    "portionVenda": "925 g",
+    "kcal": 231,
+    "p": 11,
+    "c": 28.7,
+    "f": 7.9
+  },
+  {
+    "name": "Buffalo Queen Média Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "465 g",
+    "kcal": 115,
+    "p": 6.3,
+    "c": 9.9,
+    "f": 5.4
+  },
+  {
+    "name": "Buffalo Queen Grande Italiana",
+    "portion": "1 fatia",
+    "portionVenda": "655 g",
+    "kcal": 158,
+    "p": 8.6,
+    "c": 15,
+    "f": 6.9
+  },
+  {
+    "name": "Cheese Roller Média Original (adicional)",
+    "portion": "1 fatia",
+    "portionVenda": "123 g",
+    "kcal": 46,
+    "p": 1.8,
+    "c": 0.6,
+    "f": 3.4
+  },
+  {
+    "name": "Delícias de Queijo",
+    "portion": "1/2 dose de venda",
+    "portionVenda": "189 g",
+    "kcal": 242,
+    "p": 8.3,
+    "c": 38.9,
+    "f": 5.7
+  },
+  {
+    "name": "Pão de Queijo",
+    "portion": "1/2 dose de venda",
+    "portionVenda": "385 g",
+    "kcal": 598,
+    "p": 20.5,
+    "c": 58.1,
+    "f": 31.3
+  },
+  {
+    "name": "Pão de Queijo com Bacon e Jalapenos",
+    "portion": "1/2 dose de venda",
+    "portionVenda": "434 g",
+    "kcal": 547,
+    "p": 26.6,
+    "c": 54.7,
+    "f": 24.5
+  },
+  {
+    "name": "Pão de Alho",
+    "portion": "Dose de venda",
+    "portionVenda": "90 g",
+    "kcal": 300,
+    "p": 5.4,
+    "c": 36.5,
+    "f": 14.2
+  },
+  {
+    "name": "Pão de Alho com queijo",
+    "portion": "Dose de venda",
+    "portionVenda": "120 g",
+    "kcal": 382,
+    "p": 11.1,
+    "c": 36.8,
+    "f": 20.6
+  },
+  {
+    "name": "Batatas Rústicas",
+    "portion": "Dose de venda",
+    "portionVenda": "220 g",
+    "kcal": 330,
+    "p": 5.5,
+    "c": 44,
+    "f": 13.4
+  },
+  {
+    "name": "Kickers",
+    "portion": "Dose de venda",
+    "portionVenda": "296 g",
+    "kcal": 592,
+    "p": 45.9,
+    "c": 42.9,
+    "f": 26
+  },
+  {
+    "name": "Asitas de Frango",
+    "portion": "Dose de venda",
+    "portionVenda": "252 g",
+    "kcal": 501,
+    "p": 45.1,
+    "c": 10.3,
+    "f": 31
+  },
+  {
+    "name": "Asitas de Frango BBQ",
+    "portion": "Dose de venda",
+    "portionVenda": "282 g",
+    "kcal": 735,
+    "p": 47.4,
+    "c": 63.3,
+    "f": 31.6
+  },
+  {
+    "name": "Asitas de Frango Picantes",
+    "portion": "Dose de venda",
+    "portionVenda": "282 g",
+    "kcal": 530,
+    "p": 45.6,
+    "c": 14.2,
+    "f": 31.5
+  },
+  {
+    "name": "Tiras",
+    "portion": "Dose de venda",
+    "portionVenda": "224 g",
+    "kcal": 495,
+    "p": 38.3,
+    "c": 36.3,
+    "f": 22
+  },
+  {
+    "name": "DIP Mel 25 g",
+    "portion": "Dose de venda",
+    "portionVenda": "25 g",
+    "kcal": 47,
+    "p": 0.1,
+    "c": 11.7,
+    "f": 0
+  },
+  {
+    "name": "Cinnabites",
+    "portion": "1/2 dose de venda",
+    "portionVenda": "197 g",
+    "kcal": 291,
+    "p": 6.4,
+    "c": 41.5,
+    "f": 11.1
+  },
+  {
+    "name": "Chocopie",
+    "portion": "1/2 dose de venda",
+    "portionVenda": "215 g",
+    "kcal": 444,
+    "p": 5.5,
+    "c": 46.9,
+    "f": 25.6
+  },
+  {
+    "name": "Dulcineia",
+    "portion": "1/2 dose de venda",
+    "portionVenda": "245 g",
+    "kcal": 377,
+    "p": 6.9,
+    "c": 60.5,
+    "f": 12.1
+  }
+]

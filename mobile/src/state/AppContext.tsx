@@ -15,6 +15,13 @@ import {
   type Recipe,
   type Food,
 } from '../data/mockData';
+import { TACO_FOODS } from '../data/taco';
+import { FASTFOOD_FOODS } from '../data/fastfood';
+
+// Base de alimentos: TACO oficial (591) + Fast Food de marcas (334) + 54 marcas/preparações do mock.
+// TACO vem primeiro como fonte autoritativa; fast food em seguida pra busca por marca;
+// mock antigo no fim como fallback de marcas comerciais (pão, leite, etc.) que TACO não tem.
+const FOOD_DB: Food[] = [...TACO_FOODS, ...FASTFOOD_FOODS, ...INITIAL_FOOD_DB];
 import {
   loadRecipes,
   saveRecipe,
@@ -89,7 +96,7 @@ const INITIAL_STATE: State = {
   meals: INITIAL_MEALS,
   recipes: INITIAL_RECIPES,
   savedRecipes: [],
-  foodDB: INITIAL_FOOD_DB,
+  foodDB: FOOD_DB,
   shoppingList: [],
   weightEntries: [],
   weightGoalKg: 82.0,
