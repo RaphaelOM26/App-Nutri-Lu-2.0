@@ -64,13 +64,18 @@ export const INITIAL_MACROS: DailyMacros = {
 
 export const INITIAL_WATER = 5; // copos de 250ml (meta 8)
 
+// Ícones das refeições — URLs Unsplash escolhidas pra dar uma vista lateral
+// padronizada (não top-down). crop=entropy ajuda no enquadramento.
+const MEAL_IMG = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?w=180&h=180&fit=crop&crop=entropy&auto=format&q=70`;
+
 export const INITIAL_MEALS: Meal[] = [
   {
     id: 'breakfast',
     name: 'Café da manhã',
     q: 'breakfast,bread,coffee',
-    iconSrc:
-      'https://images.unsplash.com/photo-1568051243847-b6319fad107c?w=180&h=180&fit=crop&auto=format&q=70',
+    // Café preto + pão vista lateral
+    iconSrc: MEAL_IMG('1495474472287-4d71bcdd2085'),
     time: '07:30',
     color: '#EACBD1',
     kcal: 412,
@@ -83,6 +88,7 @@ export const INITIAL_MEALS: Meal[] = [
     id: 'lunch',
     name: 'Almoço',
     q: 'chicken,rice,bowl',
+    iconSrc: MEAL_IMG('1567620905732-2d1ec7ab7445'),
     time: '12:30',
     color: '#D6E0CF',
     kcal: 638,
@@ -96,7 +102,9 @@ export const INITIAL_MEALS: Meal[] = [
   {
     id: 'snack',
     name: 'Lanche',
-    q: 'apple,red',
+    q: 'sandwich,bread',
+    // Sanduíche de pão de forma vista lateral
+    iconSrc: MEAL_IMG('1528735602780-2552fd46c7af'),
     time: '16:00',
     color: '#D4E0EE',
     kcal: 198,
@@ -109,6 +117,8 @@ export const INITIAL_MEALS: Meal[] = [
     id: 'dinner',
     name: 'Jantar',
     q: 'salmon,vegetables',
+    // Prato com proteína + acompanhamentos, vista lateral
+    iconSrc: MEAL_IMG('1467003909585-2f8a72700288'),
     time: '19:30',
     color: '#C0CFE6',
     kcal: 0,

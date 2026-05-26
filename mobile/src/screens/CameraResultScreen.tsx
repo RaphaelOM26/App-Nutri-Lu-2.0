@@ -11,6 +11,7 @@ import { Card } from '../components/Card';
 import { Btn } from '../components/Btn';
 import { Icon } from '../components/Icons';
 import { useApp } from '../state/AppContext';
+import { useToast } from '../state/ToastContext';
 import { guessMealByTime, MEAL_LABELS, MEAL_ORDER, mealLabel, type MealId } from '../utils/meals';
 import type { FoodAnalysisItem } from '../api/client';
 import type { RootStackParamList } from '../navigation/types';
@@ -24,6 +25,7 @@ export const CameraResultScreen: React.FC = () => {
   const nav = useNavigation<Nav>();
   const { analysis, imageDataUrl, mealId: paramMealId } = route.params;
   const { addToMeal } = useApp();
+  const toast = useToast();
 
   // Items vêm da IA — usuário só pode remover, não ajustar quantidade.
   const [items, setItems] = useState<FoodAnalysisItem[]>(analysis.items);
@@ -64,11 +66,8 @@ export const CameraResultScreen: React.FC = () => {
       })),
       total,
     );
-    Alert.alert(
-      'Adicionado!',
-      `${total.kcal} kcal lançadas em ${mealLabel(selectedMeal).toLowerCase()}.`,
-      [{ text: 'OK', onPress: () => nav.navigate('Tabs', { screen: 'Diary' } as never) }],
-    );
+    toast(`Adicionado a ${mealLabel(selectedMeal)} · ${total.kcal} kcal`);
+    nav.navigate('Tabs', { screen: 'Diary' } as never);
   };
 
   const confidenceColor =

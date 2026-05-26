@@ -17,6 +17,7 @@ import { Icon } from '../components/Icons';
 import { FoodImg } from '../components/FoodImg';
 import { MacroRing } from '../components/MacroRing';
 import { useApp } from '../state/AppContext';
+import { useToast } from '../state/ToastContext';
 import { useFocusReplay } from '../utils/useFocusReplay';
 import { newRecipeId, type SavedRecipe } from '../storage/recipes';
 import { categorize } from '../storage/shoppingList';
@@ -57,6 +58,7 @@ export const RecipeDetailScreen: React.FC = () => {
     upsertShoppingItem,
     removeShoppingItem,
   } = useApp();
+  const toast = useToast();
   const params = route.params ?? {};
 
   // Normaliza pra uma representação única
@@ -230,11 +232,9 @@ export const RecipeDetailScreen: React.FC = () => {
       };
       await addSavedRecipe(saved);
       setSavedJustNow(true);
-      Alert.alert('Salvo!', `"${saved.title}" foi adicionada às suas receitas.`, [
-        { text: 'Ver receitas', onPress: () => nav.navigate('Tabs') },
-      ]);
+      toast('Receita salva');
     } catch (err) {
-      Alert.alert('Erro ao salvar', err instanceof Error ? err.message : 'Tente novamente.');
+      toast(err instanceof Error ? err.message : 'Erro ao salvar receita', 'error');
     } finally {
       setSaving(false);
     }
@@ -249,6 +249,7 @@ export const RecipeDetailScreen: React.FC = () => {
         style: 'destructive',
         onPress: async () => {
           await removeSavedRecipe(view.data.id);
+          toast('Receita removida');
           nav.goBack();
         },
       },

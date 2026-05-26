@@ -15,6 +15,7 @@ import { MacroRing } from '../components/MacroRing';
 import { FoodImg } from '../components/FoodImg';
 import { Icon } from '../components/Icons';
 import { useApp } from '../state/AppContext';
+import { useToast } from '../state/ToastContext';
 import { useFocusReplay } from '../utils/useFocusReplay';
 import { guessMealByTime, mealLabel, type MealId } from '../utils/meals';
 import type { RootStackParamList } from '../navigation/types';
@@ -28,6 +29,7 @@ export const FoodDetailScreen: React.FC = () => {
   const route = useRoute<Rt>();
   const replayKey = useFocusReplay();
   const { addToMeal } = useApp();
+  const toast = useToast();
   const { food } = route.params;
   // Se veio de AddFood com mealId, usa; senão adivinha pela hora atual
   const mealId: MealId = (route.params?.mealId as MealId) || guessMealByTime();
@@ -61,13 +63,8 @@ export const FoodDetailScreen: React.FC = () => {
       ],
       { kcal, p, c, f },
     );
-    // Feedback visual + navega pro Diário
-    Alert.alert('Adicionado!', `${food.name} (${qty}g · ${kcal} kcal) no ${mealLabel(mealId).toLowerCase()}.`, [
-      {
-        text: 'OK',
-        onPress: () => nav.navigate('Tabs', { screen: 'Diary' } as never),
-      },
-    ]);
+    toast(`Adicionado a ${mealLabel(mealId)} · ${kcal} kcal`);
+    nav.navigate('Tabs', { screen: 'Diary' } as never);
   };
 
   return (

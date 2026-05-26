@@ -32,6 +32,7 @@ export const ProfileScreen: React.FC = () => {
       <ScreenHeader
         title="Eu"
         large
+        left={[<IconBtn key="back" icon={Icon.back} onPress={() => nav.navigate('Tabs', { screen: 'Home' } as never)} />]}
         right={[<LuBtn key="lu" onPress={() => nav.navigate('ChatLu')} />, <IconBtn key="b" icon={Icon.bell} />]}
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 130 }}>

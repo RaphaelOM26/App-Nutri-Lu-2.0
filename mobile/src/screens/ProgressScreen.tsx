@@ -2,10 +2,10 @@
 // 4 tabs: Peso (com CRUD), Macros (bar chart + breakdown), Fotos, Hábitos.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, View, Text, ScrollView, Pressable, Alert } from 'react-native';
+import { Animated, View, Text, ScrollView, Pressable, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import Svg, { Polyline, Polygon, Circle as SCircle } from 'react-native-svg';
+import Svg, { Polyline, Polygon, Path, Circle as SCircle, Line as SLine, Rect as SRect } from 'react-native-svg';
 import { useTheme, FONT } from '../theme';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { IconBtn } from '../components/IconBtn';
@@ -16,7 +16,9 @@ import { Icon } from '../components/Icons';
 import { FoodImg } from '../components/FoodImg';
 import { AddWeightModal } from '../components/AddWeightModal';
 import { useApp, type WeightEntry } from '../state/AppContext';
+import { useToast } from '../state/ToastContext';
 import { useFocusReplay } from '../utils/useFocusReplay';
+import { SEED_ACHIEVEMENTS, formatUnlockedDate } from '../data/achievements';
 
 const AnimatedPolyline = Animated.createAnimatedComponent(Polyline);
 const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
@@ -38,6 +40,7 @@ export const ProgressScreen: React.FC = () => {
   const nav = useNavigation<any>();
   const replayKey = useFocusReplay();
   const [tab, setTab] = useState<TabId>('weight');
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
@@ -54,7 +57,7 @@ export const ProgressScreen: React.FC = () => {
         {/* Streak + conquistas */}
         <View style={{ paddingHorizontal: 16, paddingBottom: 14, flexDirection: 'row', gap: 10 }}>
           <StreakCard />
-          <AchievementsCard />
+          <AchievementsCard onPress={() => setAchievementsOpen(true)} />
         </View>
 
         {/* Tabs */}
@@ -78,14 +81,85 @@ export const ProgressScreen: React.FC = () => {
         {tab === 'photos' && <PhotosTab />}
         {tab === 'habits' && <HabitsTab />}
       </ScrollView>
+
+      <AchievementsModal visible={achievementsOpen} onClose={() => setAchievementsOpen(false)} />
     </SafeAreaView>
   );
 };
 
-// ─── Streak card (12 dias + 7 mini indicadores) ──────────────────
+// ─── Modal de conquistas ─────────────────────────────────────────
+const ACHIEVEMENT_TONES: Record<string, string> = {};
+const AchievementsModal: React.FC<{ visible: boolean; onClose: () => void }> = ({ visible, onClose }) => {
+  const theme = useTheme();
+  const toneToColor = (t: string) => {
+    if (t === 'primary') return theme.primary;
+    if (t === 'protein') return theme.proteinPink;
+    if (t === 'carbs') return theme.carbsBlue;
+    if (t === 'fats') return theme.fatsGold;
+    if (t === 'water') return theme.waterIce;
+    if (t === 'warning') return theme.warning;
+    return theme.primary;
+  };
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 16 }}>
+        <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderRadius: 24, padding: 20, gap: 12, maxHeight: '85%' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: theme.fatsGold + '22', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon.award size={20} color={theme.fatsGold} stroke={2} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                Conquistas
+              </Text>
+              <Text style={{ fontFamily: FONT.headExtra, fontSize: 17, fontWeight: '800', color: theme.text, marginTop: 1 }}>
+                {SEED_ACHIEVEMENTS.length} desbloqueadas
+              </Text>
+            </View>
+          </View>
+          <ScrollView style={{ maxHeight: 460 }} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
+            {SEED_ACHIEVEMENTS.map((a) => {
+              const IconC = Icon[a.icon];
+              const color = toneToColor(a.tone);
+              return (
+                <View key={a.id} style={{ flexDirection: 'row', gap: 12, padding: 12, borderRadius: 14, backgroundColor: theme.bgElev }}>
+                  <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: color + '22', alignItems: 'center', justifyContent: 'center' }}>
+                    <IconC size={20} color={color} stroke={2} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '700', color: theme.text, flex: 1 }}>
+                        {a.title}
+                      </Text>
+                      <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, marginLeft: 8 }}>
+                        {formatUnlockedDate(a.unlockedAt)}
+                      </Text>
+                    </View>
+                    <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
+                      {a.description}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </ScrollView>
+          <Pressable onPress={onClose} style={{ padding: 14, alignItems: 'center', borderRadius: 14, backgroundColor: theme.text }}>
+            <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, color: theme.bg, fontWeight: '700' }}>Fechar</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+};
+
+// ─── Streak card (12 dias + 7 mini indicadores da semana atual) ──
+// Mostra a semana de domingo a sábado, com check nos dias até HOJE (inclusive)
+// e vazio nos dias futuros. Letra do dia de hoje fica em destaque.
 const StreakCard: React.FC = () => {
   const theme = useTheme();
-  const days = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+  const today = new Date();
+  const todayWeekday = today.getDay(); // 0 = Dom, 6 = Sáb
+  const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
   return (
     <Card pad={16} radius={20} style={{ flex: 1.3, backgroundColor: theme.primarySoft }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -100,33 +174,41 @@ const StreakCard: React.FC = () => {
         <Icon.flame size={32} color={theme.primaryDeep} stroke={1.5} />
       </View>
       <View style={{ flexDirection: 'row', gap: 4, marginTop: 12 }}>
-        {days.map((d, i) => (
-          <View key={i} style={{ flex: 1, alignItems: 'center', gap: 3 }}>
-            <View
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 11,
-                backgroundColor: i < 6 ? theme.primaryDeep : 'rgba(255,255,255,0.5)',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {i < 6 && <Icon.check size={12} color="#fff" stroke={3} />}
+        {labels.map((d, i) => {
+          const isPast = i < todayWeekday;
+          const isToday = i === todayWeekday;
+          const done = isPast || isToday; // marca como feito até hoje (mock)
+          return (
+            <View key={i} style={{ flex: 1, alignItems: 'center', gap: 3 }}>
+              <View
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  backgroundColor: done ? theme.primaryDeep : 'rgba(255,255,255,0.5)',
+                  borderWidth: isToday ? 2 : 0,
+                  borderColor: '#FFFFFF',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {done && <Icon.check size={12} color="#fff" stroke={3} />}
+              </View>
+              <Text style={{ fontFamily: FONT.body, fontSize: 9, color: theme.primaryDeep, fontWeight: isToday ? '800' : '700' }}>{d}</Text>
             </View>
-            <Text style={{ fontFamily: FONT.body, fontSize: 9, color: theme.primaryDeep, fontWeight: '700' }}>{d}</Text>
-          </View>
-        ))}
+          );
+        })}
       </View>
     </Card>
   );
 };
 
 // ─── Achievements card (7 + badges stacked) ──────────────────────
-const AchievementsCard: React.FC = () => {
+const AchievementsCard: React.FC<{ onPress?: () => void }> = ({ onPress }) => {
   const theme = useTheme();
   const badges = [theme.fatsGold, theme.primaryDeep, theme.proteinPink, theme.carbsBlue];
   return (
+    <Pressable onPress={onPress} style={{ flex: 1 }}>
     <Card pad={16} radius={20} style={{ flex: 1 }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
         <View>
@@ -171,6 +253,7 @@ const AchievementsCard: React.FC = () => {
         </View>
       </View>
     </Card>
+    </Pressable>
   );
 };
 
@@ -178,8 +261,17 @@ const AchievementsCard: React.FC = () => {
 const WeightTab: React.FC = () => {
   const theme = useTheme();
   const { weightEntries, weightGoalKg, addWeightEntry, removeWeightEntry } = useApp();
+  const toast = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [period, setPeriod] = useState<Period>('90D');
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showHover = (idx: number) => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    setHoveredIdx(idx);
+    // Auto-fecha após 2.5s sem mais interação
+    hoverTimer.current = setTimeout(() => setHoveredIdx(null), 2500);
+  };
 
   // ─── Definição do range do período ──────────────────────────────
   // Para "Tudo", usa do primeiro registro até hoje. Para outros, usa
@@ -230,6 +322,40 @@ const WeightTab: React.FC = () => {
   const yFor = (kg: number) => H - ((kg - yMin) / (yMax - yMin)) * H;
   const points = filteredEntries.map((e) => `${xFor(e.date)},${yFor(e.kg)}`).join(' ');
 
+  // ─── Smooth path (Catmull-Rom → Bezier cúbica) ──
+  // Suaviza a linha entre pontos pra dar um visual mais elegante (modelo A).
+  const smoothPath = useMemo(() => {
+    const pts = filteredEntries.map((e) => ({ x: xFor(e.date), y: yFor(e.kg) }));
+    if (pts.length < 2) return '';
+    const tension = 0.2;
+    let d = `M ${pts[0].x},${pts[0].y}`;
+    for (let i = 1; i < pts.length; i++) {
+      const prev = pts[i - 1];
+      const curr = pts[i];
+      const prev2 = pts[i - 2] || prev;
+      const next = pts[i + 1] || curr;
+      const cp1x = prev.x + (curr.x - prev2.x) * tension;
+      const cp1y = prev.y + (curr.y - prev2.y) * tension;
+      const cp2x = curr.x - (next.x - prev.x) * tension;
+      const cp2y = curr.y - (next.y - prev.y) * tension;
+      d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${curr.x},${curr.y}`;
+    }
+    return d;
+  }, [filteredEntries, startMs, endMs, yMin, yMax]);
+
+  // Path da área sombreada (mesmo smooth, fechado até a baseline)
+  const smoothAreaPath = useMemo(() => {
+    if (!smoothPath || filteredEntries.length < 2) return '';
+    const firstX = xFor(filteredEntries[0].date);
+    const lastX = xFor(filteredEntries[filteredEntries.length - 1].date);
+    return `${smoothPath} L ${lastX},${H} L ${firstX},${H} Z`;
+  }, [smoothPath, filteredEntries, startMs, endMs]);
+
+  // Y da meta no SVG (pra linha pontilhada horizontal)
+  const goalYInChart = weightGoalKg >= yMin && weightGoalKg <= yMax ? yFor(weightGoalKg) : null;
+  const lastKg = filteredEntries[filteredEntries.length - 1]?.kg;
+  const aboveGoalKg = lastKg != null ? lastKg - weightGoalKg : 0;
+
   // (Sem animações no gráfico de peso — atualização instantânea ao mudar período)
 
   // ─── X ticks: contagem e labels mudam por período ──
@@ -237,55 +363,73 @@ const WeightTab: React.FC = () => {
   //  - 30D: 4 semanas (Sem 1 → 4)
   //  - 90D: 3 meses (últimos 3 meses do calendário)
   //  - 1A / Tudo: 12 meses (últimos 12 meses do calendário)
+  // ─── X ticks ──
+  // Agora cada tick carrega o timestamp real (`x`) — usado pra posicionar
+  // o label absoluto sobre a posição da barra correspondente, garantindo
+  // alinhamento com o que está no gráfico.
   const xTicks = useMemo(() => {
     const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const fmtDay = (d: Date) => `${String(d.getDate()).padStart(2, '0')} ${cap(d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''))}`;
+    const fmtMonth = (d: Date) => cap(d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''));
 
     switch (period) {
       case '7D': {
-        const ticks: { label: string }[] = [];
+        const ticks: { label: string; x: number }[] = [];
         for (let i = 6; i >= 0; i--) {
-          const d = new Date(endMs);
-          d.setDate(d.getDate() - i);
+          const d = new Date(endMs - i * DAY_MS);
           const wd = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-          ticks.push({ label: cap(wd) });
+          ticks.push({ label: cap(wd), x: d.getTime() });
         }
         return ticks;
       }
-      case '30D':
-        return [1, 2, 3, 4].map((n) => ({ label: `Sem ${n}` }));
+      case '30D': {
+        // 5 ticks distribuídos UNIFORMEMENTE ao longo dos 30 dias do período.
+        // Cobre o range completo (do startMs ao endMs).
+        const ticks: { label: string; x: number }[] = [];
+        for (let i = 0; i < 5; i++) {
+          const t = startMs + (i / 4) * (endMs - startMs);
+          ticks.push({ label: fmtDay(new Date(t)), x: t });
+        }
+        return ticks;
+      }
       case '90D': {
-        const out: { label: string }[] = [];
+        // Início do mês pra cada um dos últimos 3 meses (ex: "Mar", "Abr", "Mai")
+        const ticks: { label: string; x: number }[] = [];
         const end = new Date(endMs);
         for (let i = 2; i >= 0; i--) {
           const d = new Date(end.getFullYear(), end.getMonth() - i, 1);
-          const name = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
-          out.push({ label: cap(name) });
+          // Se o início do mês está antes do startMs, clampa
+          const t = Math.max(startMs, d.getTime());
+          ticks.push({ label: fmtMonth(d), x: t });
         }
-        return out;
+        return ticks;
       }
       case '1A':
       case 'Tudo':
       default: {
-        const out: { label: string }[] = [];
+        // Mostra ~6 ticks bimestrais pra não ficar apertado (12 meses)
+        const ticks: { label: string; x: number }[] = [];
         const end = new Date(endMs);
-        for (let i = 11; i >= 0; i--) {
+        for (let i = 10; i >= 0; i -= 2) {
           const d = new Date(end.getFullYear(), end.getMonth() - i, 1);
-          const name = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
-          out.push({ label: cap(name) });
+          const t = Math.max(startMs, d.getTime());
+          ticks.push({ label: fmtMonth(d), x: t });
         }
-        return out;
+        return ticks;
       }
     }
-  }, [period, endMs]);
+  }, [period, endMs, startMs]);
 
   const onAddSaved = (kg: number) => {
     addWeightEntry(kg);
+    toast(`Pesagem registrada · ${kg.toFixed(1).replace('.', ',')} kg`);
   };
 
   const onLongPressEntry = (entry: WeightEntry) => {
     Alert.alert('Remover registro?', `${entry.kg.toFixed(1).replace('.', ',')} kg em ${formatDate(entry.date)}`, [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Remover', style: 'destructive', onPress: () => removeWeightEntry(entry.id) },
+      { text: 'Remover', style: 'destructive', onPress: () => { removeWeightEntry(entry.id); toast('Pesagem removida'); } },
     ]);
   };
 
@@ -404,55 +548,173 @@ const WeightTab: React.FC = () => {
                 </View>
               ) : (
                 <Svg width="100%" height={CHART_H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-                  <Polygon
-                    points={`${xFor(filteredEntries[0].date)},${H} ${points} ${xFor(filteredEntries[filteredEntries.length - 1].date)},${H}`}
-                    fill={theme.primary}
-                    fillOpacity={0.12}
-                  />
-                  <Polyline
-                    points={points}
-                    fill="none"
-                    stroke={theme.primary}
-                    strokeWidth={1.5}
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                  <SCircle
-                    cx={xFor(filteredEntries[filteredEntries.length - 1].date)}
-                    cy={yFor(filteredEntries[filteredEntries.length - 1].kg)}
-                    r={2.5}
-                    fill={theme.bg}
-                    stroke={theme.primary}
-                    strokeWidth={1.2}
-                  />
+                  {/* Modelo B: barras verticais — cada pesagem é uma barra */}
+                  {(() => {
+                    const n = filteredEntries.length;
+                    // Largura de cada slot = W / n; barra ocupa ~65% (o resto é gap entre elas).
+                    // Cap pra barras não ficarem largas demais com poucos pontos.
+                    const slotW = W / n;
+                    const barW = Math.min(2.5, slotW * 0.65);
+                    return filteredEntries.map((e, i) => {
+                      const isLast = i === n - 1;
+                      const x = xFor(e.date) - barW / 2;
+                      const y = yFor(e.kg);
+                      const h = H - y;
+                      return (
+                        <SRect
+                          key={i}
+                          x={x}
+                          y={y}
+                          width={barW}
+                          height={h}
+                          rx={barW / 3}
+                          ry={barW / 3}
+                          fill={theme.primary}
+                          fillOpacity={isLast ? 1 : 0.55}
+                        />
+                      );
+                    });
+                  })()}
+                  {/* Linha horizontal pontilhada da meta (mantida sobre as barras) */}
+                  {goalYInChart !== null && (
+                    <SLine
+                      x1={0}
+                      y1={goalYInChart}
+                      x2={W}
+                      y2={goalYInChart}
+                      stroke={theme.primaryDeep}
+                      strokeWidth={1}
+                      strokeDasharray="2,3"
+                      strokeOpacity={0.7}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  )}
                 </Svg>
+              )}
+
+              {/* Overlay tocável: 1 hit-area por barra (mais largo que a barra
+                  pra facilitar o toque). onPressIn = aparece já no contato. */}
+              {filteredEntries.length >= 2 &&
+                filteredEntries.map((e, i) => {
+                  const pct = ((e.date - startMs) / (endMs - startMs)) * 100;
+                  const HIT_W = 28;
+                  return (
+                    <Pressable
+                      key={`hit-${i}`}
+                      onPressIn={() => showHover(i)}
+                      onHoverIn={() => showHover(i)}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        bottom: 0,
+                        left: `${pct}%`,
+                        marginLeft: -HIT_W / 2,
+                        width: HIT_W,
+                      }}
+                    />
+                  );
+                })}
+
+              {/* Tooltip flutuante mostrando peso + data da barra selecionada */}
+              {hoveredIdx !== null && filteredEntries[hoveredIdx] && (() => {
+                const e = filteredEntries[hoveredIdx];
+                const pct = ((e.date - startMs) / (endMs - startMs)) * 100;
+                const onLeftHalf = pct < 50;
+                const d = new Date(e.date);
+                const dateLabel = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
+                return (
+                  <View
+                    pointerEvents="none"
+                    style={{
+                      position: 'absolute',
+                      // Posiciona próximo da barra; flip pra esquerda se barra estiver na direita
+                      left: `${pct}%`,
+                      marginLeft: onLeftHalf ? 6 : -90,
+                      top: `${(yFor(e.kg) / H) * 100}%`,
+                      marginTop: -42,
+                      width: 84,
+                      backgroundColor: theme.text,
+                      borderRadius: 10,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      alignItems: 'center',
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.15,
+                      shadowRadius: 4,
+                    }}
+                  >
+                    <Text style={{ fontFamily: FONT.headExtra, fontSize: 13, fontWeight: '800', color: theme.bg }}>
+                      {e.kg.toFixed(1).replace('.', ',')} kg
+                    </Text>
+                    <Text style={{ fontFamily: FONT.body, fontSize: 9, color: theme.bg, opacity: 0.7, marginTop: 1 }}>
+                      {dateLabel}
+                    </Text>
+                  </View>
+                );
+              })()}
+
+              {/* Label da meta sobreposto à direita da linha pontilhada */}
+              {goalYInChart !== null && filteredEntries.length >= 2 && (
+                <View
+                  pointerEvents="none"
+                  style={{
+                    position: 'absolute',
+                    right: 4,
+                    top: `${(goalYInChart / H) * 100}%`,
+                    marginTop: -16,
+                    backgroundColor: theme.bg,
+                    paddingHorizontal: 4,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONT.body, fontSize: 9, fontWeight: '700', color: theme.primaryDeep }}>
+                    meta {weightGoalKg.toFixed(1).replace('.', ',')}kg
+                  </Text>
+                </View>
               )}
             </View>
 
-            {/* X-axis labels */}
-            <View
-              style={{
-                height: X_AXIS_H,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingTop: 4,
-              }}
-            >
-              {xTicks.map((t, i) => (
-                <Text
-                  key={i}
-                  style={{
-                    fontFamily: FONT.body,
-                    fontSize: 9,
-                    color: theme.textFaint,
-                    fontWeight: '600',
-                  }}
-                >
-                  {t.label}
-                </Text>
-              ))}
+            {/* X-axis labels: cada label é um wrapper de largura fixa centrado
+                no X do timestamp (técnica padrão pra centralizar sobre coord).
+                Isso alinha o CENTRO do label com o CENTRO da barra correspondente. */}
+            <View style={{ height: X_AXIS_H, paddingTop: 4, position: 'relative' }}>
+              {xTicks.map((t, i) => {
+                const pct = ((t.x - startMs) / (endMs - startMs)) * 100;
+                const LABEL_W = 50;
+                // Ancoragem: ponto da esquerda fica em `left: pct% - LABEL_W/2`
+                // Pro primeiro/último, evita sair do card limitando a min/max.
+                let left: string | number = `${pct}%`;
+                let marginLeft = -LABEL_W / 2;
+                let alignItems: 'flex-start' | 'center' | 'flex-end' = 'center';
+                if (i === 0 && pct < 5) { left = 0; marginLeft = 0; alignItems = 'flex-start'; }
+                if (i === xTicks.length - 1 && pct > 95) { left = '100%' as any; marginLeft = -LABEL_W; alignItems = 'flex-end'; }
+                return (
+                  <View
+                    key={i}
+                    pointerEvents="none"
+                    style={{
+                      position: 'absolute',
+                      left,
+                      top: 4,
+                      width: LABEL_W,
+                      marginLeft,
+                      alignItems,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: FONT.body,
+                        fontSize: 9,
+                        color: theme.textFaint,
+                        fontWeight: '600',
+                      }}
+                    >
+                      {t.label}
+                    </Text>
+                  </View>
+                );
+              })}
             </View>
           </View>
         </View>
@@ -582,18 +844,32 @@ function formatDate(ts: number): string {
 // ─── MACROS TAB ──────────────────────────────────────────────────
 const MacrosTab: React.FC = () => {
   const theme = useTheme();
-  // Targets fixos (no MVP — depois vem do perfil do usuário)
-  const targets = { p: 135, c: 240, f: 70 };
-  // Dados mockados da semana — depois vem de histórico real
-  const days = [
+  const { displayedMacros, isToday } = useApp();
+  // Targets vêm do state (mesma fonte que Home e Diário).
+  // No futuro, virão do perfil; por ora estão no mock alinhados com Larissa.
+  const targets = {
+    p: displayedMacros.p.target,
+    c: displayedMacros.c.target,
+    f: displayedMacros.f.target,
+  };
+  // Últimos 6 dias = mock (até ter histórico real de macros). HOJE = state real
+  // do AppContext, então qualquer refeição adicionada/removida reflete aqui também.
+  const todayWeekdayLetter = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][new Date().getDay()];
+  const mockPastDays = [
     { d: 'S', p: 110, c: 180, f: 60 },
     { d: 'T', p: 125, c: 220, f: 55 },
     { d: 'Q', p: 95, c: 165, f: 70 },
     { d: 'Q', p: 130, c: 195, f: 62 },
     { d: 'S', p: 118, c: 175, f: 58 },
     { d: 'S', p: 105, c: 240, f: 75 },
-    { d: 'D', p: 145, c: 150, f: 50 },
   ];
+  const today = {
+    d: todayWeekdayLetter,
+    p: isToday ? displayedMacros.p.value : 0,
+    c: isToday ? displayedMacros.c.value : 0,
+    f: isToday ? displayedMacros.f.value : 0,
+  };
+  const days = [...mockPastDays, today];
 
   const avgPct = {
     p: Math.round((days.reduce((a, x) => a + x.p, 0) / days.length / targets.p) * 100),
@@ -720,6 +996,8 @@ const MacrosTab: React.FC = () => {
         >
           {macroDefs.map((m) => {
             const onGoal = m.avg >= 95 && m.avg <= 110;
+            const over = m.avg > 110;
+            const OVER_RED = '#D67373';
             return (
               <View key={m.k} style={{ flex: 1, alignItems: 'center' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
@@ -728,7 +1006,7 @@ const MacrosTab: React.FC = () => {
                     {m.label}
                   </Text>
                 </View>
-                <Text style={{ fontFamily: FONT.headExtra, fontSize: 20, fontWeight: '800', color: theme.text, marginTop: 4, letterSpacing: -0.3 }}>
+                <Text style={{ fontFamily: FONT.headExtra, fontSize: 20, fontWeight: '800', color: over ? OVER_RED : theme.text, marginTop: 4, letterSpacing: -0.3 }}>
                   {m.avg}%
                 </Text>
                 <Text
@@ -736,12 +1014,12 @@ const MacrosTab: React.FC = () => {
                     fontFamily: FONT.body,
                     fontSize: 9,
                     fontWeight: '700',
-                    color: onGoal ? theme.primaryDeep : theme.textMuted,
+                    color: over ? OVER_RED : onGoal ? theme.primaryDeep : theme.textMuted,
                     textTransform: 'uppercase',
                     letterSpacing: 0.4,
                   }}
                 >
-                  {onGoal ? 'na meta' : m.avg < 95 ? 'abaixo' : 'acima'}
+                  {over ? 'acima' : 'da meta'}
                 </Text>
               </View>
             );
@@ -761,12 +1039,14 @@ const MacrosTab: React.FC = () => {
               marginBottom: 10,
             }}
           >
-            Domingo · hoje
+            {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][new Date().getDay()]} · hoje
           </Text>
           {macroDefs.map((m, mi) => {
             const today = days[days.length - 1];
             const val = today[m.k];
             const pct = Math.round((val / m.target) * 100);
+            const over = val > m.target;
+            const OVER_RED = '#D67373';
             return (
               <View key={m.k} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <Text style={{ width: 60, fontFamily: FONT.body, fontSize: 11, color: theme.text, fontWeight: '600' }}>
@@ -775,10 +1055,10 @@ const MacrosTab: React.FC = () => {
                 <View style={{ flex: 1, height: 6, borderRadius: 100, backgroundColor: theme.ringTrack, overflow: 'hidden', position: 'relative' }}>
                   <AnimatedBarHorizontal
                     targetPct={Math.min(100, pct)}
-                    color={m.color}
+                    color={over ? OVER_RED : m.color}
                     delay={500 + mi * 120}
                   />
-                  {pct > 100 && (
+                  {over && (
                     <View
                       style={{
                         position: 'absolute',
@@ -786,15 +1066,15 @@ const MacrosTab: React.FC = () => {
                         top: 0,
                         bottom: 0,
                         width: 4,
-                        backgroundColor: theme.primaryDeep,
+                        backgroundColor: OVER_RED,
                       }}
                     />
                   )}
                 </View>
-                <Text style={{ fontFamily: FONT.headExtra, fontSize: 12, fontWeight: '800', color: theme.text, minWidth: 38, textAlign: 'right' }}>
+                <Text style={{ fontFamily: FONT.headExtra, fontSize: 12, fontWeight: '800', color: over ? OVER_RED : theme.text, minWidth: 38, textAlign: 'right' }}>
                   {pct}%
                 </Text>
-                <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, minWidth: 60, textAlign: 'right' }}>
+                <Text style={{ fontFamily: FONT.body, fontSize: 10, color: over ? OVER_RED : theme.textMuted, minWidth: 60, textAlign: 'right' }}>
                   {val}/{m.target}g
                 </Text>
               </View>
