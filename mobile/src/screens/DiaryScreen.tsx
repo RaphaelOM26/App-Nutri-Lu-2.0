@@ -18,6 +18,8 @@ import { Btn } from '../components/Btn';
 import { MealCard } from '../components/MealCard';
 import { Icon, type IconName } from '../components/Icons';
 import { MonthCalendar } from '../components/MonthCalendar';
+import { ConfigMealsModal } from '../components/ConfigMealsModal';
+import { ShareProgressModal } from '../components/ShareProgressModal';
 import { useApp } from '../state/AppContext';
 import { useToast } from '../state/ToastContext';
 import { useFocusReplay } from '../utils/useFocusReplay';
@@ -82,6 +84,7 @@ export const DiaryScreen: React.FC = () => {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [configMealsOpen, setConfigMealsOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewText, setReviewText] = useState<string | null>(null);
@@ -138,8 +141,7 @@ export const DiaryScreen: React.FC = () => {
   };
 
   const openConfig = () => { setMenuOpen(false); setConfigMealsOpen(true); };
-  const showExport = () => { setMenuOpen(false); showToast('Exportação em PDF em breve'); };
-  const showShare = () => { setMenuOpen(false); showToast('Compartilhamento em breve'); };
+  const openShare = () => { setMenuOpen(false); setShareOpen(true); };
 
   const runActionForMeal = (mealId: string) => {
     const action = pendingAction;
@@ -361,9 +363,8 @@ export const DiaryScreen: React.FC = () => {
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
             </View>
             <DiaryMenuItem icon={Icon.calendar} title="Copiar dia anterior" subtitle="Replica as 4 refeições de ontem" onPress={requestCopyYesterday} />
-            <DiaryMenuItem icon={Icon.settings} title="Configurar refeições" subtitle="Horários e refeições padrão" onPress={openConfig} />
-            <DiaryMenuItem icon={Icon.bookmark} title="Exportar diário" subtitle="PDF do dia pra nutricionista" onPress={showExport} />
-            <DiaryMenuItem icon={Icon.send} title="Compartilhar progresso" subtitle="Cartão estilizado pra rede social" onPress={showShare} />
+            <DiaryMenuItem icon={Icon.settings} title="Configurar refeições" subtitle="Adicionar, editar ou remover refeições" onPress={openConfig} />
+            <DiaryMenuItem icon={Icon.send} title="Compartilhar progresso" subtitle="Cartão estilizado pra rede social" onPress={openShare} />
           </Pressable>
         </Pressable>
       </Modal>
@@ -397,35 +398,11 @@ export const DiaryScreen: React.FC = () => {
         </Pressable>
       </Modal>
 
-      {/* Configurar refeições — visualização das 4 padrão (edição vem na Sem 2) */}
-      <Modal visible={configMealsOpen} transparent animationType="fade" onRequestClose={() => setConfigMealsOpen(false)}>
-        <Pressable onPress={() => setConfigMealsOpen(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 20 }}>
-          <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderRadius: 20, padding: 20, gap: 12 }}>
-            <Text style={{ fontFamily: FONT.headExtra, fontSize: 17, fontWeight: '800', color: theme.text }}>
-              Configurar refeições
-            </Text>
-            <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, lineHeight: 17 }}>
-              Suas refeições padrão atuais. Edição de horários e refeições customizadas (ex: Pré-treino, Ceia) chegam na próxima atualização.
-            </Text>
-            <View style={{ gap: 8, marginTop: 4 }}>
-              {meals.map((m) => (
-                <View key={m.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, backgroundColor: theme.bgElev, borderRadius: 12 }}>
-                  <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: m.color || theme.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon.drumstick size={16} color={theme.text} stroke={2} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '700', color: theme.text }}>{m.name}</Text>
-                    <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted }}>{m.time}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-            <Pressable onPress={() => setConfigMealsOpen(false)} style={{ padding: 14, alignItems: 'center', marginTop: 4 }}>
-              <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '700', color: theme.textMuted }}>Fechar</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      {/* Configurar refeições — CRUD: adicionar, editar, remover */}
+      <ConfigMealsModal visible={configMealsOpen} onClose={() => setConfigMealsOpen(false)} />
+
+      {/* Compartilhar progresso — gera card visual + submenu social */}
+      <ShareProgressModal visible={shareOpen} onClose={() => setShareOpen(false)} />
 
       {/* Modal de análise do dia (Lu) */}
       <Modal visible={reviewOpen} transparent animationType="fade" onRequestClose={() => setReviewOpen(false)}>
