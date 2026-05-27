@@ -90,17 +90,104 @@ async function extractFromImage(base64) {
 }
 
 // ─── Extração via URL (link de receita) ───────────────────────────
+
+/**
+ * Decodifica entidades HTML básicas (&amp; &lt; &gt; &quot; &#39; &nbsp; etc.)
+ * Usado pra limpar valores de meta tags antes de mandar pro modelo.
+ */
+function decodeHtmlEntities(s) {
+  return String(s || '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#x?([0-9a-f]+);/gi, (_, code) =>
+      String.fromCodePoint(parseInt(code, code.match(/^x/i) ? 16 : 10) || 32),
+    );
+}
+
+/**
+ * Captura meta tags og:/twitter: + JSON-LD + <title>. É AQUI que Instagram,
+ * TikTok e YouTube colocam a caption/descrição do post — o strip agressivo
+ * antigo descartava esse conteúdo. Sem isso, posts de receita das redes não
+ * conseguiam ser extraídos.
+ */
+function extractMetaInfo(html) {
+  const meta = {};
+  // og:* e twitter:* e name="description"
+  const metaRegex = /<meta\s+[^>]*?(?:property|name)\s*=\s*["']([^"']+)["'][^>]*?content\s*=\s*["']([^"']*)["'][^>]*?>/gi;
+  let m;
+  while ((m = metaRegex.exec(html)) !== null) {
+    const key = m[1].toLowerCase();
+    const val = decodeHtmlEntities(m[2]);
+    if (!val) continue;
+    // Também aceita ordem invertida (content="" antes de property)
+    if (
+      key.startsWith('og:') ||
+      key.startsWith('twitter:') ||
+      key === 'description' ||
+      key === 'keywords'
+    ) {
+      meta[key] = val;
+    }
+  }
+  // <meta content="..." property="..."> (ordem invertida)
+  const altRegex = /<meta\s+[^>]*?content\s*=\s*["']([^"']*)["'][^>]*?(?:property|name)\s*=\s*["']([^"']+)["'][^>]*?>/gi;
+  while ((m = altRegex.exec(html)) !== null) {
+    const key = m[2].toLowerCase();
+    const val = decodeHtmlEntities(m[1]);
+    if (!val) continue;
+    if (key.startsWith('og:') || key.startsWith('twitter:') || key === 'description') {
+      if (!meta[key]) meta[key] = val;
+    }
+  }
+
+  // <title>
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (titleMatch) meta.pageTitle = decodeHtmlEntities(titleMatch[1]).trim();
+
+  // JSON-LD: schema.org Recipe, mas também sites usam pra description geral
+  const jsonLdMatches = [...html.matchAll(/<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  const jsonLdSnippets = [];
+  for (const j of jsonLdMatches) {
+    try {
+      const obj = JSON.parse(j[1].trim());
+      // Pega só campos textuais relevantes pra não inflar contexto
+      const flat = JSON.stringify(obj).slice(0, 8000);
+      jsonLdSnippets.push(flat);
+    } catch {
+      // ignora se não parsa
+    }
+  }
+  meta.jsonLd = jsonLdSnippets;
+  return meta;
+}
+
+/** Detecta a rede/plataforma a partir da URL pra dar contexto ao modelo. */
+function detectPlatform(url) {
+  const u = url.toLowerCase();
+  if (/instagram\.com\/(reel|p|tv)\//.test(u)) return 'Instagram (post/reel) — a receita geralmente está na caption do post';
+  if (/tiktok\.com\/@[^/]+\/(video|photo)\//.test(u)) return 'TikTok — a receita geralmente está na descrição do vídeo';
+  if (/(youtube\.com\/watch|youtu\.be\/|youtube\.com\/shorts\/)/.test(u)) return 'YouTube — a receita pode estar na descrição do vídeo ou nos comentários fixados';
+  if (/facebook\.com\//.test(u)) return 'Facebook';
+  if (/pinterest\./.test(u)) return 'Pinterest';
+  return null;
+}
+
 async function extractFromUrl(url) {
-  // Estratégia simples no MVP: pegamos o HTML da página e mandamos
-  // o conteúdo textual relevante pro modelo. Sem scraping específico
-  // por site, a IA é boa em extrair de qualquer estrutura.
-  let pageText;
+  let html;
   try {
     const response = await fetch(url, {
       headers: {
+        // User-Agent mobile real ajuda redes sociais a servirem caption pública
         'User-Agent':
           'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
       },
+      redirect: 'follow',
     });
     if (!response.ok) {
       throw Object.assign(
@@ -108,15 +195,7 @@ async function extractFromUrl(url) {
         { status: 422, code: 'URL_FETCH_FAILED' }
       );
     }
-    const html = await response.text();
-    // Strip tags simples — a IA lida bem com texto cru misturado
-    pageText = html
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 50000); // limita pra não estourar contexto
+    html = await response.text();
   } catch (err) {
     if (err.code === 'URL_FETCH_FAILED') throw err;
     throw Object.assign(
@@ -125,14 +204,55 @@ async function extractFromUrl(url) {
     );
   }
 
+  // 1) Extrai meta tags + JSON-LD ANTES de strippar (aqui mora a caption do post)
+  const meta = extractMetaInfo(html);
+
+  // 2) Strip do resto do HTML pra capturar texto residual (artigos de blog,
+  //    comentários, etc.). Mantemos limite mais agressivo aqui porque o sinal
+  //    mais forte vem das meta tags.
+  const bodyText = html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 30000);
+
+  // 3) Monta payload estruturado pro modelo
+  const platform = detectPlatform(url);
+  const parts = [];
+  parts.push(`URL: ${url}`);
+  if (platform) parts.push(`Plataforma: ${platform}`);
+  if (meta.pageTitle) parts.push(`Título da página: ${meta.pageTitle}`);
+  if (meta['og:title']) parts.push(`og:title: ${meta['og:title']}`);
+  if (meta['og:description']) parts.push(`og:description (caption do post):\n${meta['og:description']}`);
+  if (meta['twitter:description'] && meta['twitter:description'] !== meta['og:description']) {
+    parts.push(`twitter:description:\n${meta['twitter:description']}`);
+  }
+  if (meta.description && meta.description !== meta['og:description']) {
+    parts.push(`meta description:\n${meta.description}`);
+  }
+  if (meta.jsonLd?.length) {
+    parts.push(`JSON-LD (schema.org):\n${meta.jsonLd.join('\n---\n')}`);
+  }
+  if (bodyText && bodyText.length > 100) {
+    parts.push(`Texto da página:\n${bodyText}`);
+  }
+
+  const userPrompt = [
+    'Extraia a receita do conteúdo abaixo. A página pode ser de uma rede social (Instagram, TikTok, YouTube) — nesses casos a receita está geralmente na CAPTION do post (og:description). Se for blog, está no corpo do texto.',
+    'Se identificar ingredientes e modo de preparo, retorne com confidence "high" ou "medium". Se NÃO conseguir identificar nenhuma receita real, retorne ingredients e steps como arrays vazios e confidence "low".',
+    '',
+    parts.join('\n\n'),
+  ].join('\n');
+
   const completion = await openai.chat.completions.create({
     model: MODEL,
     messages: [
       { role: 'system', content: RECIPE_SYSTEM_PROMPT },
-      {
-        role: 'user',
-        content: `Extraia a receita do conteúdo abaixo (página web). Se a página tem várias receitas, extraia a principal.\n\nURL: ${url}\n\nConteúdo:\n${pageText}`,
-      },
+      { role: 'user', content: userPrompt },
     ],
     response_format: {
       type: 'json_schema',
