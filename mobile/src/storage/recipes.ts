@@ -13,6 +13,8 @@ export type SavedRecipe = ExtractedRecipe & {
   source: 'image' | 'url' | 'video' | 'manual';
   imageDataUrl?: string; // foto original (opcional, base64 com prefixo data:)
   sourceUrl?: string; // URL original se vier de link
+  /** Notas/observações livres escritas pelo usuário. Persistido. */
+  userNotes?: string;
 };
 
 export async function loadRecipes(): Promise<SavedRecipe[]> {

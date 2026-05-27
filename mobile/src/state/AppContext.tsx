@@ -47,6 +47,32 @@ import {
   saveRecents,
   MAX_RECENTS,
 } from '../storage/foodPrefs';
+import {
+  loadFavoriteRecipes,
+  saveFavoriteRecipes,
+  loadRecentRecipes,
+  saveRecentRecipes,
+  MAX_RECIPE_RECENTS,
+} from '../storage/recipePrefs';
+import {
+  loadCollections,
+  saveCollections,
+  newCollectionId,
+  type RecipeCollection,
+} from '../storage/collections';
+import {
+  loadPantry,
+  savePantry,
+  newPantryId,
+  type PantryItem,
+} from '../storage/pantry';
+import {
+  loadMealsConfig,
+  saveMealsConfig,
+  newMealId,
+  pickMealColor,
+  pickMealImageForName,
+} from '../storage/mealsConfig';
 import { loadReadIds, saveReadIds } from '../storage/notifications';
 import { seedNotifications, type AppNotification } from '../data/notifications';
 import { loadCompletedDays, saveCompletedDays, todayKey } from '../storage/completedDays';
@@ -69,6 +95,14 @@ type State = {
   favoriteFoodIds: string[];
   /** IDs de alimentos vistos recentemente, mais recente primeiro (cap em MAX_RECENTS). Persistido. */
   recentFoodIds: string[];
+  /** IDs de receitas favoritadas (seed `r1`/`r2` ou saved `rcp_...`). Persistido. */
+  favoriteRecipeIds: string[];
+  /** IDs de receitas vistas recentemente, mais recente primeiro (cap em MAX_RECIPE_RECENTS). Persistido. */
+  recentRecipeIds: string[];
+  /** Coleções nomeadas de receitas. Persistido. */
+  collections: RecipeCollection[];
+  /** Itens na despensa do usuário. Persistido. */
+  pantry: PantryItem[];
   /** Notificações das últimas 24h (mock no MVP — backend depois). */
   notifications: AppNotification[];
   /** IDs de notificações que o user já leu (persistido). */
@@ -106,6 +140,24 @@ type Action =
   | { type: 'TOGGLE_FAVORITE_FOOD'; id: string }
   | { type: 'SET_RECENT_FOODS'; ids: string[] }
   | { type: 'ADD_RECENT_FOOD'; id: string }
+  | { type: 'SET_FAVORITE_RECIPES'; ids: string[] }
+  | { type: 'TOGGLE_FAVORITE_RECIPE'; id: string }
+  | { type: 'SET_RECENT_RECIPES'; ids: string[] }
+  | { type: 'ADD_RECENT_RECIPE'; id: string }
+  | { type: 'SET_COLLECTIONS'; collections: RecipeCollection[] }
+  | { type: 'CREATE_COLLECTION'; name: string; recipeIds: string[] }
+  | { type: 'DELETE_COLLECTION'; id: string }
+  | { type: 'RENAME_COLLECTION'; id: string; name: string }
+  | { type: 'ADD_RECIPE_TO_COLLECTION'; collectionId: string; recipeId: string }
+  | { type: 'REMOVE_RECIPE_FROM_COLLECTION'; collectionId: string; recipeId: string }
+  | { type: 'SET_PANTRY'; items: PantryItem[] }
+  | { type: 'ADD_PANTRY_ITEM'; item: PantryItem }
+  | { type: 'REMOVE_PANTRY_ITEM'; id: string }
+  | { type: 'CLEAR_PANTRY' }
+  | { type: 'SET_MEALS'; meals: Meal[] }
+  | { type: 'ADD_MEAL'; meal: Meal }
+  | { type: 'UPDATE_MEAL'; id: string; name?: string; time?: string }
+  | { type: 'REMOVE_MEAL'; id: string }
   | { type: 'SET_READ_NOTIFICATIONS'; ids: string[] }
   | { type: 'MARK_NOTIFICATION_READ'; id: string }
   | { type: 'MARK_ALL_NOTIFICATIONS_READ' }
@@ -133,6 +185,10 @@ const INITIAL_STATE: State = {
   foodDB: FOOD_DB,
   favoriteFoodIds: [],
   recentFoodIds: [],
+  favoriteRecipeIds: [],
+  recentRecipeIds: [],
+  collections: [],
+  pantry: [],
   notifications: seedNotifications(),
   readNotificationIds: [],
   completedDays: [],
@@ -310,6 +366,132 @@ function reducer(state: State, action: Action): State {
       return { ...state, recentFoodIds: [action.id, ...filtered].slice(0, MAX_RECENTS) };
     }
 
+    case 'SET_FAVORITE_RECIPES':
+      return { ...state, favoriteRecipeIds: action.ids };
+
+    case 'TOGGLE_FAVORITE_RECIPE': {
+      const exists = state.favoriteRecipeIds.includes(action.id);
+      const next = exists
+        ? state.favoriteRecipeIds.filter((id) => id !== action.id)
+        : [action.id, ...state.favoriteRecipeIds];
+      return { ...state, favoriteRecipeIds: next };
+    }
+
+    case 'SET_RECENT_RECIPES':
+      return { ...state, recentRecipeIds: action.ids };
+
+    case 'ADD_RECENT_RECIPE': {
+      const filtered = state.recentRecipeIds.filter((id) => id !== action.id);
+      return { ...state, recentRecipeIds: [action.id, ...filtered].slice(0, MAX_RECIPE_RECENTS) };
+    }
+
+    case 'SET_COLLECTIONS':
+      return { ...state, collections: action.collections };
+
+    case 'CREATE_COLLECTION':
+      return {
+        ...state,
+        collections: [
+          { id: newCollectionId(), name: action.name, recipeIds: action.recipeIds, createdAt: Date.now() },
+          ...state.collections,
+        ],
+      };
+
+    case 'DELETE_COLLECTION':
+      return { ...state, collections: state.collections.filter((c) => c.id !== action.id) };
+
+    case 'RENAME_COLLECTION':
+      return {
+        ...state,
+        collections: state.collections.map((c) => (c.id === action.id ? { ...c, name: action.name } : c)),
+      };
+
+    case 'ADD_RECIPE_TO_COLLECTION':
+      return {
+        ...state,
+        collections: state.collections.map((c) =>
+          c.id === action.collectionId && !c.recipeIds.includes(action.recipeId)
+            ? { ...c, recipeIds: [...c.recipeIds, action.recipeId] }
+            : c,
+        ),
+      };
+
+    case 'REMOVE_RECIPE_FROM_COLLECTION':
+      return {
+        ...state,
+        collections: state.collections.map((c) =>
+          c.id === action.collectionId ? { ...c, recipeIds: c.recipeIds.filter((id) => id !== action.recipeId) } : c,
+        ),
+      };
+
+    case 'SET_PANTRY':
+      return { ...state, pantry: action.items };
+
+    case 'ADD_PANTRY_ITEM': {
+      // upsert por nome (case-insensitive) — atualiza qty se já existir
+      const lower = action.item.name.toLowerCase().trim();
+      const idx = state.pantry.findIndex((it) => it.name.toLowerCase().trim() === lower);
+      const next = [...state.pantry];
+      if (idx >= 0) next[idx] = { ...next[idx], qty: action.item.qty, expiresAt: action.item.expiresAt ?? next[idx].expiresAt };
+      else next.unshift(action.item);
+      return { ...state, pantry: next };
+    }
+
+    case 'REMOVE_PANTRY_ITEM':
+      return { ...state, pantry: state.pantry.filter((it) => it.id !== action.id) };
+
+    case 'CLEAR_PANTRY':
+      return { ...state, pantry: [] };
+
+    case 'SET_MEALS':
+      return { ...state, meals: action.meals };
+
+    case 'ADD_MEAL':
+      // Adiciona ordenando por horário (HH:MM) pra manter ordem cronológica
+      return {
+        ...state,
+        meals: [...state.meals, action.meal].sort((a, b) => a.time.localeCompare(b.time)),
+      };
+
+    case 'UPDATE_MEAL': {
+      const meals = state.meals.map((m, idx) => {
+        if (m.id !== action.id) return m;
+        const nextName = action.name ?? m.name;
+        // Se nome mudou, recalcula a imagem temática
+        const nextIcon = action.name && action.name !== m.name
+          ? pickMealImageForName(nextName, idx)
+          : m.iconSrc;
+        return { ...m, name: nextName, time: action.time ?? m.time, iconSrc: nextIcon };
+      });
+      return { ...state, meals: meals.sort((a, b) => a.time.localeCompare(b.time)) };
+    }
+
+    case 'REMOVE_MEAL': {
+      const removed = state.meals.find((m) => m.id === action.id);
+      if (!removed) return state;
+      // Subtrai macros da meal removida do total do dia
+      const macroDelta = removed.items.reduce(
+        (acc, it) => {
+          acc.kcal += it.kcal;
+          acc.p += it.p;
+          acc.c += it.c;
+          acc.f += it.f;
+          return acc;
+        },
+        { kcal: 0, p: 0, c: 0, f: 0 },
+      );
+      return {
+        ...state,
+        meals: state.meals.filter((m) => m.id !== action.id),
+        dailyMacros: {
+          kcal: { ...state.dailyMacros.kcal, value: Math.max(0, state.dailyMacros.kcal.value - macroDelta.kcal) },
+          p: { ...state.dailyMacros.p, value: Math.max(0, state.dailyMacros.p.value - macroDelta.p) },
+          c: { ...state.dailyMacros.c, value: Math.max(0, state.dailyMacros.c.value - macroDelta.c) },
+          f: { ...state.dailyMacros.f, value: Math.max(0, state.dailyMacros.f.value - macroDelta.f) },
+        },
+      };
+    }
+
     case 'SET_READ_NOTIFICATIONS':
       return { ...state, readNotificationIds: action.ids };
 
@@ -361,6 +543,25 @@ type AppContextValue = State & {
   // Favoritos e recentes de alimentos
   toggleFavoriteFood: (id: string) => void;
   addRecentFood: (id: string) => void;
+  // Favoritos e recentes de receitas
+  toggleFavoriteRecipe: (id: string) => void;
+  addRecentRecipe: (id: string) => void;
+  // Coleções
+  createCollection: (name: string, recipeIds: string[]) => void;
+  deleteCollection: (id: string) => void;
+  renameCollection: (id: string, name: string) => void;
+  addRecipeToCollection: (collectionId: string, recipeId: string) => void;
+  removeRecipeFromCollection: (collectionId: string, recipeId: string) => void;
+  // Despensa
+  addPantryItem: (input: { name: string; qty: string; cat: string; expiresAt?: string }) => void;
+  removePantryItem: (id: string) => void;
+  clearPantry: () => void;
+  /** True se o nome (substring case-insensitive) bate com algum item da despensa. */
+  isInPantry: (name: string) => boolean;
+  // Refeições configuráveis
+  addMeal: (input: { name: string; time: string }) => void;
+  updateMeal: (id: string, input: { name?: string; time?: string }) => void;
+  removeMeal: (id: string) => void;
   // Notificações
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
@@ -392,7 +593,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const [recipes, list, weights, favs, recents, readNotifs, completed] = await Promise.all([
+        const [recipes, list, weights, favs, recents, readNotifs, completed, favRecipes, recentRecipes, cols, pantry, mealsCfg] = await Promise.all([
           loadRecipes(),
           loadShoppingList(),
           loadWeightEntries(),
@@ -400,6 +601,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           loadRecents(),
           loadReadIds(),
           loadCompletedDays(),
+          loadFavoriteRecipes(),
+          loadRecentRecipes(),
+          loadCollections(),
+          loadPantry(),
+          loadMealsConfig(),
         ]);
         dispatch({ type: 'SET_SAVED_RECIPES', recipes });
         dispatch({ type: 'SET_SHOPPING_LIST', items: list });
@@ -409,6 +615,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_RECENT_FOODS', ids: recents });
         dispatch({ type: 'SET_READ_NOTIFICATIONS', ids: readNotifs });
         dispatch({ type: 'SET_COMPLETED_DAYS', days: completed });
+        dispatch({ type: 'SET_FAVORITE_RECIPES', ids: favRecipes });
+        dispatch({ type: 'SET_RECENT_RECIPES', ids: recentRecipes });
+        dispatch({ type: 'SET_COLLECTIONS', collections: cols });
+        dispatch({ type: 'SET_PANTRY', items: pantry });
+        // Se já tem config customizada de meals, usa. Senão mantém INITIAL_MEALS.
+        if (mealsCfg && mealsCfg.length > 0) {
+          dispatch({ type: 'SET_MEALS', meals: mealsCfg });
+        }
       } catch (err) {
         console.warn('[app] falha ao hidratar:', err);
       } finally {
@@ -457,6 +671,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!state.hydrated) return;
+    saveFavoriteRecipes(state.favoriteRecipeIds).catch((err) =>
+      console.warn('[app] falha ao persistir favoritos de receitas:', err),
+    );
+  }, [state.favoriteRecipeIds, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveRecentRecipes(state.recentRecipeIds).catch((err) =>
+      console.warn('[app] falha ao persistir recentes de receitas:', err),
+    );
+  }, [state.recentRecipeIds, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveCollections(state.collections).catch((err) =>
+      console.warn('[app] falha ao persistir coleções:', err),
+    );
+  }, [state.collections, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    savePantry(state.pantry).catch((err) =>
+      console.warn('[app] falha ao persistir despensa:', err),
+    );
+  }, [state.pantry, state.hydrated]);
+
+  // Persiste a CONFIG das meals (id/name/time/color/etc). Items efêmeros em MVP.
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveMealsConfig(state.meals).catch((err) =>
+      console.warn('[app] falha ao persistir config de refeições:', err),
+    );
+  }, [state.meals, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
     saveCompletedDays(state.completedDays).catch((err) =>
       console.warn('[app] falha ao persistir dias completos:', err),
     );
@@ -491,6 +741,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     removeWeightEntry: (id) => dispatch({ type: 'REMOVE_WEIGHT_ENTRY', id }),
     toggleFavoriteFood: (id) => dispatch({ type: 'TOGGLE_FAVORITE_FOOD', id }),
     addRecentFood: (id) => dispatch({ type: 'ADD_RECENT_FOOD', id }),
+    toggleFavoriteRecipe: (id) => dispatch({ type: 'TOGGLE_FAVORITE_RECIPE', id }),
+    addRecentRecipe: (id) => dispatch({ type: 'ADD_RECENT_RECIPE', id }),
+    createCollection: (name, recipeIds) => dispatch({ type: 'CREATE_COLLECTION', name, recipeIds }),
+    deleteCollection: (id) => dispatch({ type: 'DELETE_COLLECTION', id }),
+    renameCollection: (id, name) => dispatch({ type: 'RENAME_COLLECTION', id, name }),
+    addRecipeToCollection: (collectionId, recipeId) =>
+      dispatch({ type: 'ADD_RECIPE_TO_COLLECTION', collectionId, recipeId }),
+    removeRecipeFromCollection: (collectionId, recipeId) =>
+      dispatch({ type: 'REMOVE_RECIPE_FROM_COLLECTION', collectionId, recipeId }),
+    addPantryItem: (input) =>
+      dispatch({
+        type: 'ADD_PANTRY_ITEM',
+        item: { id: newPantryId(), name: input.name, qty: input.qty, cat: input.cat, expiresAt: input.expiresAt, addedAt: Date.now() },
+      }),
+    removePantryItem: (id) => dispatch({ type: 'REMOVE_PANTRY_ITEM', id }),
+    clearPantry: () => dispatch({ type: 'CLEAR_PANTRY' }),
+    isInPantry: (name) => {
+      const lower = name.toLowerCase().trim();
+      return state.pantry.some((it) => lower.includes(it.name.toLowerCase().trim()) || it.name.toLowerCase().trim().includes(lower));
+    },
+    addMeal: (input) => {
+      const idx = state.meals.length;
+      const id = newMealId();
+      const meal: Meal = {
+        id,
+        name: input.name,
+        q: input.name,
+        iconSrc: pickMealImageForName(input.name, idx),
+        time: input.time,
+        color: pickMealColor(idx),
+        kcal: 0,
+        items: [],
+      };
+      dispatch({ type: 'ADD_MEAL', meal });
+    },
+    updateMeal: (id, input) => dispatch({ type: 'UPDATE_MEAL', id, ...input }),
+    removeMeal: (id) => dispatch({ type: 'REMOVE_MEAL', id }),
     markNotificationRead: (id) => dispatch({ type: 'MARK_NOTIFICATION_READ', id }),
     markAllNotificationsRead: () => dispatch({ type: 'MARK_ALL_NOTIFICATIONS_READ' }),
     unreadNotificationsCount: state.notifications.filter(
