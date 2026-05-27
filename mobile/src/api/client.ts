@@ -21,6 +21,8 @@ export type ExtractedRecipe = {
   time: string;
   servings: number;
   confidence: 'high' | 'medium' | 'low';
+  /** Query em inglês pro Unsplash (ex: "pie,chickpea,rustic"). */
+  imageQuery?: string;
 };
 
 export type FoodAnalysisItem = {
@@ -153,6 +155,37 @@ export function generateInsight(context: LuContext): Promise<{ text: string; ton
 /** Análise detalhada de fim de dia (resumo + oportunidades + fechamento). */
 export function generateDayReview(context: LuContext): Promise<{ text: string }> {
   return postJSON<{ text: string }>('/day-review', { context });
+}
+
+// ─── Voz → Refeição ─────────────────────────────────────────────
+
+export type VoiceMealItem = {
+  name: string;
+  portion_grams: number;
+  kcal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+};
+
+export type VoiceMealResponse = {
+  transcript: string;
+  items: VoiceMealItem[];
+  total: { kcal: number; protein_g: number; carbs_g: number; fat_g: number };
+  mealType: 'breakfast' | 'lunch' | 'snack' | 'dinner' | null;
+  confidence: 'high' | 'medium' | 'low';
+};
+
+/**
+ * Transcreve áudio e estrutura como refeição.
+ * @param audioBase64 áudio em base64 (com ou sem prefixo data:audio/...)
+ * @param format extensão do áudio (default 'm4a' — gravação padrão do iOS/Android)
+ */
+export function transcribeMealAudio(
+  audioBase64: string,
+  format: string = 'm4a',
+): Promise<VoiceMealResponse> {
+  return postJSON<VoiceMealResponse>('/transcribe-meal', { audio: audioBase64, format });
 }
 
 export { BASE_URL };

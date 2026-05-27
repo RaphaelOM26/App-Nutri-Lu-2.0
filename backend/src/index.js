@@ -9,6 +9,7 @@ import analyzeFoodRouter from './routes/analyzeFood.js';
 import chatRouter from './routes/chat.js';
 import insightRouter from './routes/insight.js';
 import dayReviewRouter from './routes/dayReview.js';
+import transcribeMealRouter from './routes/transcribeMeal.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -34,6 +35,7 @@ app.use('/analyze-food', analyzeFoodRouter);
 app.use('/chat', chatRouter);
 app.use('/insight', insightRouter);
 app.use('/day-review', dayReviewRouter);
+app.use('/transcribe-meal', transcribeMealRouter);
 
 // Handler de erro padrão (último na cadeia)
 app.use((err, req, res, next) => {
