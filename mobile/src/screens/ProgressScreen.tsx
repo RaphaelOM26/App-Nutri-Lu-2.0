@@ -10,6 +10,7 @@ import { useTheme, FONT } from '../theme';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { IconBtn } from '../components/IconBtn';
 import { LuBtn } from '../components/LuBtn';
+import { Btn } from '../components/Btn';
 import { Card } from '../components/Card';
 import { Chip } from '../components/Chip';
 import { Icon } from '../components/Icons';
@@ -153,13 +154,14 @@ const AchievementsModal: React.FC<{ visible: boolean; onClose: () => void }> = (
 };
 
 // ─── Streak card (12 dias + 7 mini indicadores da semana atual) ──
-// Mostra a semana de domingo a sábado, com check nos dias até HOJE (inclusive)
-// e vazio nos dias futuros. Letra do dia de hoje fica em destaque.
+// Semana segunda→domingo (padrão BR). Check nos dias até HOJE, vazio nos futuros.
+// Dia de hoje fica destacado com borda branca.
 const StreakCard: React.FC = () => {
   const theme = useTheme();
   const today = new Date();
-  const todayWeekday = today.getDay(); // 0 = Dom, 6 = Sáb
-  const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+  // getDay(): 0=Dom..6=Sáb. Mapeia pra semana começando segunda: Seg=0, ..., Dom=6.
+  const todayWeekday = (today.getDay() + 6) % 7;
+  const labels = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
   return (
     <Card pad={16} radius={20} style={{ flex: 1.3, backgroundColor: theme.primarySoft }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -265,6 +267,8 @@ const WeightTab: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [period, setPeriod] = useState<Period>('90D');
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  // Modal custom de confirmação ao remover pesagem (substitui Alert.alert feio)
+  const [pendingRemove, setPendingRemove] = useState<WeightEntry | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showHover = (idx: number) => {
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
@@ -405,9 +409,7 @@ const WeightTab: React.FC = () => {
         }
         return ticks;
       }
-      case '1A':
-      case 'Tudo':
-      default: {
+      case '1A': {
         // Mostra ~6 ticks bimestrais pra não ficar apertado (12 meses)
         const ticks: { label: string; x: number }[] = [];
         const end = new Date(endMs);
@@ -418,6 +420,63 @@ const WeightTab: React.FC = () => {
         }
         return ticks;
       }
+      case 'Tudo':
+      default: {
+        // Adaptativo: ticks proporcionais ao RANGE REAL do histórico do user.
+        // Antes era bimestral fixo (10 meses atrás) — se o histórico tinha só
+        // 7 dias, todos os 6 ticks viravam x=startMs (clampados) e ficavam
+        // empilhados na esquerda do gráfico (bug visual).
+        const rangeMs = endMs - startMs;
+        const rangeDays = rangeMs / DAY_MS;
+        const ticks: { label: string; x: number }[] = [];
+
+        if (rangeDays <= 8) {
+          // Curto — mostra dia da semana de cada dia
+          const totalDays = Math.max(2, Math.ceil(rangeDays));
+          for (let i = totalDays; i >= 0; i--) {
+            const t = endMs - i * DAY_MS;
+            if (t < startMs) continue;
+            const d = new Date(t);
+            const wd = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+            ticks.push({ label: cap(wd), x: t });
+          }
+        } else if (rangeDays <= 60) {
+          // Médio — 5 ticks uniformes com data DD MMM
+          for (let i = 0; i < 5; i++) {
+            const t = startMs + (i / 4) * rangeMs;
+            ticks.push({ label: fmtDay(new Date(t)), x: t });
+          }
+        } else if (rangeDays <= 180) {
+          // ~6 meses — 1 tick por mês
+          const end = new Date(endMs);
+          const monthsBack = Math.min(6, Math.ceil(rangeDays / 30));
+          for (let i = monthsBack - 1; i >= 0; i--) {
+            const d = new Date(end.getFullYear(), end.getMonth() - i, 1);
+            const t = Math.max(startMs, d.getTime());
+            ticks.push({ label: fmtMonth(d), x: t });
+          }
+        } else {
+          // Longo — bimestral, máximo 6 ticks
+          const end = new Date(endMs);
+          const monthsBack = Math.ceil(rangeDays / 30);
+          const step = monthsBack > 12 ? 2 : 1;
+          for (let i = Math.min(monthsBack - 1, 10); i >= 0; i -= step) {
+            const d = new Date(end.getFullYear(), end.getMonth() - i, 1);
+            const t = Math.max(startMs, d.getTime());
+            ticks.push({ label: fmtMonth(d), x: t });
+          }
+        }
+
+        // Dedup ticks no mesmo ponto X (acontece quando clamp colide datas)
+        const seen = new Set<string>();
+        return ticks.filter((tk) => {
+          // Agrupa por dia pra evitar duplicatas
+          const key = String(Math.round(tk.x / DAY_MS));
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
     }
   }, [period, endMs, startMs]);
 
@@ -427,10 +486,14 @@ const WeightTab: React.FC = () => {
   };
 
   const onLongPressEntry = (entry: WeightEntry) => {
-    Alert.alert('Remover registro?', `${entry.kg.toFixed(1).replace('.', ',')} kg em ${formatDate(entry.date)}`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Remover', style: 'destructive', onPress: () => { removeWeightEntry(entry.id); toast('Pesagem removida'); } },
-    ]);
+    setPendingRemove(entry);
+  };
+
+  const confirmRemove = () => {
+    if (!pendingRemove) return;
+    removeWeightEntry(pendingRemove.id);
+    toast('Pesagem removida');
+    setPendingRemove(null);
   };
 
   // Espaços do layout do chart
@@ -793,24 +856,24 @@ const WeightTab: React.FC = () => {
                   <Text style={{ flex: 1, fontFamily: FONT.body, fontSize: 13, color: theme.text, fontWeight: '600' }}>
                     {formatDate(entry.date)}
                   </Text>
-                  <Text style={{ fontFamily: FONT.headExtra, fontSize: 15, fontWeight: '800', color: theme.text, marginRight: 10 }}>
+                  {/* Coluna de peso com largura fixa pra alinhar a direita em todas as linhas */}
+                  <Text style={{ width: 80, textAlign: 'right', fontFamily: FONT.headExtra, fontSize: 15, fontWeight: '800', color: theme.text }}>
                     {entry.kg.toFixed(1).replace('.', ',')} kg
                   </Text>
-                  {d !== 0 && (
-                    <Text
-                      style={{
-                        fontFamily: FONT.body,
-                        fontSize: 11,
-                        color: d > 0 ? theme.warningDeep : theme.primaryDeep,
-                        fontWeight: '700',
-                        minWidth: 44,
-                        textAlign: 'right',
-                      }}
-                    >
-                      {sign}
-                      {d.toFixed(1).replace('.', ',')}kg
-                    </Text>
-                  )}
+                  {/* Slot do delta sempre presente (mesmo se vazio) pra não empurrar o peso */}
+                  <Text
+                    style={{
+                      width: 52,
+                      textAlign: 'right',
+                      marginLeft: 10,
+                      fontFamily: FONT.body,
+                      fontSize: 11,
+                      color: d > 0 ? theme.warningDeep : theme.primaryDeep,
+                      fontWeight: '700',
+                    }}
+                  >
+                    {d !== 0 ? `${sign}${d.toFixed(1).replace('.', ',')}kg` : ''}
+                  </Text>
                 </Pressable>
               );
             })
@@ -824,6 +887,50 @@ const WeightTab: React.FC = () => {
       </View>
 
       <AddWeightModal visible={modalOpen} onClose={() => setModalOpen(false)} onSave={onAddSaved} />
+
+      {/* Modal custom de remover pesagem — substitui Alert.alert (sem identidade visual) */}
+      <Modal visible={!!pendingRemove} transparent animationType="fade" onRequestClose={() => setPendingRemove(null)}>
+        <Pressable
+          onPress={() => setPendingRemove(null)}
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <Pressable
+            onPress={() => {}}
+            style={{ backgroundColor: theme.bg, borderRadius: 20, padding: 22, width: '100%', maxWidth: 320, gap: 14 }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: theme.bgSubtle, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon.scale size={22} color={theme.text} stroke={1.8} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONT.headExtra, fontSize: 17, fontWeight: '800', color: theme.text }}>
+                  Remover pesagem?
+                </Text>
+                {pendingRemove && (
+                  <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, marginTop: 2 }}>
+                    {pendingRemove.kg.toFixed(1).replace('.', ',')} kg · {formatDate(pendingRemove.date)}
+                  </Text>
+                )}
+              </View>
+            </View>
+            <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, lineHeight: 19 }}>
+              Esse registro será apagado e sairá do gráfico. Você pode adicionar de novo a qualquer momento.
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Btn variant="secondary" size="md" onPress={() => setPendingRemove(null)} full>
+                  Cancelar
+                </Btn>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Btn variant="primary" size="md" icon={Icon.trash} onPress={confirmRemove} full>
+                  Remover
+                </Btn>
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 };

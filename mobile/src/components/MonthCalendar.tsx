@@ -26,7 +26,8 @@ const MONTHS_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', '
 const MONTH = TODAY_MONTH;
 const YEAR = TODAY_YEAR;
 const MONTH_NAME = `${MONTHS_PT[MONTH - 1]} ${YEAR}`;
-const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+// Semana começa na segunda (padrão BR). Dom no fim.
+const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 const TARGETS = { kcal: 2200, p: 135, c: 240, f: 70 };
 
 type Metric = 'kcal' | 'p' | 'c' | 'f';
@@ -81,8 +82,8 @@ export const MonthCalendar: React.FC<Props> = ({ visible, onClose, today, todayK
     return { consumed: s.f, target: s.fTarget };
   };
 
-  // Monta uma matriz com offset do primeiro dia da semana
-  const firstWeekday = new Date(YEAR, MONTH - 1, 1).getDay(); // 0=Dom
+  // Monta uma matriz com offset do primeiro dia da semana (segunda=0..domingo=6)
+  const firstWeekday = (new Date(YEAR, MONTH - 1, 1).getDay() + 6) % 7;
   const monthSummaries = getMonthSummaries(MONTH, YEAR);
   const daysInMonth = monthSummaries.length;
 
