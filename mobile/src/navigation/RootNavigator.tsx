@@ -25,6 +25,7 @@ import {
   BarcodeScreen,
   ImportRecipeScreen,
   RecipeDetailScreen,
+  LuRecipesScreen,
   ChatLuScreen,
   PlannerScreen,
   ShoppingListScreen,
@@ -72,6 +73,7 @@ export function RootNavigator() {
       <Stack.Screen name="Barcode" component={BarcodeScreen} options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="ImportRecipe" component={ImportRecipeScreen} options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="RecipeDetail" component={RecipeDetailScreen} />
+      <Stack.Screen name="LuRecipes" component={LuRecipesScreen} />
       <Stack.Screen name="ChatLu" component={ChatLuScreen} options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="Planner" component={PlannerScreen} />
       <Stack.Screen name="ShoppingList" component={ShoppingListScreen} />

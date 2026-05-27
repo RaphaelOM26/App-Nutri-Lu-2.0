@@ -5,8 +5,8 @@
 // Param pode ser { recipe } (seed), { saved } (do AsyncStorage) ou { extracted }
 // (recém-extraída, ainda não salva).
 
-import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Image, Pressable, Alert } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, ScrollView, Image, Pressable, Alert, Modal, TextInput } from 'react-native';
 import { useRoute, useNavigation, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, FONT } from '../theme';
@@ -21,6 +21,8 @@ import { useToast } from '../state/ToastContext';
 import { useFocusReplay } from '../utils/useFocusReplay';
 import { newRecipeId, type SavedRecipe } from '../storage/recipes';
 import { categorize } from '../storage/shoppingList';
+import { estimateRecipeMacros, parseToGrams } from '../utils/recipeMacros';
+import { SEED_RECIPES_BY_ID } from '../data/seedRecipes';
 import type { Ingredient, ExtractedRecipe } from '../api/client';
 import type { RootStackParamList } from '../navigation/types';
 
@@ -30,21 +32,10 @@ type Rt = RouteProp<RootStackParamList, 'RecipeDetail'>;
 type TabId = 'ingredients' | 'steps' | 'notes';
 type IngredientStatus = 'pantry' | 'list' | null;
 
-// Mock ingredients/steps pras receitas seed (não vêm com dados estruturados)
-const SEED_INGREDIENTS: Ingredient[] = [
-  { quantity: '300', unit: 'g', name: 'Peito de frango' },
-  { quantity: '1', unit: 'xícara', name: 'Arroz integral' },
-  { quantity: '200', unit: 'g', name: 'Brócolis' },
-  { quantity: '2', unit: 'colheres', name: 'Azeite' },
-  { quantity: '3', unit: 'dentes', name: 'Alho' },
-  { quantity: '1', unit: 'unidade', name: 'Limão' },
-];
-const SEED_STEPS = [
-  'Tempere o frango com sal, pimenta e suco de meio limão. Deixe descansar 10 minutos.',
-  'Cozinhe o arroz integral em água fervente por 25 minutos, escorra e reserve.',
-  'Em uma frigideira, doure o alho no azeite, adicione o brócolis e refogue por 4 minutos.',
-  'Grelhe o frango por 6-7 minutos de cada lado. Sirva sobre o arroz com o brócolis.',
-];
+// Fallback pra receitas seed legadas que não estejam em SEED_RECIPES_BY_ID.
+// As 262 receitas curadas têm ingredientes/passos próprios (lookup em SEED_RECIPES_BY_ID).
+const FALLBACK_INGREDIENTS: Ingredient[] = [];
+const FALLBACK_STEPS: string[] = [];
 
 export const RecipeDetailScreen: React.FC = () => {
   const theme = useTheme();
@@ -57,6 +48,9 @@ export const RecipeDetailScreen: React.FC = () => {
     shoppingList,
     upsertShoppingItem,
     removeShoppingItem,
+    foodDB,
+    displayedMeals,
+    addToMeal,
   } = useApp();
   const toast = useToast();
   const params = route.params ?? {};
@@ -64,6 +58,9 @@ export const RecipeDetailScreen: React.FC = () => {
   // Normaliza pra uma representação única
   const view = useMemo(() => {
     if (params.recipe) {
+      // Tenta lookup nos dados curados (262 receitas dos PDFs).
+      // Se a receita seed não estiver lá, usa o fallback vazio.
+      const detailed = SEED_RECIPES_BY_ID[params.recipe.id];
       return {
         kind: 'seed' as const,
         title: params.recipe.name,
@@ -71,8 +68,8 @@ export const RecipeDetailScreen: React.FC = () => {
         time: params.recipe.time,
         baseServings: params.recipe.servings || 2,
         kcal: params.recipe.kcal,
-        ingredients: SEED_INGREDIENTS,
-        steps: SEED_STEPS,
+        ingredients: detailed?.ingredients || FALLBACK_INGREDIENTS,
+        steps: detailed?.steps || FALLBACK_STEPS,
         confidence: null,
         imageDataUrl: null as string | null,
         sourceUrl: null as string | null,
@@ -83,7 +80,8 @@ export const RecipeDetailScreen: React.FC = () => {
         kind: 'saved' as const,
         data: params.saved,
         title: params.saved.title,
-        q: params.saved.title,
+        // Prefere imageQuery gerada pela Lu; cai pro title se não houver
+        q: params.saved.imageQuery || params.saved.title,
         time: params.saved.time || '—',
         baseServings: params.saved.servings || 1,
         kcal: 0, // backend não extrai macros ainda
@@ -99,7 +97,7 @@ export const RecipeDetailScreen: React.FC = () => {
         kind: 'extracted' as const,
         data: params.extracted,
         title: params.extracted.title,
-        q: params.extracted.title,
+        q: params.extracted.imageQuery || params.extracted.title,
         time: params.extracted.time || '—',
         baseServings: params.extracted.servings || 1,
         kcal: 0,
@@ -120,6 +118,31 @@ export const RecipeDetailScreen: React.FC = () => {
   const [localPantry, setLocalPantry] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [savedJustNow, setSavedJustNow] = useState(false);
+  const [mealPickerOpen, setMealPickerOpen] = useState(false);
+  // Notas livres do usuário — só editável em receitas saved (já persistidas).
+  // Pra extracted: ainda sem id estável, então campo só ativa depois de salvar.
+  const initialNotes = view?.kind === 'saved' ? (view.data.userNotes ?? '') : '';
+  const [userNotes, setUserNotes] = useState(initialNotes);
+  const notesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Persistência debounced das notas — só pra receitas saved.
+  useEffect(() => {
+    if (view?.kind !== 'saved') return;
+    if (userNotes === (view.data.userNotes ?? '')) return; // sem mudança
+    if (notesDebounceRef.current) clearTimeout(notesDebounceRef.current);
+    notesDebounceRef.current = setTimeout(async () => {
+      try {
+        const updated: SavedRecipe = { ...view.data, userNotes };
+        await addSavedRecipe(updated); // upsert pelo id
+      } catch (err) {
+        console.warn('[recipe] falha ao salvar notas:', err);
+      }
+    }, 600);
+    return () => {
+      if (notesDebounceRef.current) clearTimeout(notesDebounceRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userNotes]);
 
   if (!view) {
     return (
@@ -152,12 +175,23 @@ export const RecipeDetailScreen: React.FC = () => {
   const ingredientStatus = view.ingredients.map((_, i) => getStatus(i));
 
   const scale = servings / view.baseServings;
-  const scaledKcal = Math.round(view.kcal * scale);
-  // Macros placeholder pra seeds (proporção fixa do design)
-  const scaledP = view.kind === 'seed' ? Math.round(38 * scale) : 0;
-  const scaledC = view.kind === 'seed' ? Math.round(45 * scale) : 0;
-  const scaledF = view.kind === 'seed' ? Math.round(12 * scale) : 0;
-  const showMacros = view.kind === 'seed' && view.kcal > 0;
+  // Pra seeds: usa kcal do recipe + macros placeholder fixos do design.
+  // Pra saved/extracted: estima via foodDB.
+  const estimated = useMemo(
+    () => (view.kind === 'seed' ? null : estimateRecipeMacros(view.ingredients, foodDB)),
+    [view.kind, view.ingredients, foodDB],
+  );
+  const baseKcal = view.kind === 'seed' ? view.kcal : estimated?.kcal ?? 0;
+  const baseP = view.kind === 'seed' ? 38 : estimated?.p ?? 0;
+  const baseC = view.kind === 'seed' ? 45 : estimated?.c ?? 0;
+  const baseF = view.kind === 'seed' ? 12 : estimated?.f ?? 0;
+  const scaledKcal = Math.round(baseKcal * scale);
+  const scaledP = Math.round(baseP * scale);
+  const scaledC = Math.round(baseC * scale);
+  const scaledF = Math.round(baseF * scale);
+  // Mostra card de macros se temos dados. Pra estimativa, exige match >= 30% pra não exibir lixo.
+  const showMacros = baseKcal > 0 && (view.kind === 'seed' || (estimated && estimated.matchRatio >= 0.3));
+  const isEstimate = view.kind !== 'seed' && showMacros;
 
   /**
    * Toggle de status. Comportamento:
@@ -283,6 +317,13 @@ export const RecipeDetailScreen: React.FC = () => {
               <Icon.back size={18} color="#1B1B1B" />
             </Pressable>
             <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Pressable
+                onPress={() => nav.navigate('ChatLu')}
+                accessibilityLabel="Perguntar à Lu sobre esta receita"
+                style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Icon.sparkle size={16} color={theme.primaryDeep} stroke={2} />
+              </Pressable>
               {view.kind === 'saved' && (
                 <Pressable
                   onPress={onDelete}
@@ -366,10 +407,15 @@ export const RecipeDetailScreen: React.FC = () => {
           </Card>
         </View>
 
-        {/* Macros card (só pra seeds que têm kcal) */}
+        {/* Macros card — seeds usam valores do design; saved/extracted usam estimativa via foodDB */}
         {showMacros && (
           <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
             <Card pad={16} radius={20}>
+              {isEstimate && (
+                <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>
+                  Estimativa · {estimated?.matchedCount}/{estimated?.totalCount} ingr.
+                </Text>
+              )}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                 <MacroRing
                   key={`recipe-ring-${replayKey}-${servings}`}
@@ -637,16 +683,58 @@ export const RecipeDetailScreen: React.FC = () => {
         )}
 
         {tab === 'notes' && (
-          <View style={{ paddingHorizontal: 16 }}>
-            <Card pad={16} radius={16}>
-              <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, lineHeight: 19 }}>
-                {view.kind === 'extracted' && view.sourceUrl
-                  ? `Importada de: ${view.sourceUrl}`
-                  : view.kind === 'saved'
-                  ? `Salva em ${new Date(view.data.savedAt).toLocaleDateString('pt-BR')}${view.sourceUrl ? ` · de ${view.sourceUrl}` : ''}`
-                  : 'Nenhuma nota.'}
-              </Text>
-            </Card>
+          <View style={{ paddingHorizontal: 16, gap: 10 }}>
+            {/* Campo livre de notas — editável apenas em saved (pra ter id pra persistir). */}
+            {view.kind === 'saved' ? (
+              <Card pad={14} radius={16}>
+                <TextInput
+                  value={userNotes}
+                  onChangeText={setUserNotes}
+                  placeholder="Escreva suas observações: dicas, ajustes, variações…"
+                  placeholderTextColor={theme.textFaint}
+                  multiline
+                  textAlignVertical="top"
+                  style={{
+                    minHeight: 140,
+                    fontFamily: FONT.body,
+                    fontSize: 14,
+                    color: theme.text,
+                    lineHeight: 21,
+                  }}
+                />
+                {userNotes.trim().length > 0 && (
+                  <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textFaint, marginTop: 6, textAlign: 'right' }}>
+                    {userNotes.trim().length} caractere{userNotes.trim().length === 1 ? '' : 's'} · salvo automaticamente
+                  </Text>
+                )}
+              </Card>
+            ) : (
+              <Card pad={16} radius={16}>
+                <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center' }}>
+                  {view.kind === 'extracted'
+                    ? 'Salve a receita pra poder escrever notas.'
+                    : 'As notas viram quando você importar suas próprias receitas.'}
+                </Text>
+              </Card>
+            )}
+
+            {/* Metadata discreta no rodapé (não dentro do campo de notas) */}
+            {(view.kind === 'saved' || view.kind === 'extracted') && view.sourceUrl && (
+              <View style={{ paddingHorizontal: 4, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Icon.link size={12} color={theme.textFaint} stroke={2} />
+                <Text style={{ flex: 1, fontFamily: FONT.body, fontSize: 11, color: theme.textFaint }} numberOfLines={1}>
+                  Importada de {view.sourceUrl}
+                </Text>
+              </View>
+            )}
+            {view.kind === 'saved' && (
+              <View style={{ paddingHorizontal: 4, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Icon.clock size={12} color={theme.textFaint} stroke={2} />
+                <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textFaint }}>
+                  Salva em {new Date(view.data.savedAt).toLocaleDateString('pt-BR')}
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
@@ -662,13 +750,93 @@ export const RecipeDetailScreen: React.FC = () => {
             variant="primary"
             size="lg"
             icon={Icon.plus}
-            onPress={() => Alert.alert('Em breve', 'Adicionar receita ao diário virá quando conectarmos refeições e receitas.')}
+            onPress={() => {
+              if (scaledKcal === 0) {
+                Alert.alert('Sem cálculo de macros', 'Não consegui estimar a nutrição dessa receita. Marque mais ingredientes ou edite os campos antes de adicionar ao diário.');
+                return;
+              }
+              setMealPickerOpen(true);
+            }}
             full
           >
             Adicionar ao diário
           </Btn>
         )}
       </View>
+
+      {/* Bottom-sheet: escolha da refeição pra adicionar a receita */}
+      <Modal visible={mealPickerOpen} transparent animationType="fade" onRequestClose={() => setMealPickerOpen(false)}>
+        <Pressable
+          onPress={() => setMealPickerOpen(false)}
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
+        >
+          <Pressable
+            onPress={() => {}}
+            style={{
+              backgroundColor: theme.bg,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              padding: 20,
+              paddingBottom: 32,
+              gap: 12,
+            }}
+          >
+            <View style={{ alignItems: 'center', paddingBottom: 4 }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
+            </View>
+            <Text style={{ fontFamily: FONT.headExtra, fontSize: 18, fontWeight: '800', color: theme.text, textAlign: 'center' }}>
+              Adicionar a qual refeição?
+            </Text>
+            <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center', marginBottom: 4 }}>
+              {servings === view.baseServings ? `${servings} porç. · ${scaledKcal} kcal` : `${servings} porç. (escalada) · ${scaledKcal} kcal`}
+              {isEstimate ? ' · estimativa' : ''}
+            </Text>
+            {displayedMeals.map((meal) => (
+              <Pressable
+                key={meal.id}
+                onPress={() => {
+                  // Calcula portion em gramas somando ingredientes (×scale).
+                  // Fallback 100g se a soma der 0.
+                  const totalGrams = Math.max(
+                    1,
+                    Math.round(view.ingredients.reduce((s, ing) => s + parseToGrams(ing.quantity, ing.unit), 0) * scale),
+                  );
+                  const itemName = `${view.title}${servings !== view.baseServings ? ` · ${servings} porç.` : ''}`;
+                  addToMeal(
+                    meal.id,
+                    [{ name: itemName, portion: `${totalGrams}g`, amount: 1, kcal: scaledKcal, p: scaledP, c: scaledC, f: scaledF }],
+                    { kcal: scaledKcal, p: scaledP, c: scaledC, f: scaledF },
+                  );
+                  setMealPickerOpen(false);
+                  toast(`Adicionada a ${meal.name} · ${scaledKcal} kcal`);
+                }}
+                style={{
+                  backgroundColor: theme.bgElev,
+                  borderRadius: 16,
+                  padding: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: meal.color || theme.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon.drumstick size={18} color={theme.text} stroke={2} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: FONT.bodyBold, fontSize: 15, fontWeight: '700', color: theme.text }}>{meal.name}</Text>
+                  <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted }}>
+                    {meal.time} · {meal.items.length} {meal.items.length === 1 ? 'item' : 'itens'} · {meal.kcal} kcal
+                  </Text>
+                </View>
+                <Icon.forward size={18} color={theme.textMuted} stroke={2} />
+              </Pressable>
+            ))}
+            <Pressable onPress={() => setMealPickerOpen(false)} style={{ padding: 12, alignItems: 'center', marginTop: 4 }}>
+              <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '600', color: theme.textMuted }}>Cancelar</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 };

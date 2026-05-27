@@ -28,6 +28,8 @@ export type RootStackParamList = {
   // Receitas
   ImportRecipe: undefined;
   RecipeDetail: { recipe?: Recipe; saved?: SavedRecipe; extracted?: ExtractedRecipe & { sourceUrl?: string; imageDataUrl?: string } };
+  /** Tela de receitas curadas da Lu. collectionId opcional filtra por coleção. */
+  LuRecipes: { collectionId?: string };
   // Chat + planner + lista
   ChatLu: undefined;
   Planner: undefined;

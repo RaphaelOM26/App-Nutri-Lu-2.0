@@ -14,6 +14,7 @@ export { VoiceScreen } from './VoiceScreen';
 export { BarcodeScreen } from './BarcodeScreen';
 export { ImportRecipeScreen } from './ImportRecipeScreen';
 export { RecipeDetailScreen } from './RecipeDetailScreen';
+export { LuRecipesScreen } from './LuRecipesScreen';
 export { ChatLuScreen } from './ChatLuScreen';
 export { PlannerScreen } from './PlannerScreen';
 export { ShoppingListScreen } from './ShoppingListScreen';
