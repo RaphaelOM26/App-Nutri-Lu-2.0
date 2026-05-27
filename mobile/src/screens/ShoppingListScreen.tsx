@@ -2,7 +2,7 @@
 // Items são adicionados a partir de RecipeDetail (toggle de cart nos ingredientes).
 
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Vibration, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, Vibration, Share, Platform, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme, FONT } from '../theme';
@@ -12,6 +12,7 @@ import { Card } from '../components/Card';
 import { Btn } from '../components/Btn';
 import { Icon } from '../components/Icons';
 import { useApp, type ShoppingListItem } from '../state/AppContext';
+import { useToast } from '../state/ToastContext';
 
 const CATEGORY_ORDER = ['Hortifruti', 'Proteínas', 'Laticínios', 'Grãos', 'Temperos', 'Outros'];
 const CATEGORY_ICONS: Record<string, string> = {
@@ -26,6 +27,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 export const ShoppingListScreen: React.FC = () => {
   const theme = useTheme();
   const nav = useNavigation();
+  const toast = useToast();
   const {
     shoppingList,
     toggleShoppingChecked,
@@ -34,6 +36,7 @@ export const ShoppingListScreen: React.FC = () => {
     clearShoppingList,
   } = useApp();
   const [marketMode, setMarketMode] = useState(false);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   const checked = shoppingList.filter((i) => i.checked).length;
   const total = shoppingList.length;
@@ -58,15 +61,71 @@ export const ShoppingListScreen: React.FC = () => {
   }, {});
 
   const onClear = () => {
-    if (shoppingList.length === 0) return;
-    Alert.alert(
-      'Limpar lista?',
-      `${shoppingList.length} ${shoppingList.length === 1 ? 'item será removido' : 'itens serão removidos'}.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Limpar', style: 'destructive', onPress: clearShoppingList },
-      ],
-    );
+    if (shoppingList.length === 0) {
+      toast('Lista já está vazia');
+      return;
+    }
+    // Modal custom em vez de Alert.alert — funciona consistente em mobile e web
+    setClearConfirmOpen(true);
+  };
+
+  const confirmClear = () => {
+    setClearConfirmOpen(false);
+    clearShoppingList();
+    toast('Lista limpa');
+  };
+
+  /** Monta texto da lista pra Share/WhatsApp. */
+  const buildShareText = (): string => {
+    const lines: string[] = ['🛒 *Lista de compras*', ''];
+    const grouped = shoppingList.reduce<Record<string, ShoppingListItem[]>>((acc, it) => {
+      (acc[it.cat] = acc[it.cat] || []).push(it);
+      return acc;
+    }, {});
+    for (const cat of CATEGORY_ORDER) {
+      const list = grouped[cat];
+      if (!list?.length) continue;
+      lines.push(`${CATEGORY_ICONS[cat] || '•'} *${cat}*`);
+      for (const it of list) {
+        const mark = it.checked ? '✓' : '☐';
+        lines.push(`${mark} ${it.name} — ${it.qty}`);
+      }
+      lines.push('');
+    }
+    const checkedCount = shoppingList.filter((i) => i.checked).length;
+    lines.push(`${checkedCount}/${shoppingList.length} comprados`);
+    return lines.join('\n').trim();
+  };
+
+  const onShare = async () => {
+    if (shoppingList.length === 0) {
+      toast('Lista vazia — nada pra compartilhar');
+      return;
+    }
+    const message = buildShareText();
+    try {
+      // Web: tenta navigator.share, senão copia pro clipboard
+      if (Platform.OS === 'web') {
+        const nav = typeof navigator !== 'undefined' ? (navigator as any) : null;
+        if (nav?.share) {
+          await nav.share({ title: 'Lista de compras', text: message });
+          return;
+        }
+        if (nav?.clipboard?.writeText) {
+          await nav.clipboard.writeText(message);
+          toast('Lista copiada — cole onde quiser');
+          return;
+        }
+        toast('Compartilhamento não suportado neste navegador', 'error');
+        return;
+      }
+      await Share.share({ message, title: 'Lista de compras' });
+    } catch (err) {
+      // user cancelou ou erro real — ignora silenciosamente em cancel
+      if (err instanceof Error && !/cancel|abort/i.test(err.message)) {
+        toast('Não consegui compartilhar', 'error');
+      }
+    }
   };
 
   return (
@@ -134,7 +193,7 @@ export const ShoppingListScreen: React.FC = () => {
                 </Btn>
               </View>
               <View style={{ flex: 1 }}>
-                <Btn variant="outline" icon={Icon.send} size="md" full>
+                <Btn variant="outline" icon={Icon.send} size="md" full onPress={onShare}>
                   Compartilhar
                 </Btn>
               </View>
@@ -177,6 +236,38 @@ export const ShoppingListScreen: React.FC = () => {
           </>
         )}
       </ScrollView>
+
+      {/* Modal custom de confirmação — substitui Alert.alert (que falha no RN-Web) */}
+      <Modal visible={clearConfirmOpen} transparent animationType="fade" onRequestClose={() => setClearConfirmOpen(false)}>
+        <Pressable
+          onPress={() => setClearConfirmOpen(false)}
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <Pressable
+            onPress={() => {}}
+            style={{ backgroundColor: theme.bg, borderRadius: 20, padding: 22, width: '100%', maxWidth: 320, gap: 14 }}
+          >
+            <Text style={{ fontFamily: FONT.headExtra, fontSize: 18, fontWeight: '800', color: theme.text }}>
+              Limpar lista?
+            </Text>
+            <Text style={{ fontFamily: FONT.body, fontSize: 14, color: theme.textMuted, lineHeight: 20 }}>
+              {shoppingList.length} {shoppingList.length === 1 ? 'item será removido' : 'itens serão removidos'}.
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+              <View style={{ flex: 1 }}>
+                <Btn variant="secondary" size="md" onPress={() => setClearConfirmOpen(false)} full>
+                  Cancelar
+                </Btn>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Btn variant="primary" size="md" icon={Icon.trash} onPress={confirmClear} full>
+                  Limpar
+                </Btn>
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 };

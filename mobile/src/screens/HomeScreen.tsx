@@ -373,18 +373,21 @@ const StreakPill: React.FC<{ days: number }> = ({ days }) => {
   const animate = (toValue: number) => {
     Animated.spring(expand, { toValue, useNativeDriver: false, friction: 6, tension: 90 }).start();
     if (toValue === 1) {
+      // pulse vive na MESMA Animated.View que `width` (que é JS-driven).
+      // Native driver junto com JS driver na mesma view → crash no Android.
+      // Mantemos pulse em JS driver também.
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.12, duration: 180, useNativeDriver: true }),
-        Animated.spring(pulse, { toValue: 1, useNativeDriver: true, friction: 4, tension: 100 }),
+        Animated.timing(pulse, { toValue: 1.12, duration: 180, useNativeDriver: false }),
+        Animated.spring(pulse, { toValue: 1, useNativeDriver: false, friction: 4, tension: 100 }),
       ]).start();
     }
   };
 
   useEffect(() => {
-    // Pulse inicial pra "anunciar" a abertura
+    // Pulse inicial pra "anunciar" a abertura — JS driver (mesma view tem width animado)
     Animated.sequence([
-      Animated.timing(pulse, { toValue: 1.12, duration: 180, useNativeDriver: true }),
-      Animated.spring(pulse, { toValue: 1, useNativeDriver: true, friction: 4, tension: 100 }),
+      Animated.timing(pulse, { toValue: 1.12, duration: 180, useNativeDriver: false }),
+      Animated.spring(pulse, { toValue: 1, useNativeDriver: false, friction: 4, tension: 100 }),
     ]).start();
     // Auto-contrai depois de 3s
     const t = setTimeout(() => animate(0), 3000);
