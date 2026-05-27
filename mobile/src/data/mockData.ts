@@ -126,16 +126,20 @@ export const INITIAL_MEALS: Meal[] = [
   },
 ];
 
-export const INITIAL_RECIPES: Recipe[] = [
-  { id: 'r1', name: 'Frango grelhado com arroz integral', q: 'chicken,rice,bowl', time: '25min', kcal: 480, tag: 'Almoço', servings: 2 },
-  { id: 'r2', name: 'Salada de quinoa e abacate', q: 'quinoa,avocado,salad', time: '15min', kcal: 380, tag: 'Almoço', servings: 2 },
-  { id: 'r3', name: 'Bowl de aveia com frutas vermelhas', q: 'oats,berries,bowl', time: '8min', kcal: 320, tag: 'Café', servings: 1 },
-  { id: 'r4', name: 'Salmão ao forno com legumes', q: 'salmon,vegetables,roasted', time: '30min', kcal: 540, tag: 'Jantar', servings: 2 },
-  { id: 'r5', name: 'Panqueca proteica de banana', q: 'pancake,banana', time: '10min', kcal: 290, tag: 'Café', servings: 1 },
-  { id: 'r6', name: 'Wrap de frango e vegetais', q: 'wrap,chicken', time: '12min', kcal: 410, tag: 'Lanche', servings: 1 },
-  { id: 'r7', name: 'Sopa de lentilha', q: 'lentil,soup', time: '40min', kcal: 320, tag: 'Jantar', servings: 4 },
-  { id: 'r8', name: 'Smoothie verde detox', q: 'smoothie,green', time: '5min', kcal: 220, tag: 'Café', servings: 1 },
-];
+// 262 receitas curadas (anonimizadas dos PDFs originais — sem menções autorais).
+// Mapeadas em coleções da Lu via SEED_RECIPES.collectionId. Gerado por
+// scripts/extract-pdf/generate-seed-ts.mjs — não edite manualmente o arquivo.
+import { SEED_RECIPES } from './seedRecipes';
+
+export const INITIAL_RECIPES: Recipe[] = SEED_RECIPES.map((r) => ({
+  id: r.id,
+  name: r.name,
+  q: r.q,
+  time: r.time,
+  kcal: r.kcal,
+  tag: r.tag,
+  servings: r.servings,
+}));
 
 // Base alimentar simplificada (~50 itens comuns BR). Valores aproximados — TACO/USDA.
 // Em produção viria de uma API real (TACO, OpenFoodFacts) ou da OpenAI como fallback.
@@ -223,7 +227,9 @@ const FOOD_IMG_MAP: Record<string, string> = {
   chicken: '1532550907401-a500c9a57435',
   grilled: '1532550907401-a500c9a57435',
   salad: '1512621776951-a57141f2eefd',
-  green: '1505253716362-afaea1d3d1af',
+  // NOTA: "green" mapeava pra salada verde — removido pra não capturar
+  // queries de suco/smoothie que tinham "green" como token. Quando precisar
+  // de algo "verde", use "salad" ou "smoothie" diretamente.
   broccoli: '1584270354949-c26b0d5b4a0c',
   steamed: '1584270354949-c26b0d5b4a0c',
   apple: '1568702846914-96b305d2aaeb',
@@ -263,6 +269,73 @@ const FOOD_IMG_MAP: Record<string, string> = {
   homemade: '1547592180-85f173990554',
   brazilian: '1547592180-85f173990554',
   eggs: '1482049016688-2d3e1b311543',
+  // === Novos pra cobrir as 280 receitas dos PDFs ===
+  juice: '1622597467836-f3285f2131b8',     // suco verde detox
+  detox: '1622597467836-f3285f2131b8',
+  cake: '1606313564200-e75d5e30476c',      // bolo/brownie de chocolate
+  brownie: '1606313564200-e75d5e30476c',
+  fudge: '1606313564200-e75d5e30476c',
+  cookie: '1499636136210-6f4ee915583e',    // cookie
+  biscuit: '1499636136210-6f4ee915583e',
+  flan: '1551024601-bec78aea704b',         // pudim/sobremesa
+  mousse: '1551024601-bec78aea704b',
+  cheesecake: '1551024601-bec78aea704b',
+  dessert: '1551024601-bec78aea704b',
+  pie: '1568571780765-9276ac8b75a2',       // torta
+  tart: '1568571780765-9276ac8b75a2',
+  quiche: '1568571780765-9276ac8b75a2',
+  pasta: '1551183053-bf91a1d81141',        // massa italiana
+  spaghetti: '1551183053-bf91a1d81141',
+  pizza: '1565299624946-b28f40a0ae38',     // pizza/wrap
+  lasagna: '1551183053-bf91a1d81141',
+  risotto: '1551183053-bf91a1d81141',
+  gnocchi: '1551183053-bf91a1d81141',
+  crepe: '1528207776546-365bb710ee93',     // panqueca-like
+  waffle: '1528207776546-365bb710ee93',
+  muffin: '1499636136210-6f4ee915583e',
+  cupcake: '1606313564200-e75d5e30476c',
+  tapioca: '1525351484163-7529414344d8',   // breakfast brasileiro
+  brigadeiro: '1606313564200-e75d5e30476c',
+  // proteínas
+  stroganoff: '1532550907401-a500c9a57435',
+  parmigiana: '1532550907401-a500c9a57435',
+  steak: '1532550907401-a500c9a57435',
+  burger: '1565299624946-b28f40a0ae38',
+  shrimp: '1467003909585-2f8a72700288',
+  fish: '1467003909585-2f8a72700288',
+  tuna: '1467003909585-2f8a72700288',
+  kibbeh: '1547592180-85f173990554',
+  meatball: '1547592180-85f173990554',
+  skewer: '1532550907401-a500c9a57435',
+  // petiscos
+  coxinha: '1547592180-85f173990554',
+  croquette: '1547592180-85f173990554',
+  fritter: '1547592180-85f173990554',
+  pastry: '1547592180-85f173990554',
+  bruschetta: '1509440159596-0249088772ff',
+  fondue: '1551024601-bec78aea704b',
+  chips: '1525351484163-7529414344d8',
+  guacamole: '1559054663-e8d23213f55c',
+  pate: '1559054663-e8d23213f55c',
+  // acompanhamentos / ingredientes
+  polenta: '1518779578993-ec3579fee39f',
+  potato: '1518779578993-ec3579fee39f',
+  sweet: '1518779578993-ec3579fee39f',
+  cassava: '1518779578993-ec3579fee39f',
+  eggplant: '1540420773420-3366772f4999',
+  zucchini: '1540420773420-3366772f4999',
+  corn: '1540420773420-3366772f4999',
+  strawberry: '1488477181946-6428a0291777',
+  // bebidas extras
+  shake: '1502741224143-90386d7f8c82',
+  refreshing: '1502741224143-90386d7f8c82',
+  cream: '1551024601-bec78aea704b',  // ice cream / sorvete
+  scoop: '1551024601-bec78aea704b',
+  tea: '1495474472287-4d71bcdd2085',
+  // genéricos / molhos
+  sauce: '1540420773420-3366772f4999',
+  dressing: '1540420773420-3366772f4999',
+  ingredients: '1540420773420-3366772f4999',
 };
 
 /** Resolve a URL do Unsplash a partir de tokens (ex: "chicken,rice,bowl"). */

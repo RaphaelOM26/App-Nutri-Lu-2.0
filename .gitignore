@@ -52,3 +52,10 @@ Thumbs.db
 
 # ─── Claude / agent files (configs locais) ──────────────────────
 .claude/
+
+# ─── PDF extraction (auto-gerados pelo pipeline em scripts/) ────
+# Dumps JSON intermediários grandes — não versionar.
+scripts/extract-pdf/dumps/
+
+# ─── Arquivos locais temporários ────────────────────────────────
+expo-qr.html
