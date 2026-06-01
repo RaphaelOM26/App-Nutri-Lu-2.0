@@ -1,7 +1,9 @@
 // Theme tokens — porte direto do `Design 2.0/theme.jsx`.
 // Paleta `sage` (default), com variantes light/dark seguindo o sistema.
 
+import React from 'react';
 import { useColorScheme } from 'react-native';
+import { ThemeContext } from './ThemeContextDef';
 
 // ─── Paleta base (sage) ──────────────────────────────────────────
 export const PALETTE = {
@@ -37,7 +39,7 @@ export type Theme = typeof PALETTE & {
   shadow: string;
 };
 
-const LIGHT: Theme = {
+export const LIGHT: Theme = {
   ...PALETTE,
   dark: false,
   bg: '#F6F6F6',
@@ -52,7 +54,7 @@ const LIGHT: Theme = {
   shadow: 'rgba(27,27,27,0.08)',
 };
 
-const DARK: Theme = {
+export const DARK: Theme = {
   ...PALETTE,
   dark: true,
   bg: '#101212',
@@ -67,9 +69,13 @@ const DARK: Theme = {
   shadow: 'rgba(0,0,0,0.5)',
 };
 
-// Hook que retorna o tema apropriado seguindo o sistema do device.
+// Hook que retorna o tema apropriado.
+// Quando envolvido pelo ThemeProvider, respeita a preferência do user.
+// Fallback (sem provider): segue o colorScheme do sistema.
 export function useTheme(): Theme {
+  const ctx = React.useContext(ThemeContext);
   const scheme = useColorScheme();
+  if (ctx) return ctx.theme;
   return scheme === 'dark' ? DARK : LIGHT;
 }
 
@@ -82,6 +88,9 @@ export const FONT = {
   body: 'NunitoSans_400Regular',
   bodyMedium: 'NunitoSans_600SemiBold',
   bodyBold: 'NunitoSans_700Bold',
+  // Serif editorial — DM Serif Display (usada em resumos compartilháveis e momentos brand)
+  serif: 'DMSerifDisplay_400Regular',
+  serifItalic: 'DMSerifDisplay_400Regular_Italic',
 } as const;
 
 // Escala de tipografia (mesma do protótipo: 32/24/20/18/16/14/12)

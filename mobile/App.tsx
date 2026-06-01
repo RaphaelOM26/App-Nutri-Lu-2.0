@@ -20,11 +20,17 @@ import {
   NunitoSans_600SemiBold,
   NunitoSans_700Bold,
 } from '@expo-google-fonts/nunito-sans';
+import { DMSerifDisplay_400Regular, DMSerifDisplay_400Regular_Italic } from '@expo-google-fonts/dm-serif-display';
 import { AppProvider } from './src/state/AppContext';
 import { ToastProvider } from './src/state/ToastContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { MacrosWatcher } from './src/components/MacrosWatcher';
 import { useTheme } from './src/theme';
+import { ThemeProvider } from './src/theme/ThemeContext';
+import { configureNotificationHandler } from './src/utils/notifications';
+
+// Configura o handler de notificações ANTES de montar a árvore (uma vez só).
+configureNotificationHandler();
 
 export const navigationRef = createNavigationContainerRef();
 
@@ -60,23 +66,27 @@ export default function App() {
     NunitoSans_400Regular,
     NunitoSans_600SemiBold,
     NunitoSans_700Bold,
+    DMSerifDisplay_400Regular,
+    DMSerifDisplay_400Regular_Italic,
   });
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AppProvider>
-          <ToastProvider>
-            {fontsLoaded ? (
-              <>
-                <MacrosWatcher />
-                <AppContent />
-              </>
-            ) : (
-              <SplashFallback />
-            )}
-          </ToastProvider>
-        </AppProvider>
+        <ThemeProvider>
+          <AppProvider>
+            <ToastProvider>
+              {fontsLoaded ? (
+                <>
+                  <MacrosWatcher />
+                  <AppContent />
+                </>
+              ) : (
+                <SplashFallback />
+              )}
+            </ToastProvider>
+          </AppProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

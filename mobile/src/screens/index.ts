@@ -18,3 +18,5 @@ export { LuRecipesScreen } from './LuRecipesScreen';
 export { ChatLuScreen } from './ChatLuScreen';
 export { PlannerScreen } from './PlannerScreen';
 export { ShoppingListScreen } from './ShoppingListScreen';
+export { JourneySummaryScreen } from './JourneySummaryScreen';
+export { InviteFriendsScreen } from './InviteFriendsScreen';

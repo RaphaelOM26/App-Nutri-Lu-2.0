@@ -29,6 +29,8 @@ import {
   ChatLuScreen,
   PlannerScreen,
   ShoppingListScreen,
+  JourneySummaryScreen,
+  InviteFriendsScreen,
 } from '../screens';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -77,6 +79,8 @@ export function RootNavigator() {
       <Stack.Screen name="ChatLu" component={ChatLuScreen} options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="Planner" component={PlannerScreen} />
       <Stack.Screen name="ShoppingList" component={ShoppingListScreen} />
+      <Stack.Screen name="JourneySummary" component={JourneySummaryScreen} />
+      <Stack.Screen name="InviteFriends" component={InviteFriendsScreen} />
     </Stack.Navigator>
   );
 }

@@ -15,6 +15,7 @@ import { LuBtn } from '../components/LuBtn';
 import { Icon } from '../components/Icons';
 import { MealCard } from '../components/MealCard';
 import { useApp } from '../state/AppContext';
+import { Avatar } from '../components/Avatar';
 import { useFocusReplay } from '../utils/useFocusReplay';
 import type { RootStackParamList } from '../navigation/types';
 import { formatRelativeTime, type AppNotification } from '../data/notifications';
@@ -41,6 +42,7 @@ export const HomeScreen: React.FC = () => {
     unreadNotificationsCount,
     markAllNotificationsRead,
     markNotificationRead,
+    profilePhotoUri,
   } = useApp();
   const [notifOpen, setNotifOpen] = useState(false);
 
@@ -115,9 +117,7 @@ export const HomeScreen: React.FC = () => {
             onPress={() => nav.navigate('Tabs', { screen: 'Profile' } as never)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
           >
-            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: theme.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontFamily: FONT.headExtra, fontWeight: '800', fontSize: 14, color: theme.primaryDeep }}>LS</Text>
-            </View>
+            <Avatar uri={profilePhotoUri} initials="LS" size={38} />
             <View>
               <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted }}>Olá,</Text>
               <Text style={{ fontFamily: FONT.headExtra, fontSize: 16, fontWeight: '800', color: theme.text }}>Larissa</Text>
@@ -424,10 +424,21 @@ const StreakPill: React.FC<{ days: number }> = ({ days }) => {
   const labelOpacity = expand.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0, 1] });
 
   return (
-    <Pressable onPress={onPress} accessibilityLabel={`${days} dias consecutivos`}>
+    // Wrapper reserva apenas o tamanho COLAPSADO no flex layout do header.
+    // A pill expande VIA ABSOLUTE positioning sobre o avatar/nome à esquerda,
+    // sem empurrar a sineta nem o avatar/nome.
+    <Pressable
+      onPress={onPress}
+      accessibilityLabel={`${days} dias consecutivos`}
+      style={{ width: COLLAPSED_W, height: 32 }}
+    >
       <Animated.View
         style={{
+          position: 'absolute',
+          top: 0,
+          right: 0, // ancorada à direita, expande pra esquerda sobre o conteúdo
           width,
+          height: 32,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 4,

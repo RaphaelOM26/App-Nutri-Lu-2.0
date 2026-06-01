@@ -34,4 +34,8 @@ export type RootStackParamList = {
   ChatLu: undefined;
   Planner: undefined;
   ShoppingList: undefined;
+  // Resumo da jornada (compartilhável)
+  JourneySummary: undefined;
+  // Convidar amigos
+  InviteFriends: undefined;
 };
