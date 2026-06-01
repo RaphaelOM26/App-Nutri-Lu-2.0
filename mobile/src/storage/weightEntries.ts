@@ -31,48 +31,63 @@ export function newEntryId(): string {
   return `we_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-// ─── Seed inicial: 1 ano de pesagens semanais (jornada realista de emagrecimento) ──
-// Pessoa começou em ~92kg há 1 ano, perdeu até ~85kg com oscilações típicas
-// (plateaus, picos de fim-de-semana, recuperações). Útil pra testar o gráfico
-// em todos os períodos (7D / 30D / 90D / 1A / Tudo).
+// ─── Seed inicial: histórico realista de emagrecimento ──
+// Pessoa começou em ~92kg há 1 ano e está em ~84,8kg hoje.
+// Primeiros ~11 meses: pesagem semanal (uma entrada por semana).
+// Últimos 30 dias: pesagem DIÁRIA com flutuações típicas
+// (picos de água/sal, rebotes de fim de semana, tendência leve de queda).
 const DAY = 24 * 60 * 60 * 1000;
 
-function generateYearOfWeighIns(): WeightEntry[] {
+function generateSeedHistory(): WeightEntry[] {
   const out: WeightEntry[] = [];
-  const startKg = 92.0;
-  const endKg = 85.2;
-  const weeks = 52;
   const now = Date.now();
 
-  // Ruído determinístico por semana — sempre mesmo padrão entre re-renders
-  const noiseSeed = [
+  // ── Parte 1: 48 semanas atrás → 5 semanas atrás (pesagem semanal) ──
+  // De 92,0kg até ~86,2kg (perda gradual ao longo de ~11 meses)
+  const weeklyStartKg = 92.0;
+  const weeklyEndKg = 86.2;
+  const weeklyCount = 44; // 44 entradas semanais (cobrindo do mês 12 ao mês ~1)
+  const weeklyNoise = [
     +0.3, -0.4, +0.6, -0.2, -0.5, +0.4, -0.3, +0.7, -0.6, -0.2,
     +0.5, -0.4, +0.3, -0.7, +0.4, -0.3, +0.6, -0.5, -0.2, +0.3,
     -0.4, +0.5, -0.6, +0.3, -0.4, +0.7, -0.2, +0.4, -0.5, -0.3,
     +0.6, -0.4, +0.3, -0.5, +0.4, -0.6, +0.3, -0.2, +0.5, -0.4,
-    +0.3, -0.5, +0.6, -0.4, +0.3, -0.5, +0.4, -0.3, +0.5, -0.2,
-    +0.3, -0.4,
+    +0.3, -0.5, +0.4, -0.3,
   ];
-
-  for (let w = 0; w < weeks; w++) {
-    // Pesagem 1x por semana, na manhã do mesmo dia (ex: domingo)
-    const date = now - (weeks - 1 - w) * 7 * DAY;
-    // Tendência linear descendente + ruído ± até 0.7kg
-    const trendKg = startKg - ((startKg - endKg) * w) / (weeks - 1);
-    const kg = Math.round((trendKg + noiseSeed[w]) * 10) / 10;
+  for (let w = 0; w < weeklyCount; w++) {
+    // Semanal começa em -48 semanas e termina em -5 semanas
+    const weeksAgo = 48 - w;
+    const date = now - weeksAgo * 7 * DAY;
+    const trend = weeklyStartKg - ((weeklyStartKg - weeklyEndKg) * w) / (weeklyCount - 1);
+    const kg = Math.round((trend + weeklyNoise[w]) * 10) / 10;
     out.push({ id: `we_seed_w${w}`, date, kg });
   }
 
-  // Adiciona algumas pesagens extras nas últimas 2 semanas pra simular "registro mais frequente recente"
-  const recent = [
-    { id: 'we_seed_r1', date: now - 1 * DAY, kg: 85.2 },
-    { id: 'we_seed_r2', date: now - 3 * DAY, kg: 85.5 },
-    { id: 'we_seed_r3', date: now - 6 * DAY, kg: 85.6 },
-    { id: 'we_seed_r4', date: now - 8 * DAY, kg: 85.8 },
-    { id: 'we_seed_r5', date: now - 11 * DAY, kg: 85.9 },
+  // ── Parte 2: últimos 30 dias (pesagem DIÁRIA) ──
+  // De ~87,0kg (30 dias atrás) até 84,8kg (hoje) — perda de ~2,2kg no mês.
+  // Padrão realista com VARIAÇÕES MAIS FORTES pra estressar o layout do gráfico:
+  // picos de água/sal de fim de semana (+0,6 a +1,2kg), quedas pós-jejum,
+  // platôs de retenção e rebotes.
+  const dailyStartKg = 87.0;
+  const dailyEndKg = 84.8;
+  const dailyCount = 30;
+  // Ruído determinístico (kg) — picos maiores. Fim de semana costuma vir positivo.
+  const dailyNoise = [
+    +0.30, +0.80, +0.60, -0.20, -0.40, +0.70, +1.00,  // sem 1 (-29 a -23): pico de domingo
+    +0.30, -0.30, -0.50, -0.70, -0.30, +0.50, +0.90,  // sem 2 (-22 a -16): queda na semana, sobe sáb-dom
+    +0.20, -0.40, -0.80, -0.60, -0.20, +0.40, +0.70,  // sem 3 (-15 a -9): drop mais forte no meio
+    +0.10, -0.50, -0.90, -0.50, -0.10, +0.60, +0.80,  // sem 4 (-8 a -2): mínimo histórico no dia -24
+    +0.20, -0.40,                                      // últimos 2 (-1, hoje)
   ];
-  out.push(...recent);
+  for (let d = 0; d < dailyCount; d++) {
+    const daysAgo = dailyCount - 1 - d; // d=0 → 29 dias atrás; d=29 → hoje
+    const date = now - daysAgo * DAY;
+    const trend = dailyStartKg - ((dailyStartKg - dailyEndKg) * d) / (dailyCount - 1);
+    const kg = Math.round((trend + dailyNoise[d]) * 10) / 10;
+    out.push({ id: `we_seed_d${d}`, date, kg });
+  }
+
   return out.sort((a, b) => b.date - a.date);
 }
 
-export const SEED_WEIGHT_ENTRIES: WeightEntry[] = generateYearOfWeighIns();
+export const SEED_WEIGHT_ENTRIES: WeightEntry[] = generateSeedHistory();

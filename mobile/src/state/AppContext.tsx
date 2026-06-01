@@ -41,6 +41,35 @@ import {
   type WeightEntry,
 } from '../storage/weightEntries';
 import {
+  loadWeightGoal,
+  saveWeightGoal,
+  loadMacroTargets,
+  saveMacroTargets,
+  loadProfilePhoto,
+  saveProfilePhoto,
+  loadMealReminders,
+  saveMealReminders,
+  loadSilenceAll,
+  saveSilenceAll,
+  type MacroTargets,
+  type MealReminders,
+} from '../storage/userProfile';
+import {
+  loadProgressPhotos,
+  saveProgressPhotos,
+  newPhotoId,
+  buildSeedProgressPhotos,
+  type ProgressPhoto,
+} from '../storage/progressPhotos';
+import {
+  loadHabits,
+  saveHabits,
+  newHabitId,
+  dayKey,
+  SEED_HABITS,
+  type Habit,
+} from '../storage/habits';
+import {
   loadFavorites,
   saveFavorites,
   loadRecents,
@@ -112,6 +141,16 @@ type State = {
   shoppingList: ShoppingListItem[];
   weightEntries: WeightEntry[];
   weightGoalKg: number;
+  /** Fotos de progresso (antes/depois). Mais recente primeiro. Persistido. */
+  progressPhotos: ProgressPhoto[];
+  /** Hábitos do usuário com histórico e lembretes. Persistido. */
+  habits: Habit[];
+  /** URI local da foto de perfil. null = usa as iniciais. Persistido. */
+  profilePhotoUri: string | null;
+  /** Map mealId → enabled (lembrete por refeição). Persistido. */
+  mealReminders: MealReminders;
+  /** Silenciar TODAS as notificações (master switch). Persistido. */
+  silenceAllNotifications: boolean;
   // estado de loading da hidratação inicial do AsyncStorage
   hydrated: boolean;
   // Dia visualizado pelas telas com DateStrip (Home + Diary compartilham)
@@ -133,6 +172,19 @@ type Action =
   | { type: 'TOGGLE_SHOPPING_CHECKED'; id: string }
   | { type: 'TOGGLE_SHOPPING_PANTRY'; id: string }
   | { type: 'CLEAR_SHOPPING_LIST' }
+  | { type: 'SET_WEIGHT_GOAL'; kg: number }
+  | { type: 'SET_MACRO_TARGETS'; targets: MacroTargets }
+  | { type: 'SET_PROFILE_PHOTO'; uri: string | null }
+  | { type: 'SET_MEAL_REMINDERS'; cfg: MealReminders }
+  | { type: 'SET_SILENCE_ALL'; silenced: boolean }
+  | { type: 'SET_PROGRESS_PHOTOS'; photos: ProgressPhoto[] }
+  | { type: 'ADD_PROGRESS_PHOTO'; photo: ProgressPhoto }
+  | { type: 'REMOVE_PROGRESS_PHOTO'; id: string }
+  | { type: 'SET_HABITS'; habits: Habit[] }
+  | { type: 'ADD_HABIT'; habit: Habit }
+  | { type: 'UPDATE_HABIT'; id: string; patch: Partial<Pick<Habit, 'name' | 'reminderTime'>> }
+  | { type: 'REMOVE_HABIT'; id: string }
+  | { type: 'TOGGLE_HABIT_TODAY'; id: string; dayKey: string }
   | { type: 'SET_WEIGHT_ENTRIES'; entries: WeightEntry[] }
   | { type: 'ADD_WEIGHT_ENTRY'; entry: WeightEntry }
   | { type: 'REMOVE_WEIGHT_ENTRY'; id: string }
@@ -195,6 +247,11 @@ const INITIAL_STATE: State = {
   shoppingList: [],
   weightEntries: [],
   weightGoalKg: 82.0,
+  progressPhotos: [],
+  habits: [],
+  profilePhotoUri: null,
+  mealReminders: {},
+  silenceAllNotifications: false,
   hydrated: false,
   selectedDay: TODAY,
 };
@@ -334,6 +391,70 @@ function reducer(state: State, action: Action): State {
 
     case 'CLEAR_SHOPPING_LIST':
       return { ...state, shoppingList: [] };
+
+    case 'SET_WEIGHT_GOAL':
+      return { ...state, weightGoalKg: action.kg };
+
+    case 'SET_MACRO_TARGETS':
+      return {
+        ...state,
+        dailyMacros: {
+          kcal: { ...state.dailyMacros.kcal, target: action.targets.kcal },
+          p: { ...state.dailyMacros.p, target: action.targets.p },
+          c: { ...state.dailyMacros.c, target: action.targets.c },
+          f: { ...state.dailyMacros.f, target: action.targets.f },
+        },
+      };
+
+    case 'SET_PROFILE_PHOTO':
+      return { ...state, profilePhotoUri: action.uri };
+
+    case 'SET_MEAL_REMINDERS':
+      return { ...state, mealReminders: action.cfg };
+
+    case 'SET_SILENCE_ALL':
+      return { ...state, silenceAllNotifications: action.silenced };
+
+    case 'SET_PROGRESS_PHOTOS':
+      return { ...state, progressPhotos: action.photos };
+
+    case 'ADD_PROGRESS_PHOTO': {
+      const next = [action.photo, ...state.progressPhotos].sort((a, b) => b.date - a.date);
+      return { ...state, progressPhotos: next };
+    }
+
+    case 'REMOVE_PROGRESS_PHOTO':
+      return { ...state, progressPhotos: state.progressPhotos.filter((p) => p.id !== action.id) };
+
+    case 'SET_HABITS':
+      return { ...state, habits: action.habits };
+
+    case 'ADD_HABIT':
+      return { ...state, habits: [...state.habits, action.habit] };
+
+    case 'UPDATE_HABIT':
+      return {
+        ...state,
+        habits: state.habits.map((h) => (h.id === action.id ? { ...h, ...action.patch } : h)),
+      };
+
+    case 'REMOVE_HABIT':
+      return { ...state, habits: state.habits.filter((h) => h.id !== action.id) };
+
+    case 'TOGGLE_HABIT_TODAY':
+      return {
+        ...state,
+        habits: state.habits.map((h) => {
+          if (h.id !== action.id) return h;
+          const isDone = h.completedDays.includes(action.dayKey);
+          return {
+            ...h,
+            completedDays: isDone
+              ? h.completedDays.filter((k) => k !== action.dayKey)
+              : [...h.completedDays, action.dayKey],
+          };
+        }),
+      };
 
     case 'SET_WEIGHT_ENTRIES':
       return { ...state, weightEntries: action.entries };
@@ -540,6 +661,17 @@ type AppContextValue = State & {
   // Weight tracking
   addWeightEntry: (kg: number, date?: number) => void;
   removeWeightEntry: (id: string) => void;
+  setWeightGoal: (kg: number) => void;
+  setMacroTargets: (targets: MacroTargets) => void;
+  setProfilePhoto: (uri: string | null) => void;
+  setMealReminders: (cfg: MealReminders) => void;
+  setSilenceAllNotifications: (silenced: boolean) => void;
+  addProgressPhoto: (uri: string, weightKg?: number) => void;
+  removeProgressPhoto: (id: string) => void;
+  addHabit: (name: string, reminderTime?: string) => Habit;
+  updateHabit: (id: string, patch: Partial<Pick<Habit, 'name' | 'reminderTime'>>) => void;
+  removeHabit: (id: string) => void;
+  toggleHabitToday: (id: string) => void;
   // Favoritos e recentes de alimentos
   toggleFavoriteFood: (id: string) => void;
   addRecentFood: (id: string) => void;
@@ -593,7 +725,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const [recipes, list, weights, favs, recents, readNotifs, completed, favRecipes, recentRecipes, cols, pantry, mealsCfg] = await Promise.all([
+        const [recipes, list, weights, favs, recents, readNotifs, completed, favRecipes, recentRecipes, cols, pantry, mealsCfg, weightGoal, photos, habits, macroTargets, profilePhoto, mealReminders, silenceAll] = await Promise.all([
           loadRecipes(),
           loadShoppingList(),
           loadWeightEntries(),
@@ -606,6 +738,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           loadCollections(),
           loadPantry(),
           loadMealsConfig(),
+          loadWeightGoal(),
+          loadProgressPhotos(),
+          loadHabits(),
+          loadMacroTargets(),
+          loadProfilePhoto(),
+          loadMealReminders(),
+          loadSilenceAll(),
         ]);
         dispatch({ type: 'SET_SAVED_RECIPES', recipes });
         dispatch({ type: 'SET_SHOPPING_LIST', items: list });
@@ -623,6 +762,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (mealsCfg && mealsCfg.length > 0) {
           dispatch({ type: 'SET_MEALS', meals: mealsCfg });
         }
+        if (weightGoal != null) {
+          dispatch({ type: 'SET_WEIGHT_GOAL', kg: weightGoal });
+        }
+        // Se nunca tiver fotos persistidas, semeia com 2 mock pra demo
+        dispatch({ type: 'SET_PROGRESS_PHOTOS', photos: photos.length > 0 ? photos : buildSeedProgressPhotos() });
+        // Se nunca tiver hábitos, semeia com 4 de exemplo. Senão usa o que persistiu.
+        dispatch({ type: 'SET_HABITS', habits: habits.length > 0 ? habits : SEED_HABITS });
+        if (macroTargets) {
+          dispatch({ type: 'SET_MACRO_TARGETS', targets: macroTargets });
+        }
+        if (profilePhoto) {
+          dispatch({ type: 'SET_PROFILE_PHOTO', uri: profilePhoto });
+        }
+        dispatch({ type: 'SET_MEAL_REMINDERS', cfg: mealReminders });
+        dispatch({ type: 'SET_SILENCE_ALL', silenced: silenceAll });
       } catch (err) {
         console.warn('[app] falha ao hidratar:', err);
       } finally {
@@ -646,6 +800,65 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.warn('[app] falha ao persistir pesagens:', err),
     );
   }, [state.weightEntries, state.hydrated]);
+
+  // Persistência: meta de peso
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveWeightGoal(state.weightGoalKg).catch((err) =>
+      console.warn('[app] falha ao persistir meta de peso:', err),
+    );
+  }, [state.weightGoalKg, state.hydrated]);
+
+  // Persistência: targets de macros (kcal/p/c/f)
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveMacroTargets({
+      kcal: state.dailyMacros.kcal.target,
+      p: state.dailyMacros.p.target,
+      c: state.dailyMacros.c.target,
+      f: state.dailyMacros.f.target,
+    }).catch((err) => console.warn('[app] falha ao persistir macro targets:', err));
+  }, [state.dailyMacros.kcal.target, state.dailyMacros.p.target, state.dailyMacros.c.target, state.dailyMacros.f.target, state.hydrated]);
+
+  // Persistência: fotos de progresso
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveProgressPhotos(state.progressPhotos).catch((err) =>
+      console.warn('[app] falha ao persistir fotos:', err),
+    );
+  }, [state.progressPhotos, state.hydrated]);
+
+  // Persistência: hábitos
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveHabits(state.habits).catch((err) =>
+      console.warn('[app] falha ao persistir hábitos:', err),
+    );
+  }, [state.habits, state.hydrated]);
+
+  // Persistência: foto de perfil
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveProfilePhoto(state.profilePhotoUri).catch((err) =>
+      console.warn('[app] falha ao persistir foto de perfil:', err),
+    );
+  }, [state.profilePhotoUri, state.hydrated]);
+
+  // Persistência: lembretes de refeições
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveMealReminders(state.mealReminders).catch((err) =>
+      console.warn('[app] falha ao persistir meal reminders:', err),
+    );
+  }, [state.mealReminders, state.hydrated]);
+
+  // Persistência: silenciar tudo
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveSilenceAll(state.silenceAllNotifications).catch((err) =>
+      console.warn('[app] falha ao persistir silenceAll:', err),
+    );
+  }, [state.silenceAllNotifications, state.hydrated]);
 
   // Persistência: favoritos e recentes
   useEffect(() => {
@@ -739,6 +952,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addWeightEntry: (kg, date) =>
       dispatch({ type: 'ADD_WEIGHT_ENTRY', entry: { id: newEntryId(), date: date ?? Date.now(), kg } }),
     removeWeightEntry: (id) => dispatch({ type: 'REMOVE_WEIGHT_ENTRY', id }),
+    setWeightGoal: (kg) => dispatch({ type: 'SET_WEIGHT_GOAL', kg }),
+    setMacroTargets: (targets) => dispatch({ type: 'SET_MACRO_TARGETS', targets }),
+    setProfilePhoto: (uri) => dispatch({ type: 'SET_PROFILE_PHOTO', uri }),
+    setMealReminders: (cfg) => dispatch({ type: 'SET_MEAL_REMINDERS', cfg }),
+    setSilenceAllNotifications: (silenced) => dispatch({ type: 'SET_SILENCE_ALL', silenced }),
+    addProgressPhoto: (uri, weightKg) =>
+      dispatch({ type: 'ADD_PROGRESS_PHOTO', photo: { id: newPhotoId(), date: Date.now(), uri, weightKg } }),
+    removeProgressPhoto: (id) => dispatch({ type: 'REMOVE_PROGRESS_PHOTO', id }),
+    addHabit: (name, reminderTime) => {
+      const habit: Habit = { id: newHabitId(), name, reminderTime, completedDays: [] };
+      dispatch({ type: 'ADD_HABIT', habit });
+      return habit;
+    },
+    updateHabit: (id, patch) => dispatch({ type: 'UPDATE_HABIT', id, patch }),
+    removeHabit: (id) => dispatch({ type: 'REMOVE_HABIT', id }),
+    toggleHabitToday: (id) => dispatch({ type: 'TOGGLE_HABIT_TODAY', id, dayKey: dayKey() }),
     toggleFavoriteFood: (id) => dispatch({ type: 'TOGGLE_FAVORITE_FOOD', id }),
     addRecentFood: (id) => dispatch({ type: 'ADD_RECENT_FOOD', id }),
     toggleFavoriteRecipe: (id) => dispatch({ type: 'TOGGLE_FAVORITE_RECIPE', id }),
