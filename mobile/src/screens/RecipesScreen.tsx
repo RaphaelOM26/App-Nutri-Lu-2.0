@@ -25,7 +25,8 @@ import type { SavedRecipe } from '../storage/recipes';
 import type { RecipeCollection } from '../storage/collections';
 import { daysUntilExpiry, type PantryItem } from '../storage/pantry';
 import { categorize } from '../storage/shoppingList';
-import { estimateRecipeMacros } from '../utils/recipeMacros';
+import { estimateRecipeMacros, pickRecipesForRemainingMacros, type RecipeFitCandidate } from '../utils/recipeMacros';
+import { SEED_RECIPES } from '../data/seedRecipes';
 import type { Recipe, Food } from '../data/mockData';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -227,20 +228,38 @@ export const RecipesScreen: React.FC = () => {
   );
 };
 
-// ─── Modal: sugestão da Lu (resposta do /chat) ─────────────────
-const LuSuggestionModal: React.FC<{
+// ─── Modal: sugestão da Lu (receita real + explicação) ─────────
+type LuModalProps = {
   visible: boolean;
   onClose: () => void;
   loading: boolean;
-  suggestion: string | null;
+  candidate: RecipeFitCandidate | null;
+  explanation: string | null;
+  remaining: { kcal: number; p: number; c: number; f: number };
+  noCandidates: boolean;
   onRetry: () => void;
+  onOpenRecipe: () => void;
   onOpenChat: () => void;
-}> = ({ visible, onClose, loading, suggestion, onRetry, onOpenChat }) => {
+};
+
+const LuSuggestionModal: React.FC<LuModalProps> = ({
+  visible,
+  onClose,
+  loading,
+  candidate,
+  explanation,
+  remaining,
+  noCandidates,
+  onRetry,
+  onOpenRecipe,
+  onOpenChat,
+}) => {
   const theme = useTheme();
+  const per = candidate?.perServing;
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
-        <View style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 14, maxHeight: '75%' }}>
+        <View style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 14, maxHeight: '85%' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Icon.sparkle size={18} color={theme.primaryDeep} stroke={2} />
@@ -248,37 +267,140 @@ const LuSuggestionModal: React.FC<{
             </View>
             <IconBtn icon={Icon.close} size={32} onPress={onClose} />
           </View>
-          <ScrollView style={{ maxHeight: 340 }}>
-            {loading ? (
-              <View style={{ paddingVertical: 30, alignItems: 'center', gap: 10 }}>
-                <ActivityIndicator size="small" color={theme.primary} />
-                <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted }}>Lu está pensando…</Text>
-              </View>
-            ) : suggestion ? (
-              <MarkdownText text={suggestion} />
-            ) : (
+
+          <ScrollView style={{ maxHeight: 480 }} contentContainerStyle={{ gap: 14 }}>
+            {/* Card visual da receita */}
+            {candidate ? (
+              <Pressable onPress={onOpenRecipe}>
+                <Card pad={0} radius={18} style={{ overflow: 'hidden' }}>
+                  <View style={{ position: 'relative' }}>
+                    <FoodImg q={candidate.recipe.q} w="100%" h={150} style={{ borderRadius: 0 }} />
+                    <View
+                      style={{
+                        position: 'absolute',
+                        bottom: 10,
+                        left: 10,
+                        backgroundColor: 'rgba(0,0,0,0.55)',
+                        paddingVertical: 3,
+                        paddingHorizontal: 8,
+                        borderRadius: 100,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <Icon.clock size={10} color="#fff" stroke={2} />
+                      <Text style={{ fontFamily: FONT.body, fontSize: 10, fontWeight: '700', color: '#fff' }}>
+                        {candidate.recipe.time}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        backgroundColor: theme.primaryDeep,
+                        paddingVertical: 3,
+                        paddingHorizontal: 8,
+                        borderRadius: 100,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <Icon.sparkle size={10} color="#fff" stroke={2} />
+                      <Text style={{ fontFamily: FONT.body, fontSize: 10, fontWeight: '800', color: '#fff', letterSpacing: 0.4 }}>
+                        ENCAIXA NO DIA
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={{ padding: 14, gap: 8 }}>
+                    <Text style={{ fontFamily: FONT.head, fontSize: 16, fontWeight: '800', color: theme.text }} numberOfLines={2}>
+                      {candidate.recipe.name}
+                    </Text>
+                    {per && (
+                      <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                        <MacroPill label={`${per.kcal} kcal`} color={theme.text} bg={theme.bgSubtle} />
+                        <MacroPill label={`P ${per.p}g`} color={theme.proteinPink} bg="#FBE9EC" />
+                        <MacroPill label={`C ${per.c}g`} color="#B07A1E" bg="#F8ECD7" />
+                        <MacroPill label={`G ${per.f}g`} color="#5C8C5A" bg="#E6F0E4" />
+                      </View>
+                    )}
+                    <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textFaint }}>
+                      por porção · {candidate.recipe.tag}
+                    </Text>
+                  </View>
+                </Card>
+              </Pressable>
+            ) : noCandidates ? (
               <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, padding: 20, textAlign: 'center' }}>
-                Sem sugestão ainda.
+                Não achei receita que encaixasse bem nos macros restantes. Tente conversar com a Lu pra outras ideias.
               </Text>
+            ) : null}
+
+            {/* Explicação da Lu */}
+            {candidate && (
+              <View style={{ gap: 6 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Icon.sparkle size={12} color={theme.primaryDeep} stroke={2} />
+                  <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.primaryDeep, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                    Por que essa receita
+                  </Text>
+                </View>
+                {loading ? (
+                  <View style={{ paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <ActivityIndicator size="small" color={theme.primary} />
+                    <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted }}>Lu está pensando…</Text>
+                  </View>
+                ) : explanation ? (
+                  <MarkdownText style={{ fontFamily: FONT.body, fontSize: 14, color: theme.text, lineHeight: 20 }}>
+                    {explanation}
+                  </MarkdownText>
+                ) : (
+                  <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted }}>
+                    Encaixa bem nos {remaining.kcal} kcal restantes ({remaining.p}g de proteína).
+                  </Text>
+                )}
+              </View>
             )}
           </ScrollView>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <View style={{ flex: 1 }}>
-              <Btn variant="outline" size="md" icon={Icon.sparkle} onPress={onRetry} disabled={loading} full>
-                Outra ideia
-              </Btn>
+
+          {candidate ? (
+            <View style={{ gap: 8 }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Btn variant="outline" size="md" icon={Icon.sparkle} onPress={onRetry} disabled={loading} full>
+                    Outra ideia
+                  </Btn>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Btn variant="primary" size="md" icon={Icon.send} onPress={onOpenRecipe} full>
+                    Ver receita
+                  </Btn>
+                </View>
+              </View>
+              <Pressable onPress={onOpenChat} style={{ alignItems: 'center', paddingVertical: 4 }}>
+                <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.primaryDeep, fontWeight: '700' }}>
+                  Conversar com Lu →
+                </Text>
+              </Pressable>
             </View>
-            <View style={{ flex: 1 }}>
-              <Btn variant="primary" size="md" icon={Icon.send} onPress={onOpenChat} full>
-                Conversar
-              </Btn>
-            </View>
-          </View>
+          ) : (
+            <Btn variant="primary" size="md" icon={Icon.send} onPress={onOpenChat} full>
+              Conversar com Lu
+            </Btn>
+          )}
         </View>
       </View>
     </Modal>
   );
 };
+
+const MacroPill: React.FC<{ label: string; color: string; bg: string }> = ({ label, color, bg }) => (
+  <View style={{ backgroundColor: bg, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 100 }}>
+    <Text style={{ fontFamily: FONT.body, fontSize: 11, fontWeight: '700', color }}>{label}</Text>
+  </View>
+);
 
 const MenuItem: React.FC<{ icon: React.FC<{ size?: number; color?: string; stroke?: number }>; title: string; subtitle: string; onPress: () => void }> = ({ icon: IconC, title, subtitle, onPress }) => {
   const theme = useTheme();
@@ -662,40 +784,82 @@ type DiscoverProps = {
 
 const DiscoverRecipes: React.FC<DiscoverProps> = ({ recipes, onOpen, onOpenLuChat, onOpenLuRecipes }) => {
   const theme = useTheme();
-  const { displayedMacros, water } = useApp();
+  const { displayedMacros, water, foodDB } = useApp();
   const toast = useToast();
   const [suggestOpen, setSuggestOpen] = useState(false);
-  const [suggestion, setSuggestion] = useState<string | null>(null);
-  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
+  const [candidates, setCandidates] = useState<RecipeFitCandidate[]>([]);
+  const [cursor, setCursor] = useState(0);
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const explanationCache = useRef<Record<string, string>>({});
 
-  const askLuForSuggestion = async () => {
-    setSuggestOpen(true);
-    if (suggestion) return; // já tem cacheado, só reabre
-    setLoadingSuggestion(true);
+  const remaining = useMemo(() => ({
+    kcal: Math.max(0, displayedMacros.kcal.target - displayedMacros.kcal.value),
+    p: Math.max(0, displayedMacros.p.target - displayedMacros.p.value),
+    c: Math.max(0, displayedMacros.c.target - displayedMacros.c.value),
+    f: Math.max(0, displayedMacros.f.target - displayedMacros.f.value),
+  }), [displayedMacros]);
+
+  const fetchExplanation = async (cand: RecipeFitCandidate) => {
+    const cacheKey = cand.recipe.id;
+    if (explanationCache.current[cacheKey]) {
+      setExplanation(explanationCache.current[cacheKey]);
+      return;
+    }
+    setLoadingExplanation(true);
+    setExplanation(null);
     try {
-      const remainingP = Math.max(0, displayedMacros.p.target - displayedMacros.p.value);
-      const remainingC = Math.max(0, displayedMacros.c.target - displayedMacros.c.value);
-      const remainingF = Math.max(0, displayedMacros.f.target - displayedMacros.f.value);
-      const remainingK = Math.max(0, displayedMacros.kcal.target - displayedMacros.kcal.value);
+      const per = cand.perServing;
       const userMsg: ChatMessage = {
         role: 'user',
-        text: `Pra fechar minha meta hoje me faltam ~${remainingK} kcal (${remainingP}g proteína, ${remainingC}g carbo, ${remainingF}g gordura). Sugira 2 ideias de prato curtas e práticas, com **negrito** nos nomes. Sem ingredientes detalhados — só o conceito.`,
+        text:
+          `Pra fechar minha meta hoje me faltam ~${remaining.kcal} kcal (${remaining.p}g proteína, ${remaining.c}g carbo, ${remaining.f}g gordura).\n\n` +
+          `Receita escolhida: **${cand.recipe.name}** — uma porção tem aproximadamente ${per.kcal} kcal, ${per.p}g de proteína, ${per.c}g de carbo e ${per.f}g de gordura.\n\n` +
+          `Em 2-3 frases curtas, explique por que essa receita encaixa bem no que me falta hoje. Compare os números de forma direta (ex.: "supre Xg da proteína que falta"). Não invente ingredientes — só compare os macros. Sem listar a receita.`,
       };
-      const { reply } = await chatWithLu([userMsg], {
-        macros: displayedMacros,
-        water,
-      });
-      setSuggestion(reply);
+      const { reply } = await chatWithLu([userMsg], { macros: displayedMacros, water });
+      const txt = (reply || '').trim();
+      if (txt) explanationCache.current[cacheKey] = txt;
+      setExplanation(txt || null);
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : 'Erro ao falar com a Lu';
+      const msg = err instanceof ApiError ? err.message : 'Não consegui falar com a Lu agora.';
       toast(msg, 'error');
-      setSuggestOpen(false);
+      setExplanation(null);
     } finally {
-      setLoadingSuggestion(false);
+      setLoadingExplanation(false);
     }
   };
 
-  const remainingK = Math.max(0, displayedMacros.kcal.target - displayedMacros.kcal.value);
+  const askLuForSuggestion = () => {
+    setSuggestOpen(true);
+    // Sempre recomputa candidatos quando abre (macros podem ter mudado)
+    const top = pickRecipesForRemainingMacros(SEED_RECIPES, remaining, foodDB, 6);
+    setCandidates(top);
+    setCursor(0);
+    if (top.length > 0) {
+      fetchExplanation(top[0]);
+    } else {
+      setExplanation(null);
+    }
+  };
+
+  const cycleNext = () => {
+    if (candidates.length < 2) return;
+    const next = (cursor + 1) % candidates.length;
+    setCursor(next);
+    fetchExplanation(candidates[next]);
+  };
+
+  const currentCandidate = candidates[cursor] || null;
+
+  const onOpenRecipeFromModal = () => {
+    if (!currentCandidate) return;
+    setSuggestOpen(false);
+    // SeedRecipe é compatível com Recipe (mesmos campos base) + extras ignorados pelo nav.
+    onOpen(currentCandidate.recipe.id, { recipe: currentCandidate.recipe as Recipe });
+  };
+
+  const remainingK = remaining.kcal;
 
   return (
     <View>
@@ -715,7 +879,7 @@ const DiscoverRecipes: React.FC<DiscoverProps> = ({ recipes, onOpen, onOpenLuCha
               </Text>
               <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, marginTop: 4 }}>
                 {remainingK > 0
-                  ? `Faltam ~${remainingK} kcal — toque pra Lu sugerir 2 ideias`
+                  ? `Faltam ~${remainingK} kcal — toque pra ver a receita que melhor encaixa`
                   : 'Você já atingiu sua meta — toque pra ver opções leves'}
               </Text>
             </View>
@@ -726,9 +890,13 @@ const DiscoverRecipes: React.FC<DiscoverProps> = ({ recipes, onOpen, onOpenLuCha
       <LuSuggestionModal
         visible={suggestOpen}
         onClose={() => setSuggestOpen(false)}
-        loading={loadingSuggestion}
-        suggestion={suggestion}
-        onRetry={() => { setSuggestion(null); askLuForSuggestion(); }}
+        loading={loadingExplanation}
+        candidate={currentCandidate}
+        explanation={explanation}
+        remaining={remaining}
+        noCandidates={candidates.length === 0}
+        onRetry={cycleNext}
+        onOpenRecipe={onOpenRecipeFromModal}
         onOpenChat={() => { setSuggestOpen(false); onOpenLuChat(); }}
       />
 

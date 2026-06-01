@@ -23,9 +23,6 @@ type Props = {
 };
 
 const MONTHS_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-const MONTH = TODAY_MONTH;
-const YEAR = TODAY_YEAR;
-const MONTH_NAME = `${MONTHS_PT[MONTH - 1]} ${YEAR}`;
 // Semana começa na segunda (padrão BR). Dom no fim.
 const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 const TARGETS = { kcal: 2200, p: 135, c: 240, f: 70 };
@@ -56,6 +53,16 @@ export const MonthCalendar: React.FC<Props> = ({ visible, onClose, today, todayK
   const theme = useTheme();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [metric, setMetric] = useState<Metric>('kcal');
+  // offset 0 = mês atual; -1 = mês anterior; etc. Não permite ir pro futuro.
+  const [offset, setOffset] = useState(0);
+
+  // Calcula mês/ano visível a partir do offset, baseado no TODAY do AppContext.
+  // Lida com virada de ano (offset positivo seria futuro — bloqueamos isso).
+  const totalMonths = (TODAY_YEAR * 12 + (TODAY_MONTH - 1)) + offset;
+  const YEAR = Math.floor(totalMonths / 12);
+  const MONTH = (totalMonths % 12) + 1;
+  const MONTH_NAME = `${MONTHS_PT[MONTH - 1]} ${YEAR}`;
+  const isCurrentMonth = offset === 0;
 
   const palette = HEATMAP_PALETTE[metric];
 
@@ -87,10 +94,11 @@ export const MonthCalendar: React.FC<Props> = ({ visible, onClose, today, todayK
   const monthSummaries = getMonthSummaries(MONTH, YEAR);
   const daysInMonth = monthSummaries.length;
 
-  // Sobrescreve o dia "hoje" com os dados reais do state
+  // Sobrescreve o dia "hoje" com os dados reais do state — só vale se está
+  // visualizando o mês corrente (em meses passados o "today" não se aplica).
   const summaries = monthSummaries.map((s, i) => {
     const day = i + 1;
-    if (day === today) {
+    if (isCurrentMonth && day === today) {
       return {
         day, month: MONTH, year: YEAR,
         kcal: todayKcal, kcalTarget: TARGETS.kcal,
@@ -134,6 +142,28 @@ export const MonthCalendar: React.FC<Props> = ({ visible, onClose, today, todayK
             <IconBtn icon={Icon.close} size={32} onPress={onClose} />
           </View>
 
+          {/* Navegação entre meses */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
+            <Pressable
+              onPress={() => { setOffset((o) => o - 1); setSelectedDay(null); }}
+              hitSlop={10}
+              style={{ width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Icon.back size={18} color={theme.text} stroke={2} />
+            </Pressable>
+            <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, fontWeight: '600' }}>
+              {isCurrentMonth ? 'Mês atual' : `${-offset} ${-offset === 1 ? 'mês atrás' : 'meses atrás'}`}
+            </Text>
+            <Pressable
+              onPress={() => { if (offset < 0) { setOffset((o) => o + 1); setSelectedDay(null); } }}
+              hitSlop={10}
+              disabled={offset >= 0}
+              style={{ width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Icon.forward size={18} color={offset >= 0 ? theme.textFaint : theme.text} stroke={2} />
+            </Pressable>
+          </View>
+
           {/* Toggle de métrica */}
           <View style={{ flexDirection: 'row', gap: 6, backgroundColor: theme.bgElev, padding: 4, borderRadius: 12 }}>
             {(['kcal', 'p', 'c', 'f'] as Metric[]).map((m) => {
@@ -175,8 +205,9 @@ export const MonthCalendar: React.FC<Props> = ({ visible, onClose, today, todayK
               <View key={rowIdx} style={{ flexDirection: 'row', gap: 4 }}>
                 {cells.slice(rowIdx * 7, rowIdx * 7 + 7).map((cell, colIdx) => {
                   if (cell.day === null) return <View key={colIdx} style={{ flex: 1, aspectRatio: 1 }} />;
-                  const isFuture = cell.day > today;
-                  const isToday = cell.day === today;
+                  // "Future" só faz sentido no mês corrente — em meses passados todo dia já existiu
+                  const isFuture = isCurrentMonth && cell.day > today;
+                  const isToday = isCurrentMonth && cell.day === today;
                   const m = pickMetric(cell.summary);
                   const bucket = adherenceBucket(m.consumed, m.target);
                   const bg = isFuture ? 'transparent' : colorFor(bucket);

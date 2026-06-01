@@ -5,6 +5,7 @@
 
 import type { Food } from '../data/mockData';
 import type { Ingredient } from '../api/client';
+import type { SeedRecipe } from '../data/seedRecipes';
 
 export type EstimatedMacros = {
   kcal: number;
@@ -105,4 +106,58 @@ export function estimateRecipeMacros(ingredients: Ingredient[], foodDB: Food[]):
     matchedCount: matched,
     totalCount: ingredients.length,
   };
+}
+
+// ─── Sugestão de receita por macros restantes ───────────────────
+
+export type RecipeFitCandidate = {
+  recipe: SeedRecipe;
+  perServing: { kcal: number; p: number; c: number; f: number };
+  /** Score: quanto MENOR, melhor o encaixe. */
+  score: number;
+};
+
+/**
+ * Ranqueia receitas pela proximidade aos macros que faltam no dia.
+ * Heurística (lower=better):
+ *  - Penaliza estourar kcal/macros (peso 3x).
+ *  - Recompensa proteína próxima ao restante (peso 2x — é o macro mais "caro").
+ *  - Penaliza receitas com matchRatio baixo no foodDB.
+ *  - Filtra porções fora da faixa razoável (60-900 kcal).
+ */
+export function pickRecipesForRemainingMacros(
+  recipes: SeedRecipe[],
+  remaining: { kcal: number; p: number; c: number; f: number },
+  foodDB: Food[],
+  topN = 5,
+): RecipeFitCandidate[] {
+  const targetK = Math.max(80, Math.min(remaining.kcal, 700));
+  const targetP = Math.max(8, Math.min(remaining.p, 40));
+
+  const scored: RecipeFitCandidate[] = [];
+  for (const r of recipes) {
+    if (!r.ingredients || r.ingredients.length === 0) continue;
+    const est = estimateRecipeMacros(r.ingredients, foodDB);
+    if (est.matchRatio < 0.3) continue;
+    const servings = r.servings || 1;
+    const per = {
+      kcal: Math.round(est.kcal / servings),
+      p: Math.round(est.p / servings),
+      c: Math.round(est.c / servings),
+      f: Math.round(est.f / servings),
+    };
+    if (per.kcal < 60 || per.kcal > 900) continue;
+
+    const fitK = Math.abs(per.kcal - targetK);
+    const fitP = Math.abs(per.p - targetP) * 2;
+    const overK = Math.max(0, per.kcal - remaining.kcal) * 2;
+    const overP = Math.max(0, per.p - remaining.p);
+    const overC = Math.max(0, per.c - remaining.c) * 0.5;
+    const overF = Math.max(0, per.f - remaining.f) * 1.5;
+    const matchBonus = (1 - est.matchRatio) * 40;
+    const score = fitK + fitP + overK + overP + overC + overF + matchBonus;
+    scored.push({ recipe: r, perServing: per, score });
+  }
+  scored.sort((a, b) => a.score - b.score);
+  return scored.slice(0, topN);
 }

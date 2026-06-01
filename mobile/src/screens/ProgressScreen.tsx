@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, View, Text, ScrollView, Pressable, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 import Svg, { Polyline, Polygon, Path, Circle as SCircle, Line as SLine, Rect as SRect } from 'react-native-svg';
 import { useTheme, FONT } from '../theme';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -16,6 +17,20 @@ import { Chip } from '../components/Chip';
 import { Icon } from '../components/Icons';
 import { FoodImg } from '../components/FoodImg';
 import { AddWeightModal } from '../components/AddWeightModal';
+import { ProgressMenuSheet } from '../components/ProgressMenuSheet';
+import { EditWeightGoalModal } from '../components/EditWeightGoalModal';
+import { NotificationsModal } from '../components/NotificationsModal';
+import { ShareJourneyModal } from '../components/ShareJourneyModal';
+import { WeightCalendarModal } from '../components/WeightCalendarModal';
+import { MonthCalendar } from '../components/MonthCalendar';
+import { EditHabitModal } from '../components/EditHabitModal';
+import { calcStreak, dayKey, type Habit } from '../storage/habits';
+import {
+  requestNotificationPermission,
+  scheduleNamedDailyReminder,
+  cancelNamedReminder,
+  habitNotifId,
+} from '../utils/notifications';
 import { useApp, type WeightEntry } from '../state/AppContext';
 import { useToast } from '../state/ToastContext';
 import { useFocusReplay } from '../utils/useFocusReplay';
@@ -26,22 +41,29 @@ const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
 const AnimatedCircle = Animated.createAnimatedComponent(SCircle);
 
 type TabId = 'weight' | 'macros' | 'photos' | 'habits';
-type Period = '7D' | '30D' | '90D' | '1A' | 'Tudo';
+type Period = '7D' | '30D';
 
-const PERIOD_DAYS: Record<Period, number | null> = {
+const PERIOD_DAYS: Record<Period, number> = {
   '7D': 7,
   '30D': 30,
-  '90D': 90,
-  '1A': 365,
-  Tudo: null,
 };
 
 export const ProgressScreen: React.FC = () => {
   const theme = useTheme();
   const nav = useNavigation<any>();
   const replayKey = useFocusReplay();
+  const { weightGoalKg, setWeightGoal, setMacroTargets, displayedMacros } = useApp();
   const [tab, setTab] = useState<TabId>('weight');
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editGoalOpen, setEditGoalOpen] = useState(false);
+  const [remindersOpen, setRemindersOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  // O calendário é contextual: na tab Peso mostra dias com pesagem,
+  // nas tabs Macros/Fotos/Hábitos abre o MonthCalendar de aderência de macros.
+  const onOpenCalendar = () => setCalendarOpen(true);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
@@ -50,8 +72,8 @@ export const ProgressScreen: React.FC = () => {
         large
         right={[
           <LuBtn key="lu" onPress={() => nav.navigate('ChatLu')} />,
-          <IconBtn key="cal" icon={Icon.calendar} />,
-          <IconBtn key="more" icon={Icon.more} />,
+          <IconBtn key="cal" icon={Icon.calendar} onPress={onOpenCalendar} />,
+          <IconBtn key="more" icon={Icon.more} onPress={() => setMenuOpen(true)} />,
         ]}
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 130 }}>
@@ -84,6 +106,43 @@ export const ProgressScreen: React.FC = () => {
       </ScrollView>
 
       <AchievementsModal visible={achievementsOpen} onClose={() => setAchievementsOpen(false)} />
+      <ProgressMenuSheet
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onEditGoal={() => setEditGoalOpen(true)}
+        onReminders={() => setRemindersOpen(true)}
+        onShare={() => setShareOpen(true)}
+      />
+      <EditWeightGoalModal
+        visible={editGoalOpen}
+        onClose={() => setEditGoalOpen(false)}
+        currentKg={weightGoalKg}
+        currentTargets={{
+          kcal: displayedMacros.kcal.target,
+          p: displayedMacros.p.target,
+          c: displayedMacros.c.target,
+          f: displayedMacros.f.target,
+        }}
+        onSave={({ kg, targets }) => {
+          setWeightGoal(kg);
+          setMacroTargets(targets);
+        }}
+      />
+      <NotificationsModal visible={remindersOpen} onClose={() => setRemindersOpen(false)} />
+      <ShareJourneyModal visible={shareOpen} onClose={() => setShareOpen(false)} />
+      {tab === 'weight' ? (
+        <WeightCalendarModal visible={calendarOpen} onClose={() => setCalendarOpen(false)} />
+      ) : (
+        <MonthCalendar
+          visible={calendarOpen}
+          onClose={() => setCalendarOpen(false)}
+          today={new Date().getDate()}
+          todayKcal={displayedMacros.kcal.value}
+          todayP={displayedMacros.p.value}
+          todayC={displayedMacros.c.value}
+          todayF={displayedMacros.f.value}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -259,13 +318,63 @@ const AchievementsCard: React.FC<{ onPress?: () => void }> = ({ onPress }) => {
   );
 };
 
+// ─── Cell de stat embaixo do gráfico de peso (estilo macros legenda) ──
+const WeightStat: React.FC<{
+  color: string;
+  label: string;
+  big: string;
+  bigSuffix?: string;
+  sub: string;
+  tone?: 'good' | 'warn' | 'goal';
+}> = ({ color, label, big, bigSuffix, sub, tone }) => {
+  const theme = useTheme();
+  const subColor =
+    tone === 'warn' ? theme.warningDeep :
+    tone === 'goal' || tone === 'good' ? theme.primaryDeep :
+    theme.textMuted;
+  const bigColor = tone === 'warn' ? theme.warningDeep : theme.text;
+  return (
+    <View style={{ flex: 1, alignItems: 'center' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
+        <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, fontWeight: '600' }}>
+          {label}
+        </Text>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 4 }}>
+        <Text style={{ fontFamily: FONT.headExtra, fontSize: 20, fontWeight: '800', color: bigColor, letterSpacing: -0.3 }}>
+          {big}
+        </Text>
+        {bigSuffix && (
+          <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, fontWeight: '700', marginLeft: 2 }}>
+            {bigSuffix}
+          </Text>
+        )}
+      </View>
+      <Text
+        style={{
+          fontFamily: FONT.body,
+          fontSize: 9,
+          fontWeight: '700',
+          color: subColor,
+          textTransform: 'uppercase',
+          letterSpacing: 0.4,
+          marginTop: 1,
+        }}
+      >
+        {sub}
+      </Text>
+    </View>
+  );
+};
+
 // ─── WEIGHT TAB ──────────────────────────────────────────────────
 const WeightTab: React.FC = () => {
   const theme = useTheme();
   const { weightEntries, weightGoalKg, addWeightEntry, removeWeightEntry } = useApp();
   const toast = useToast();
   const [modalOpen, setModalOpen] = useState(false);
-  const [period, setPeriod] = useState<Period>('90D');
+  const [period, setPeriod] = useState<Period>('7D');
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   // Modal custom de confirmação ao remover pesagem (substitui Alert.alert feio)
   const [pendingRemove, setPendingRemove] = useState<WeightEntry | null>(null);
@@ -278,19 +387,12 @@ const WeightTab: React.FC = () => {
   };
 
   // ─── Definição do range do período ──────────────────────────────
-  // Para "Tudo", usa do primeiro registro até hoje. Para outros, usa
-  // a janela fixa (7/30/90/365 dias) terminando hoje.
+  // Janela fixa (7 ou 30 dias) terminando hoje.
   const { startMs, endMs } = useMemo(() => {
     const now = Date.now();
     const days = PERIOD_DAYS[period];
-    if (days === null) {
-      // Tudo: do mais antigo até agora (ou últimos 30d se vazio)
-      const oldest = [...weightEntries].sort((a, b) => a.date - b.date)[0];
-      const oldestMs = oldest?.date ?? now - 30 * 24 * 60 * 60 * 1000;
-      return { startMs: oldestMs, endMs: now };
-    }
     return { startMs: now - days * 24 * 60 * 60 * 1000, endMs: now };
-  }, [period, weightEntries]);
+  }, [period]);
 
   // Filtra entradas pelo período + ordena crescente por data
   const filteredEntries = useMemo(() => {
@@ -299,16 +401,20 @@ const WeightTab: React.FC = () => {
       .sort((a, b) => a.date - b.date);
   }, [weightEntries, startMs, endMs]);
 
-  // Faixa de peso pra eixo Y (Math.floor/ceil pra ticks bonitos)
+  // Faixa de peso pra eixo Y — começa em ZERO pra preservar a proporção real.
+  // Assim a meta (ex: 82kg) aparece visualmente próxima do topo das barras
+  // (84-85kg), e a distância visual reflete a distância real até a meta.
+  // O preço é que pequenas variações entre pesagens viram pouco distinguíveis,
+  // mas é uma escolha consciente — a tab "Registros recentes" lista valores
+  // exatos pra quem quer comparar.
   const { yMin, yMax, yMid } = useMemo(() => {
+    const goal = weightGoalKg;
     if (filteredEntries.length === 0) {
-      const goal = weightGoalKg;
-      return { yMin: Math.floor(goal - 2), yMax: Math.ceil(goal + 2), yMid: goal };
+      return { yMin: 0, yMax: Math.ceil(goal + 4), yMid: goal / 2 };
     }
     const kgs = filteredEntries.map((e) => e.kg);
-    const lo = Math.floor(Math.min(...kgs) - 1);
-    const hi = Math.ceil(Math.max(...kgs) + 1);
-    return { yMin: lo, yMax: hi, yMid: (lo + hi) / 2 };
+    const hi = Math.ceil(Math.max(...kgs, goal) + 1);
+    return { yMin: 0, yMax: hi, yMid: hi / 2 };
   }, [filteredEntries, weightGoalKg]);
 
   // Header info
@@ -319,10 +425,35 @@ const WeightTab: React.FC = () => {
   const deltaPositive = delta > 0;
   const deltaAbs = Math.abs(delta).toFixed(1).replace('.', ',');
 
+  // ─── 3 stats do período (menor peso, peso perdido, progresso até alvo) ──
+  // Menor peso do período: pega o min entre as pesagens no range.
+  // Peso perdido no período: delta absoluto (se ganho, vira valor com sinal +).
+  // Progresso até alvo: % do caminho percorrido entre o peso MAIS ANTIGO do
+  // histórico inteiro (não só do período) e a meta. Vai de 0% (ainda nada)
+  // até 100% (chegou na meta). Se ultrapassou a meta, capa em 100%.
+  const minWeightInPeriod = filteredEntries.length
+    ? Math.min(...filteredEntries.map((e) => e.kg))
+    : null;
+  const allTimeOldest = useMemo(() => {
+    if (weightEntries.length === 0) return null;
+    return [...weightEntries].sort((a, b) => a.date - b.date)[0];
+  }, [weightEntries]);
+  const progressPct = useMemo(() => {
+    if (!allTimeOldest || current == null) return null;
+    const startKg = allTimeOldest.kg;
+    const totalToLose = startKg - weightGoalKg;
+    if (totalToLose <= 0) return null; // já estava abaixo da meta no início
+    const lostSoFar = startKg - current;
+    return Math.max(0, Math.min(100, Math.round((lostSoFar / totalToLose) * 100)));
+  }, [allTimeOldest, current, weightGoalKg]);
+
   // ─── Coordenadas do SVG (viewBox 0..100 → preserveAspectRatio=none escala) ──
   const W = 100;
   const H = 100;
-  const xFor = (date: number) => ((date - startMs) / (endMs - startMs)) * W;
+  // Padding horizontal interno do gráfico (em viewBox units) — garante que a
+  // primeira e a última barra fiquem inteiras dentro do SVG, sem clip.
+  const X_PAD = 3;
+  const xFor = (date: number) => X_PAD + ((date - startMs) / (endMs - startMs)) * (W - X_PAD * 2);
   const yFor = (kg: number) => H - ((kg - yMin) / (yMax - yMin)) * H;
   const points = filteredEntries.map((e) => `${xFor(e.date)},${yFor(e.kg)}`).join(' ');
 
@@ -362,122 +493,30 @@ const WeightTab: React.FC = () => {
 
   // (Sem animações no gráfico de peso — atualização instantânea ao mudar período)
 
-  // ─── X ticks: contagem e labels mudam por período ──
-  //  - 7D: 7 dias da semana (na ordem dos últimos 7 dias)
-  //  - 30D: 4 semanas (Sem 1 → 4)
-  //  - 90D: 3 meses (últimos 3 meses do calendário)
-  //  - 1A / Tudo: 12 meses (últimos 12 meses do calendário)
-  // ─── X ticks ──
-  // Agora cada tick carrega o timestamp real (`x`) — usado pra posicionar
-  // o label absoluto sobre a posição da barra correspondente, garantindo
-  // alinhamento com o que está no gráfico.
+  // ─── X ticks: 7 dias da semana (7D) ou 5 ticks uniformes (30D) ──
+  // Cada tick carrega o timestamp real (`x`) — usado pra posicionar o label
+  // absoluto sobre a posição da barra correspondente.
   const xTicks = useMemo(() => {
     const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
     const DAY_MS = 24 * 60 * 60 * 1000;
     const fmtDay = (d: Date) => `${String(d.getDate()).padStart(2, '0')} ${cap(d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''))}`;
-    const fmtMonth = (d: Date) => cap(d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''));
 
-    switch (period) {
-      case '7D': {
-        const ticks: { label: string; x: number }[] = [];
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date(endMs - i * DAY_MS);
-          const wd = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-          ticks.push({ label: cap(wd), x: d.getTime() });
-        }
-        return ticks;
+    if (period === '7D') {
+      const ticks: { label: string; x: number }[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(endMs - i * DAY_MS);
+        const wd = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+        ticks.push({ label: cap(wd).charAt(0), x: d.getTime() });
       }
-      case '30D': {
-        // 5 ticks distribuídos UNIFORMEMENTE ao longo dos 30 dias do período.
-        // Cobre o range completo (do startMs ao endMs).
-        const ticks: { label: string; x: number }[] = [];
-        for (let i = 0; i < 5; i++) {
-          const t = startMs + (i / 4) * (endMs - startMs);
-          ticks.push({ label: fmtDay(new Date(t)), x: t });
-        }
-        return ticks;
-      }
-      case '90D': {
-        // Início do mês pra cada um dos últimos 3 meses (ex: "Mar", "Abr", "Mai")
-        const ticks: { label: string; x: number }[] = [];
-        const end = new Date(endMs);
-        for (let i = 2; i >= 0; i--) {
-          const d = new Date(end.getFullYear(), end.getMonth() - i, 1);
-          // Se o início do mês está antes do startMs, clampa
-          const t = Math.max(startMs, d.getTime());
-          ticks.push({ label: fmtMonth(d), x: t });
-        }
-        return ticks;
-      }
-      case '1A': {
-        // Mostra ~6 ticks bimestrais pra não ficar apertado (12 meses)
-        const ticks: { label: string; x: number }[] = [];
-        const end = new Date(endMs);
-        for (let i = 10; i >= 0; i -= 2) {
-          const d = new Date(end.getFullYear(), end.getMonth() - i, 1);
-          const t = Math.max(startMs, d.getTime());
-          ticks.push({ label: fmtMonth(d), x: t });
-        }
-        return ticks;
-      }
-      case 'Tudo':
-      default: {
-        // Adaptativo: ticks proporcionais ao RANGE REAL do histórico do user.
-        // Antes era bimestral fixo (10 meses atrás) — se o histórico tinha só
-        // 7 dias, todos os 6 ticks viravam x=startMs (clampados) e ficavam
-        // empilhados na esquerda do gráfico (bug visual).
-        const rangeMs = endMs - startMs;
-        const rangeDays = rangeMs / DAY_MS;
-        const ticks: { label: string; x: number }[] = [];
-
-        if (rangeDays <= 8) {
-          // Curto — mostra dia da semana de cada dia
-          const totalDays = Math.max(2, Math.ceil(rangeDays));
-          for (let i = totalDays; i >= 0; i--) {
-            const t = endMs - i * DAY_MS;
-            if (t < startMs) continue;
-            const d = new Date(t);
-            const wd = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-            ticks.push({ label: cap(wd), x: t });
-          }
-        } else if (rangeDays <= 60) {
-          // Médio — 5 ticks uniformes com data DD MMM
-          for (let i = 0; i < 5; i++) {
-            const t = startMs + (i / 4) * rangeMs;
-            ticks.push({ label: fmtDay(new Date(t)), x: t });
-          }
-        } else if (rangeDays <= 180) {
-          // ~6 meses — 1 tick por mês
-          const end = new Date(endMs);
-          const monthsBack = Math.min(6, Math.ceil(rangeDays / 30));
-          for (let i = monthsBack - 1; i >= 0; i--) {
-            const d = new Date(end.getFullYear(), end.getMonth() - i, 1);
-            const t = Math.max(startMs, d.getTime());
-            ticks.push({ label: fmtMonth(d), x: t });
-          }
-        } else {
-          // Longo — bimestral, máximo 6 ticks
-          const end = new Date(endMs);
-          const monthsBack = Math.ceil(rangeDays / 30);
-          const step = monthsBack > 12 ? 2 : 1;
-          for (let i = Math.min(monthsBack - 1, 10); i >= 0; i -= step) {
-            const d = new Date(end.getFullYear(), end.getMonth() - i, 1);
-            const t = Math.max(startMs, d.getTime());
-            ticks.push({ label: fmtMonth(d), x: t });
-          }
-        }
-
-        // Dedup ticks no mesmo ponto X (acontece quando clamp colide datas)
-        const seen = new Set<string>();
-        return ticks.filter((tk) => {
-          // Agrupa por dia pra evitar duplicatas
-          const key = String(Math.round(tk.x / DAY_MS));
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-      }
+      return ticks;
     }
+    // 30D: 5 ticks distribuídos uniformemente
+    const ticks: { label: string; x: number }[] = [];
+    for (let i = 0; i < 5; i++) {
+      const t = startMs + (i / 4) * (endMs - startMs);
+      ticks.push({ label: fmtDay(new Date(t)), x: t });
+    }
+    return ticks;
   }, [period, endMs, startMs]);
 
   const onAddSaved = (kg: number) => {
@@ -498,293 +537,300 @@ const WeightTab: React.FC = () => {
 
   // Espaços do layout do chart
   const CHART_H = 130;
-  const Y_AXIS_W = 32;
   const X_AXIS_H = 18;
+
+  // Formata número de kg com vírgula brasileira
+  const fmtKg = (k: number) => k.toFixed(1).replace('.', ',');
+  const periodLabel = period === '7D' ? 'Últimos 7 dias' : 'Últimos 30 dias';
+  const deltaPeriodLabel = period === '7D' ? 'em 7 dias' : 'em 30 dias';
 
   return (
     <View style={{ paddingHorizontal: 16, gap: 14 }}>
-      {/* Card principal: atual + meta + chart + período */}
-      <Card pad={20} radius={22}>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
+      {/* Card: layout estilo macros — label + título + chip de progresso + gráfico + 3 stats + período */}
+      <Card pad={18} radius={22}>
+        {/* Header: ÚLTIMOS XD + Evolução do peso + chip "X% até alvo" */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
           <View>
-            <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, fontWeight: '600', letterSpacing: 0.6, textTransform: 'uppercase' }}>
-              Atual
+            <Text
+              style={{
+                fontFamily: FONT.body,
+                fontSize: 11,
+                color: theme.textMuted,
+                fontWeight: '700',
+                letterSpacing: 0.6,
+                textTransform: 'uppercase',
+              }}
+            >
+              {periodLabel}
             </Text>
-            <Text style={{ fontFamily: FONT.headExtra, fontSize: 36, fontWeight: '800', color: theme.text, letterSpacing: -0.6 }}>
-              {(current ?? weightGoalKg).toFixed(1).replace('.', ',')}
-              <Text style={{ fontSize: 16, color: theme.textMuted, fontWeight: '600' }}> kg</Text>
+            <Text style={{ fontFamily: FONT.headExtra, fontSize: 18, fontWeight: '800', color: theme.text, marginTop: 2 }}>
+              Evolução do peso
             </Text>
-            {filteredEntries.length >= 2 && Math.abs(delta) > 0 && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 }}>
-                {deltaPositive ? (
-                  <Icon.trend size={14} color={theme.warning} />
-                ) : (
-                  <Icon.trendDown size={14} color={theme.primaryDeep} />
-                )}
-                <Text
-                  style={{
-                    fontFamily: FONT.body,
-                    fontSize: 12,
-                    color: deltaPositive ? theme.warningDeep : theme.primaryDeep,
-                    fontWeight: '700',
-                  }}
-                >
-                  {deltaPositive ? '+' : '-'}
-                  {deltaAbs}kg em {period === 'Tudo' ? 'todo período' : period}
-                </Text>
-              </View>
-            )}
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, fontWeight: '600' }}>Meta</Text>
-            <Text style={{ fontFamily: FONT.headExtra, fontSize: 16, fontWeight: '800', color: theme.text }}>
-              {weightGoalKg.toFixed(1).replace('.', ',')} kg
-            </Text>
-            <Icon.flag size={14} color={theme.textMuted} />
-          </View>
+          {progressPct != null && (
+            <View style={{ backgroundColor: theme.primarySoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 }}>
+              <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.primaryDeep, fontWeight: '700' }}>
+                {progressPct}% até alvo
+              </Text>
+            </View>
+          )}
         </View>
 
-        {/* Chart com eixos */}
-        <View style={{ marginTop: 8, height: CHART_H + X_AXIS_H, flexDirection: 'row' }}>
-          {/* Y-axis labels */}
-          <View style={{ width: Y_AXIS_W, height: CHART_H, justifyContent: 'space-between', alignItems: 'flex-end', paddingRight: 4 }}>
-            <Text style={{ fontFamily: FONT.body, fontSize: 9, color: theme.textFaint, fontWeight: '600' }}>{yMax}kg</Text>
-            <Text style={{ fontFamily: FONT.body, fontSize: 9, color: theme.textFaint, fontWeight: '600' }}>{yMid.toFixed(0)}kg</Text>
-            <Text style={{ fontFamily: FONT.body, fontSize: 9, color: theme.textFaint, fontWeight: '600' }}>{yMin}kg</Text>
-          </View>
-
-          {/* Plot area */}
-          <View style={{ flex: 1, height: CHART_H + X_AXIS_H }}>
-            <View style={{ height: CHART_H, position: 'relative' }}>
-              {/* Gridlines horizontais */}
-              {[0, 0.5, 1].map((t) => (
+        {/* Chart: barras à esquerda (flex:1) + coluna do label "meta" à direita */}
+        <View style={{ height: CHART_H + X_AXIS_H, flexDirection: 'row' }}>
+         <View style={{ flex: 1, height: CHART_H + X_AXIS_H }}>
+          <View style={{ height: CHART_H, position: 'relative' }}>
+            {filteredEntries.length === 0 ? (
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center' }}>
+                  Sem pesagens nos últimos {period === '7D' ? '7' : '30'} dias
+                </Text>
+              </View>
+            ) : filteredEntries.length === 1 ? (
+              // Um ponto só — marca a posição visualmente
+              <View style={{ flex: 1 }}>
                 <View
-                  key={t}
                   style={{
                     position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: t * CHART_H,
-                    height: 1,
-                    backgroundColor: theme.border,
+                    top: `${(yFor(filteredEntries[0].kg) / H) * 100}%`,
+                    left: `${(xFor(filteredEntries[0].date) / W) * 100}%`,
+                    width: 10,
+                    height: 10,
+                    borderRadius: 5,
+                    backgroundColor: theme.primary,
+                    marginLeft: -5,
+                    marginTop: -5,
                   }}
                 />
-              ))}
+                <Text
+                  style={{
+                    position: 'absolute',
+                    top: `${(yFor(filteredEntries[0].kg) / H) * 100}%`,
+                    left: `${(xFor(filteredEntries[0].date) / W) * 100}%`,
+                    marginLeft: 14,
+                    marginTop: -8,
+                    fontFamily: FONT.head,
+                    fontSize: 11,
+                    fontWeight: '700',
+                    color: theme.text,
+                  }}
+                >
+                  {fmtKg(filteredEntries[0].kg)}
+                </Text>
+              </View>
+            ) : (
+              <Svg width="100%" height={CHART_H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+                {/* Barras verticais — cada pesagem é uma barra arredondada */}
+                {(() => {
+                  const n = filteredEntries.length;
+                  const slotW = W / n;
+                  // Barras mais "grossas" pra ficarem parecidas com macros (pill rounded)
+                  const barW = Math.min(4, Math.max(2, slotW * 0.6));
+                  return filteredEntries.map((e, i) => {
+                    const isLast = i === n - 1;
+                    const x = xFor(e.date) - barW / 2;
+                    const y = yFor(e.kg);
+                    const h = Math.max(barW, H - y);
+                    return (
+                      <SRect
+                        key={i}
+                        x={x}
+                        y={H - h}
+                        width={barW}
+                        height={h}
+                        rx={barW / 2}
+                        ry={barW / 2}
+                        fill={theme.primary}
+                        fillOpacity={isLast ? 1 : 0.6}
+                      />
+                    );
+                  });
+                })()}
+                {/* Linha horizontal pontilhada da meta */}
+                {goalYInChart !== null && (
+                  <SLine
+                    x1={0}
+                    y1={goalYInChart}
+                    x2={W}
+                    y2={goalYInChart}
+                    stroke={theme.primaryDeep}
+                    strokeWidth={1}
+                    strokeDasharray="2,3"
+                    strokeOpacity={0.7}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                )}
+              </Svg>
+            )}
 
-              {filteredEntries.length === 0 ? (
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center' }}>
-                    Sem pesagens em {period === 'Tudo' ? 'nenhum período' : `últimos ${period}`}
-                  </Text>
-                </View>
-              ) : filteredEntries.length === 1 ? (
-                // Um ponto só: marca a posição e uma linha tracejada
-                <View style={{ flex: 1 }}>
-                  <View
+            {/* Overlay tocável: hit-area por barra */}
+            {filteredEntries.length >= 2 &&
+              filteredEntries.map((e, i) => {
+                const pct = ((e.date - startMs) / (endMs - startMs)) * 100;
+                const HIT_W = 28;
+                return (
+                  <Pressable
+                    key={`hit-${i}`}
+                    onPressIn={() => showHover(i)}
+                    onHoverIn={() => showHover(i)}
                     style={{
                       position: 'absolute',
-                      top: `${(yFor(filteredEntries[0].kg) / H) * 100}%`,
-                      left: `${(xFor(filteredEntries[0].date) / W) * 100}%`,
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: theme.primary,
-                      marginLeft: -4,
-                      marginTop: -4,
+                      top: 0,
+                      bottom: 0,
+                      left: `${pct}%`,
+                      marginLeft: -HIT_W / 2,
+                      width: HIT_W,
                     }}
                   />
-                  <Text
-                    style={{
-                      position: 'absolute',
-                      top: `${(yFor(filteredEntries[0].kg) / H) * 100}%`,
-                      left: `${(xFor(filteredEntries[0].date) / W) * 100}%`,
-                      marginLeft: 12,
-                      marginTop: -8,
-                      fontFamily: FONT.head,
-                      fontSize: 11,
-                      fontWeight: '700',
-                      color: theme.text,
-                    }}
-                  >
-                    {filteredEntries[0].kg.toFixed(1).replace('.', ',')}
-                  </Text>
-                </View>
-              ) : (
-                <Svg width="100%" height={CHART_H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-                  {/* Modelo B: barras verticais — cada pesagem é uma barra */}
-                  {(() => {
-                    const n = filteredEntries.length;
-                    // Largura de cada slot = W / n; barra ocupa ~65% (o resto é gap entre elas).
-                    // Cap pra barras não ficarem largas demais com poucos pontos.
-                    const slotW = W / n;
-                    const barW = Math.min(2.5, slotW * 0.65);
-                    return filteredEntries.map((e, i) => {
-                      const isLast = i === n - 1;
-                      const x = xFor(e.date) - barW / 2;
-                      const y = yFor(e.kg);
-                      const h = H - y;
-                      return (
-                        <SRect
-                          key={i}
-                          x={x}
-                          y={y}
-                          width={barW}
-                          height={h}
-                          rx={barW / 3}
-                          ry={barW / 3}
-                          fill={theme.primary}
-                          fillOpacity={isLast ? 1 : 0.55}
-                        />
-                      );
-                    });
-                  })()}
-                  {/* Linha horizontal pontilhada da meta (mantida sobre as barras) */}
-                  {goalYInChart !== null && (
-                    <SLine
-                      x1={0}
-                      y1={goalYInChart}
-                      x2={W}
-                      y2={goalYInChart}
-                      stroke={theme.primaryDeep}
-                      strokeWidth={1}
-                      strokeDasharray="2,3"
-                      strokeOpacity={0.7}
-                      vectorEffect="non-scaling-stroke"
-                    />
-                  )}
-                </Svg>
-              )}
-
-              {/* Overlay tocável: 1 hit-area por barra (mais largo que a barra
-                  pra facilitar o toque). onPressIn = aparece já no contato. */}
-              {filteredEntries.length >= 2 &&
-                filteredEntries.map((e, i) => {
-                  const pct = ((e.date - startMs) / (endMs - startMs)) * 100;
-                  const HIT_W = 28;
-                  return (
-                    <Pressable
-                      key={`hit-${i}`}
-                      onPressIn={() => showHover(i)}
-                      onHoverIn={() => showHover(i)}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        bottom: 0,
-                        left: `${pct}%`,
-                        marginLeft: -HIT_W / 2,
-                        width: HIT_W,
-                      }}
-                    />
-                  );
-                })}
-
-              {/* Tooltip flutuante mostrando peso + data da barra selecionada */}
-              {hoveredIdx !== null && filteredEntries[hoveredIdx] && (() => {
-                const e = filteredEntries[hoveredIdx];
-                const pct = ((e.date - startMs) / (endMs - startMs)) * 100;
-                const onLeftHalf = pct < 50;
-                const d = new Date(e.date);
-                const dateLabel = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
-                return (
-                  <View
-                    pointerEvents="none"
-                    style={{
-                      position: 'absolute',
-                      // Posiciona próximo da barra; flip pra esquerda se barra estiver na direita
-                      left: `${pct}%`,
-                      marginLeft: onLeftHalf ? 6 : -90,
-                      top: `${(yFor(e.kg) / H) * 100}%`,
-                      marginTop: -42,
-                      width: 84,
-                      backgroundColor: theme.text,
-                      borderRadius: 10,
-                      paddingVertical: 6,
-                      paddingHorizontal: 10,
-                      alignItems: 'center',
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.15,
-                      shadowRadius: 4,
-                    }}
-                  >
-                    <Text style={{ fontFamily: FONT.headExtra, fontSize: 13, fontWeight: '800', color: theme.bg }}>
-                      {e.kg.toFixed(1).replace('.', ',')} kg
-                    </Text>
-                    <Text style={{ fontFamily: FONT.body, fontSize: 9, color: theme.bg, opacity: 0.7, marginTop: 1 }}>
-                      {dateLabel}
-                    </Text>
-                  </View>
                 );
-              })()}
+              })}
 
-              {/* Label da meta sobreposto à direita da linha pontilhada */}
-              {goalYInChart !== null && filteredEntries.length >= 2 && (
+            {/* Tooltip da barra tocada */}
+            {hoveredIdx !== null && filteredEntries[hoveredIdx] && (() => {
+              const e = filteredEntries[hoveredIdx];
+              const pct = ((e.date - startMs) / (endMs - startMs)) * 100;
+              const onLeftHalf = pct < 50;
+              const d = new Date(e.date);
+              const dateLabel = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
+              return (
                 <View
                   pointerEvents="none"
                   style={{
                     position: 'absolute',
-                    right: 4,
-                    top: `${(goalYInChart / H) * 100}%`,
-                    marginTop: -16,
-                    backgroundColor: theme.bg,
-                    paddingHorizontal: 4,
-                    borderRadius: 4,
+                    left: `${pct}%`,
+                    marginLeft: onLeftHalf ? 6 : -90,
+                    top: `${(yFor(e.kg) / H) * 100}%`,
+                    marginTop: -42,
+                    width: 84,
+                    backgroundColor: theme.text,
+                    borderRadius: 10,
+                    paddingVertical: 6,
+                    paddingHorizontal: 10,
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 4,
                   }}
                 >
-                  <Text style={{ fontFamily: FONT.body, fontSize: 9, fontWeight: '700', color: theme.primaryDeep }}>
-                    meta {weightGoalKg.toFixed(1).replace('.', ',')}kg
+                  <Text style={{ fontFamily: FONT.headExtra, fontSize: 13, fontWeight: '800', color: theme.bg }}>
+                    {fmtKg(e.kg)} kg
+                  </Text>
+                  <Text style={{ fontFamily: FONT.body, fontSize: 9, color: theme.bg, opacity: 0.7, marginTop: 1 }}>
+                    {dateLabel}
                   </Text>
                 </View>
-              )}
-            </View>
+              );
+            })()}
 
-            {/* X-axis labels: cada label é um wrapper de largura fixa centrado
-                no X do timestamp (técnica padrão pra centralizar sobre coord).
-                Isso alinha o CENTRO do label com o CENTRO da barra correspondente. */}
-            <View style={{ height: X_AXIS_H, paddingTop: 4, position: 'relative' }}>
-              {xTicks.map((t, i) => {
-                const pct = ((t.x - startMs) / (endMs - startMs)) * 100;
-                const LABEL_W = 50;
-                // Ancoragem: ponto da esquerda fica em `left: pct% - LABEL_W/2`
-                // Pro primeiro/último, evita sair do card limitando a min/max.
-                let left: string | number = `${pct}%`;
-                let marginLeft = -LABEL_W / 2;
-                let alignItems: 'flex-start' | 'center' | 'flex-end' = 'center';
-                if (i === 0 && pct < 5) { left = 0; marginLeft = 0; alignItems = 'flex-start'; }
-                if (i === xTicks.length - 1 && pct > 95) { left = '100%' as any; marginLeft = -LABEL_W; alignItems = 'flex-end'; }
-                return (
-                  <View
-                    key={i}
-                    pointerEvents="none"
-                    style={{
-                      position: 'absolute',
-                      left,
-                      top: 4,
-                      width: LABEL_W,
-                      marginLeft,
-                      alignItems,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: FONT.body,
-                        fontSize: 9,
-                        color: theme.textFaint,
-                        fontWeight: '600',
-                      }}
-                    >
-                      {t.label}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
           </View>
+
+          {/* X-axis labels alinhados ao centro de cada barra */}
+          <View style={{ height: X_AXIS_H, paddingTop: 4, position: 'relative' }}>
+            {xTicks.map((t, i) => {
+              const pct = ((t.x - startMs) / (endMs - startMs)) * 100;
+              const LABEL_W = 40;
+              let left: string | number = `${pct}%`;
+              let marginLeft = -LABEL_W / 2;
+              let alignItems: 'flex-start' | 'center' | 'flex-end' = 'center';
+              if (i === 0 && pct < 5) { left = 0; marginLeft = 0; alignItems = 'flex-start'; }
+              if (i === xTicks.length - 1 && pct > 95) { left = '100%' as any; marginLeft = -LABEL_W; alignItems = 'flex-end'; }
+              return (
+                <View
+                  key={i}
+                  pointerEvents="none"
+                  style={{ position: 'absolute', left, top: 4, width: LABEL_W, marginLeft, alignItems }}
+                >
+                  <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, fontWeight: '600' }}>
+                    {t.label}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+         </View>
+
+         {/* Coluna direita: label "meta XX kg" alinhado verticalmente com a linha pontilhada
+             e empurrado pra direita (encosta na borda direita do card). */}
+         {goalYInChart !== null && (
+           <View style={{ width: 56, height: CHART_H, position: 'relative', alignItems: 'flex-end' }}>
+             <Text
+               style={{
+                 position: 'absolute',
+                 right: 0,
+                 top: `${(goalYInChart / H) * 100}%`,
+                 marginTop: -7,
+                 fontFamily: FONT.body,
+                 fontSize: 10,
+                 fontWeight: '700',
+                 color: theme.primaryDeep,
+                 textAlign: 'right',
+               }}
+             >
+               meta {fmtKg(weightGoalKg)}kg
+             </Text>
+           </View>
+         )}
         </View>
 
-        {/* Period selector */}
+        {/* 3 stats: menor peso · peso perdido · % até alvo */}
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 8,
+            marginTop: 12,
+            paddingTop: 14,
+            borderTopWidth: 1,
+            borderTopColor: theme.border,
+          }}
+        >
+          {/* Menor peso do período */}
+          <WeightStat
+            color={theme.primarySoft}
+            label="Menor"
+            big={minWeightInPeriod != null ? `${fmtKg(minWeightInPeriod)}` : '—'}
+            bigSuffix={minWeightInPeriod != null ? 'kg' : undefined}
+            sub={period === '7D' ? 'NA SEMANA' : 'NO MÊS'}
+          />
+          {/* Peso perdido/ganho */}
+          <WeightStat
+            color={deltaPositive ? theme.warning : theme.primary}
+            label="Variação"
+            big={
+              filteredEntries.length < 2
+                ? '—'
+                : `${deltaPositive ? '+' : '−'}${deltaAbs}`
+            }
+            bigSuffix={filteredEntries.length >= 2 ? 'kg' : undefined}
+            sub={filteredEntries.length >= 2 ? deltaPeriodLabel.toUpperCase() : 'SEM DADOS'}
+            tone={deltaPositive ? 'warn' : 'good'}
+          />
+          {/* kg que ainda falta perder + % de progresso na subtag */}
+          {(() => {
+            const remainingKg = current != null ? current - weightGoalKg : null;
+            const showRemaining = remainingKg != null && remainingKg > 0;
+            return (
+              <WeightStat
+                color={theme.primaryDeep}
+                label="Falta"
+                big={showRemaining ? fmtKg(remainingKg) : (remainingKg != null && remainingKg <= 0 ? '0' : '—')}
+                bigSuffix={remainingKg != null ? 'kg' : undefined}
+                sub={
+                  remainingKg != null && remainingKg <= 0
+                    ? 'META BATIDA'
+                    : progressPct != null
+                      ? `${progressPct}% FEITO`
+                      : 'PRA META'
+                }
+                tone="goal"
+              />
+            );
+          })()}
+        </View>
+
+        {/* Period selector — só 7D e 30D */}
         <View style={{ flexDirection: 'row', gap: 4, marginTop: 14 }}>
-          {(['7D', '30D', '90D', '1A', 'Tudo'] as Period[]).map((p) => {
+          {(['7D', '30D'] as Period[]).map((p) => {
             const active = p === period;
             return (
               <Pressable
@@ -798,14 +844,7 @@ const WeightTab: React.FC = () => {
                   alignItems: 'center',
                 }}
               >
-                <Text
-                  style={{
-                    fontFamily: FONT.body,
-                    fontSize: 12,
-                    fontWeight: '700',
-                    color: active ? theme.bg : theme.textMuted,
-                  }}
-                >
+                <Text style={{ fontFamily: FONT.body, fontSize: 12, fontWeight: '700', color: active ? theme.bg : theme.textMuted }}>
                   {p}
                 </Text>
               </Pressable>
@@ -1311,119 +1350,436 @@ const AnimatedBarHorizontal: React.FC<{
 // ─── PHOTOS TAB ──────────────────────────────────────────────────
 const PhotosTab: React.FC = () => {
   const theme = useTheme();
+  const { progressPhotos, addProgressPhoto, removeProgressPhoto, weightEntries } = useApp();
+  const toast = useToast();
+  const [sourceSheetOpen, setSourceSheetOpen] = useState(false);
+  const [pendingRemove, setPendingRemove] = useState<{ id: string } | null>(null);
+
+  // Pesagem mais recente por dia — pra anexar o peso à foto automaticamente
+  const lastWeightToday = (): number | undefined => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tsTodayStart = today.getTime();
+    const w = weightEntries.find((e) => e.date >= tsTodayStart);
+    return w?.kg ?? weightEntries[0]?.kg;
+  };
+
+  const fmtDate = (ts: number) => {
+    const d = new Date(ts);
+    return `${d.getDate()} ${d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}`;
+  };
+
+  const pickFromCamera = async () => {
+    setSourceSheetOpen(false);
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) { toast('Permissão da câmera negada', 'error'); return; }
+    const res = await ImagePicker.launchCameraAsync({ mediaTypes: 'images', quality: 0.85, allowsEditing: false });
+    if (res.canceled || !res.assets?.[0]) return;
+    addProgressPhoto(res.assets[0].uri, lastWeightToday());
+    toast('Foto adicionada · histórico atualizado');
+  };
+
+  const pickFromLibrary = async () => {
+    setSourceSheetOpen(false);
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { toast('Permissão da galeria negada', 'error'); return; }
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.85 });
+    if (res.canceled || !res.assets?.[0]) return;
+    addProgressPhoto(res.assets[0].uri, lastWeightToday());
+    toast('Foto adicionada · histórico atualizado');
+  };
+
+  // Antes/depois: usa a foto mais antiga + mais recente (se >= 2)
+  const sortedAsc = [...progressPhotos].sort((a, b) => a.date - b.date);
+  const before = sortedAsc[0];
+  const after = sortedAsc[sortedAsc.length - 1];
+  const hasComparison = progressPhotos.length >= 2;
+  const weeksBetween =
+    before && after ? Math.max(1, Math.round((after.date - before.date) / (7 * 24 * 60 * 60 * 1000))) : 0;
+  const deltaKg = before?.weightKg != null && after?.weightKg != null ? after.weightKg - before.weightKg : null;
+
   return (
     <View style={{ paddingHorizontal: 16, gap: 14 }}>
-      <Card pad={0} radius={20} style={{ overflow: 'hidden' }}>
-        <View style={{ height: 260, flexDirection: 'row' }}>
-          <View style={{ flex: 1, backgroundColor: theme.bgSubtle }}>
-            <FoodImg q="person,silhouette,fitness,1" w="100%" h="100%" style={{ borderRadius: 0 }} />
-            <View
-              style={{
-                position: 'absolute',
-                top: 12,
-                left: 12,
-                backgroundColor: 'rgba(0,0,0,0.6)',
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderRadius: 100,
-              }}
-            >
-              <Text style={{ fontFamily: FONT.body, fontSize: 10, fontWeight: '700', color: '#fff' }}>1 mar</Text>
-            </View>
-          </View>
-          <View style={{ width: 2, backgroundColor: '#fff' }} />
-          <View style={{ flex: 1, backgroundColor: theme.bgSubtle }}>
-            <FoodImg q="person,silhouette,fitness,2" w="100%" h="100%" style={{ borderRadius: 0 }} />
-            <View
-              style={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                backgroundColor: 'rgba(0,0,0,0.6)',
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderRadius: 100,
-              }}
-            >
-              <Text style={{ fontFamily: FONT.body, fontSize: 10, fontWeight: '700', color: '#fff' }}>25 mai</Text>
-            </View>
-          </View>
+      {/* Botão principal — adicionar foto */}
+      <Pressable
+        onPress={() => setSourceSheetOpen(true)}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 14,
+          paddingVertical: 14,
+          paddingHorizontal: 18,
+          borderRadius: 18,
+          backgroundColor: theme.primarySoft,
+        }}
+      >
+        <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: theme.primaryDeep, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon.camera size={20} color="#fff" stroke={2} />
         </View>
-        <View style={{ padding: 14 }}>
-          <Text style={{ fontFamily: FONT.headExtra, fontSize: 14, fontWeight: '800', color: theme.text }}>
-            Comparar antes e depois
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: FONT.head, fontSize: 14, fontWeight: '800', color: theme.text }}>
+            Adicionar foto de progresso
           </Text>
-          <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
-            12 semanas de progresso · -2,8kg
+          <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.primaryDeep, fontWeight: '600', marginTop: 1 }}>
+            {progressPhotos.length} {progressPhotos.length === 1 ? 'foto registrada' : 'fotos registradas'}
           </Text>
         </View>
-      </Card>
+        <Icon.plus size={18} color={theme.primaryDeep} stroke={2.5} />
+      </Pressable>
 
+      {/* Comparação antes/depois — só aparece quando tem 2+ fotos */}
+      {hasComparison && before && after && (
+        <Card pad={0} radius={20} style={{ overflow: 'hidden' }}>
+          <View style={{ height: 260, flexDirection: 'row' }}>
+            <View style={{ flex: 1, backgroundColor: theme.bgSubtle }}>
+              <Animated.Image source={{ uri: before.uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  left: 12,
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 100,
+                }}
+              >
+                <Text style={{ fontFamily: FONT.body, fontSize: 10, fontWeight: '700', color: '#fff' }}>
+                  {fmtDate(before.date)}
+                </Text>
+              </View>
+            </View>
+            <View style={{ width: 2, backgroundColor: '#fff' }} />
+            <View style={{ flex: 1, backgroundColor: theme.bgSubtle }}>
+              <Animated.Image source={{ uri: after.uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 100,
+                }}
+              >
+                <Text style={{ fontFamily: FONT.body, fontSize: 10, fontWeight: '700', color: '#fff' }}>
+                  {fmtDate(after.date)}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={{ padding: 14 }}>
+            <Text style={{ fontFamily: FONT.headExtra, fontSize: 14, fontWeight: '800', color: theme.text }}>
+              Comparar antes e depois
+            </Text>
+            <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
+              {weeksBetween} {weeksBetween === 1 ? 'semana' : 'semanas'} de progresso
+              {deltaKg != null ? ` · ${deltaKg > 0 ? '+' : ''}${deltaKg.toFixed(1).replace('.', ',')}kg` : ''}
+            </Text>
+          </View>
+        </Card>
+      )}
+
+      {/* Histórico (real) ou empty state */}
       <View>
         <Text style={{ fontFamily: FONT.headExtra, fontSize: 16, fontWeight: '800', color: theme.text, marginBottom: 12 }}>
           Histórico
         </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <View key={i} style={{ width: '32%' }}>
-              <FoodImg q={`person,fitness,${i}`} w="100%" h={110} style={{ borderRadius: 10 }} />
+        {progressPhotos.length === 0 ? (
+          <Card pad={20} radius={16}>
+            <View style={{ alignItems: 'center', gap: 10 }}>
+              <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: theme.bgSubtle, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon.camera size={24} color={theme.textMuted} stroke={1.5} />
+              </View>
+              <Text style={{ fontFamily: FONT.head, fontSize: 14, fontWeight: '700', color: theme.text, textAlign: 'center' }}>
+                Nenhuma foto ainda
+              </Text>
+              <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center', lineHeight: 17 }}>
+                Tire uma foto agora pra começar seu antes/depois. Sugestão: tirar sempre no mesmo horário e iluminação.
+              </Text>
             </View>
-          ))}
-        </View>
+          </Card>
+        ) : (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            {progressPhotos.map((p) => (
+              <Pressable
+                key={p.id}
+                onLongPress={() => setPendingRemove({ id: p.id })}
+                style={{ width: '32%' }}
+              >
+                <View style={{ borderRadius: 10, overflow: 'hidden', position: 'relative' }}>
+                  <Animated.Image source={{ uri: p.uri }} style={{ width: '100%', height: 110 }} resizeMode="cover" />
+                  <View
+                    style={{
+                      position: 'absolute',
+                      bottom: 6,
+                      left: 6,
+                      backgroundColor: 'rgba(0,0,0,0.55)',
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      borderRadius: 100,
+                    }}
+                  >
+                    <Text style={{ fontFamily: FONT.body, fontSize: 9, fontWeight: '700', color: '#fff' }}>
+                      {fmtDate(p.date)}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        )}
+        {progressPhotos.length > 0 && (
+          <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textFaint, textAlign: 'center', marginTop: 10 }}>
+            Pressione e segure pra remover
+          </Text>
+        )}
       </View>
+
+      {/* Bottom-sheet de origem (câmera / galeria) */}
+      <Modal visible={sourceSheetOpen} transparent animationType="fade" onRequestClose={() => setSourceSheetOpen(false)}>
+        <Pressable onPress={() => setSourceSheetOpen(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
+          <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 28, gap: 4 }}>
+            <View style={{ alignItems: 'center', paddingBottom: 6 }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
+            </View>
+            <SourceItem
+              icon={Icon.camera}
+              tint={theme.primaryDeep}
+              tintBg={theme.primarySoft}
+              title="Tirar foto agora"
+              subtitle="Abre a câmera"
+              onPress={pickFromCamera}
+            />
+            <SourceItem
+              icon={Icon.gallery}
+              tint="#B07A1E"
+              tintBg="#F8ECD7"
+              title="Escolher da galeria"
+              subtitle="Selecionar uma foto existente"
+              onPress={pickFromLibrary}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Modal de confirmação de remoção */}
+      <Modal visible={!!pendingRemove} transparent animationType="fade" onRequestClose={() => setPendingRemove(null)}>
+        <Pressable onPress={() => setPendingRemove(null)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 16 }}>
+          <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderRadius: 24, padding: 22, gap: 14 }}>
+            <Text style={{ fontFamily: FONT.headExtra, fontSize: 17, fontWeight: '800', color: theme.text }}>Remover foto?</Text>
+            <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, lineHeight: 18 }}>
+              Esta ação não pode ser desfeita.
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Btn variant="outline" size="md" onPress={() => setPendingRemove(null)} full>Cancelar</Btn>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Btn variant="primary" size="md" onPress={() => { if (pendingRemove) removeProgressPhoto(pendingRemove.id); setPendingRemove(null); toast('Foto removida'); }} full>Remover</Btn>
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
+  );
+};
+
+const SourceItem: React.FC<{
+  icon: React.FC<{ size?: number; color?: string; stroke?: number }>;
+  tint: string;
+  tintBg: string;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}> = ({ icon: IconC, tint, tintBg, title, subtitle, onPress }) => {
+  const theme = useTheme();
+  return (
+    <Pressable onPress={onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 8, borderRadius: 12 }}>
+      <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: tintBg, alignItems: 'center', justifyContent: 'center' }}>
+        <IconC size={18} color={tint} stroke={2} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontFamily: FONT.head, fontSize: 14, fontWeight: '700', color: theme.text }}>{title}</Text>
+        <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, marginTop: 1 }}>{subtitle}</Text>
+      </View>
+    </Pressable>
   );
 };
 
 // ─── HABITS TAB ──────────────────────────────────────────────────
 const HabitsTab: React.FC = () => {
   const theme = useTheme();
-  const habits = [
-    { name: 'Dormir 8h', streak: 9, done: true },
-    { name: 'Beber 2L de água', streak: 12, done: true },
-    { name: 'Sem ultraprocessados', streak: 4, done: false },
-    { name: 'Caminhada 30min', streak: 7, done: true },
-  ];
+  const { habits, addHabit, updateHabit, removeHabit, toggleHabitToday } = useApp();
+  const toast = useToast();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const editingHabit = habits.find((h) => h.id === editingId);
+  const today = dayKey();
+
+  // Agenda/cancela notificação ao mudar hábito (chamado após save)
+  const syncNotification = async (habit: Habit) => {
+    const notifId = habitNotifId(habit.id);
+    if (!habit.reminderTime) {
+      await cancelNamedReminder(notifId);
+      return;
+    }
+    const granted = await requestNotificationPermission();
+    if (!granted) return; // user-side issue, mas state já tá salvo
+    await scheduleNamedDailyReminder(
+      notifId,
+      `${habit.name} 💪`,
+      `Hora de bater seu hábito de hoje!`,
+      habit.reminderTime,
+    );
+  };
+
+  const onSaveNew = async (data: { name: string; reminderTime?: string }) => {
+    const h = addHabit(data.name, data.reminderTime);
+    if (data.reminderTime) {
+      await syncNotification(h);
+      toast(`Hábito criado · lembrete às ${data.reminderTime}`);
+    } else {
+      toast('Hábito criado');
+    }
+  };
+
+  const onSaveEdit = async (data: { name: string; reminderTime?: string }) => {
+    if (!editingHabit) return;
+    updateHabit(editingHabit.id, data);
+    const updated: Habit = { ...editingHabit, ...data };
+    await syncNotification(updated);
+    toast('Hábito atualizado');
+  };
+
+  const onDelete = async () => {
+    if (!editingHabit) return;
+    await cancelNamedReminder(habitNotifId(editingHabit.id));
+    removeHabit(editingHabit.id);
+    toast('Hábito removido');
+  };
+
   return (
-    <View style={{ paddingHorizontal: 16 }}>
-      <Card pad={0} radius={18}>
-        {habits.map((h, i) => (
-          <View
-            key={h.name}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 14,
-              paddingVertical: 14,
-              paddingHorizontal: 16,
-              borderBottomWidth: i < habits.length - 1 ? 1 : 0,
-              borderBottomColor: theme.border,
-            }}
-          >
-            <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                backgroundColor: h.done ? theme.primary : theme.bgSubtle,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {h.done && <Icon.check size={16} color="#fff" stroke={3} />}
+    <View style={{ paddingHorizontal: 16, gap: 14 }}>
+      {habits.length === 0 ? (
+        <Card pad={20} radius={18}>
+          <View style={{ alignItems: 'center', gap: 10 }}>
+            <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: theme.bgSubtle, alignItems: 'center', justifyContent: 'center' }}>
+              <Icon.flame size={24} color={theme.textMuted} stroke={1.5} />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONT.body, fontSize: 14, fontWeight: '600', color: theme.text }}>{h.name}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                <Icon.flame size={12} color={theme.warning} />
-                <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, fontWeight: '600' }}>
-                  {h.streak} dias
-                </Text>
-              </View>
-            </View>
+            <Text style={{ fontFamily: FONT.head, fontSize: 14, fontWeight: '700', color: theme.text, textAlign: 'center' }}>
+              Nenhum hábito ainda
+            </Text>
+            <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center', lineHeight: 17 }}>
+              Crie hábitos diários (água, sono, caminhada) e marque a cada dia pra manter o streak.
+            </Text>
           </View>
-        ))}
-      </Card>
+        </Card>
+      ) : (
+        <Card pad={0} radius={18}>
+          {habits.map((h, i) => {
+            const done = h.completedDays.includes(today);
+            const streak = calcStreak(h.completedDays);
+            return (
+              <Pressable
+                key={h.id}
+                onPress={() => toggleHabitToday(h.id)}
+                onLongPress={() => setEditingId(h.id)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 14,
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                  borderBottomWidth: i < habits.length - 1 ? 1 : 0,
+                  borderBottomColor: theme.border,
+                }}
+              >
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: done ? theme.primary : theme.bgSubtle,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {done && <Icon.check size={16} color="#fff" stroke={3} />}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: FONT.body, fontSize: 14, fontWeight: '600', color: theme.text }}>{h.name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Icon.flame size={12} color={theme.warning} />
+                      <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, fontWeight: '600' }}>
+                        {streak} {streak === 1 ? 'dia' : 'dias'}
+                      </Text>
+                    </View>
+                    {h.reminderTime && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Icon.clock size={11} color={theme.primaryDeep} stroke={2} />
+                        <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.primaryDeep, fontWeight: '700' }}>
+                          {h.reminderTime}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                <Pressable
+                  onPress={(e: any) => { e?.stopPropagation?.(); setEditingId(h.id); }}
+                  hitSlop={8}
+                  style={{ padding: 4 }}
+                >
+                  <Icon.more size={18} color={theme.textMuted} stroke={2} />
+                </Pressable>
+              </Pressable>
+            );
+          })}
+        </Card>
+      )}
+
+      <Pressable
+        onPress={() => setCreating(true)}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+          paddingVertical: 14,
+          borderRadius: 14,
+          borderWidth: 1.5,
+          borderColor: theme.border,
+          borderStyle: 'dashed',
+        }}
+      >
+        <Icon.plus size={16} color={theme.primaryDeep} stroke={2.5} />
+        <Text style={{ fontFamily: FONT.head, fontSize: 13, fontWeight: '700', color: theme.primaryDeep }}>
+          Adicionar hábito
+        </Text>
+      </Pressable>
+
+      {habits.length > 0 && (
+        <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textFaint, textAlign: 'center' }}>
+          Toque pra marcar como feito hoje · Pressione e segure pra editar
+        </Text>
+      )}
+
+      <EditHabitModal
+        visible={creating}
+        onClose={() => setCreating(false)}
+        onSave={onSaveNew}
+      />
+      <EditHabitModal
+        visible={!!editingHabit}
+        onClose={() => setEditingId(null)}
+        habit={editingHabit}
+        onSave={onSaveEdit}
+        onDelete={onDelete}
+      />
     </View>
   );
 };
