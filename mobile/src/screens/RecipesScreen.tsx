@@ -1380,15 +1380,16 @@ const CollectionDetailModal: React.FC<{
 
   if (!collection) return null;
 
-  const inCol: Array<{ id: string; title: string; sub: string; q: string; navParam: { recipe?: Recipe; saved?: SavedRecipe } }> = collection.recipeIds
-    .map((rid) => {
+  type CollectionItem = { id: string; title: string; sub: string; q: string; navParam: { recipe?: Recipe; saved?: SavedRecipe } };
+  const inCol: CollectionItem[] = collection.recipeIds
+    .map<CollectionItem | null>((rid) => {
       const seed = recipes.find((r) => r.id === rid);
       if (seed) return { id: seed.id, title: seed.name, sub: `${seed.kcal} kcal · ${seed.time}`, q: seed.q, navParam: { recipe: seed } };
       const saved = savedRecipes.find((r) => r.id === rid);
       if (saved) return { id: saved.id, title: saved.title, sub: `${saved.ingredients.length} ingredientes`, q: saved.title, navParam: { saved } };
       return null;
     })
-    .filter((x): x is { id: string; title: string; sub: string; q: string; navParam: { recipe?: Recipe; saved?: SavedRecipe } } => x !== null);
+    .filter((x): x is CollectionItem => x !== null);
 
   const outOfCol = [
     ...savedRecipes

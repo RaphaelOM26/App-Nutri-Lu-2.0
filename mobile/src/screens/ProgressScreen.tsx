@@ -2,7 +2,7 @@
 // 4 tabs: Peso (com CRUD), Macros (bar chart + breakdown), Fotos, Hábitos.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, View, Text, ScrollView, Pressable, Alert, Modal } from 'react-native';
+import { Animated, View, Text, ScrollView, Pressable, Alert, Modal, type DimensionValue } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -730,11 +730,11 @@ const WeightTab: React.FC = () => {
             {xTicks.map((t, i) => {
               const pct = ((t.x - startMs) / (endMs - startMs)) * 100;
               const LABEL_W = 40;
-              let left: string | number = `${pct}%`;
+              let left: DimensionValue = `${pct}%`;
               let marginLeft = -LABEL_W / 2;
               let alignItems: 'flex-start' | 'center' | 'flex-end' = 'center';
               if (i === 0 && pct < 5) { left = 0; marginLeft = 0; alignItems = 'flex-start'; }
-              if (i === xTicks.length - 1 && pct > 95) { left = '100%' as any; marginLeft = -LABEL_W; alignItems = 'flex-end'; }
+              if (i === xTicks.length - 1 && pct > 95) { left = '100%'; marginLeft = -LABEL_W; alignItems = 'flex-end'; }
               return (
                 <View
                   key={i}
