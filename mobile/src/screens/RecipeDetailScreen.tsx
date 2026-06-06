@@ -414,9 +414,19 @@ export const RecipeDetailScreen: React.FC = () => {
           <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
             <Card pad={16} radius={20}>
               {isEstimate && (
-                <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>
-                  Estimativa · {estimated?.matchedCount}/{estimated?.totalCount} ingr.
-                </Text>
+                <View style={{ marginBottom: 8 }}>
+                  <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                    Estimativa por porção · {estimated?.matchedCount}/{estimated?.totalCount} ingr.
+                  </Text>
+                  <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textFaint, marginTop: 2 }}>
+                    Total da receita: ~{Math.round((estimated?.kcal ?? 0))} kcal em {view.baseServings} {view.baseServings === 1 ? 'porção' : 'porções'}
+                  </Text>
+                  {scaledKcal > 1500 && (
+                    <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.warningDeep, marginTop: 4, lineHeight: 14 }}>
+                      ⚠ Valor por porção parece alto. Se a receita serve mais pessoas, ajuste no botão + acima.
+                    </Text>
+                  )}
+                </View>
               )}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                 <MacroRing

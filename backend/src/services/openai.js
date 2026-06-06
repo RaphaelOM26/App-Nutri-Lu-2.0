@@ -64,7 +64,7 @@ export const RECIPE_SCHEMA = {
       },
       servings: {
         type: 'integer',
-        description: 'Número de porções que a receita rende. Use 0 se não souber.',
+        description: 'Número de porções que a receita rende. CRÍTICO pra cálculo de macros: nunca marque 1 se o volume claramente serve mais. Calibração: 500g de pasta seca + 400g de proteína = 4 porções; 250g de pasta + 200g de proteína = 2 porções; salada com 1 alface + verduras = 1-2 porções; bolo com 500g de farinha = 8-12 porções. Receita brasileira sem indicação explícita: padrão de família = 4 pessoas. Erre pra MAIS porções, não pra menos. Use 0 só se realmente não der pra inferir nada.',
       },
       confidence: {
         type: 'string',
