@@ -12,7 +12,9 @@
       "supportsTablet": false,
       "infoPlist": {
         "NSCameraUsageDescription": "Precisamos da câmera para fotografar suas receitas e pratos.",
-        "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para importar receitas e pratos."
+        "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para importar receitas e pratos.",
+        "NSMicrophoneUsageDescription": "Precisamos do microfone para você registrar refeições por voz.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {

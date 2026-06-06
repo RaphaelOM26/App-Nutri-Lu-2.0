@@ -24,6 +24,9 @@ router.post('/', async (req, res, next) => {
       ? image
       : `data:image/jpeg;base64,${image}`;
 
+    const imgBytes = Math.round((image.length * 3) / 4);
+    console.log(`[analyze-food] received image: ${(imgBytes / 1024).toFixed(0)}KB, prefix="${image.slice(0, 20)}..."`);
+
     const completion = await openai.chat.completions.create({
       model: MODEL,
       messages: [
@@ -55,7 +58,9 @@ router.post('/', async (req, res, next) => {
         code: 'AI_EMPTY_RESPONSE',
       });
     }
-    res.json(JSON.parse(content));
+    const parsed = JSON.parse(content);
+    console.log(`[analyze-food] AI returned: items=${parsed.items?.length ?? 0}, confidence=${parsed.confidence}`);
+    res.json(parsed);
   } catch (err) {
     next(err);
   }

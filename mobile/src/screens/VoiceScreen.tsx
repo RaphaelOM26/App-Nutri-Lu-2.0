@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Animated, Easing, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useAudioRecorder, AudioModule, RecordingPresets } from 'expo-audio';
+import { useAudioRecorder, AudioModule, RecordingPresets, setAudioModeAsync } from 'expo-audio';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useTheme, FONT } from '../theme';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -69,6 +69,7 @@ export const VoiceScreen: React.FC = () => {
         setErrorMsg('Permissão de microfone negada. Habilite nas configurações do celular.');
         return;
       }
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
       startedAtRef.current = Date.now();
