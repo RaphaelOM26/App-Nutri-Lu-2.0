@@ -8,7 +8,7 @@
 
 import { Router } from 'express';
 import { openai, MODEL, RECIPE_SCHEMA, RECIPE_SYSTEM_PROMPT } from '../services/openai.js';
-import { reconcileServings, estimateTotalKcal } from '../utils/recipeSanity.js';
+import { reconcileServings, estimateTotalKcal, sanitizeRecipe } from '../utils/recipeSanity.js';
 
 const router = Router();
 
@@ -42,6 +42,12 @@ router.post('/', async (req, res, next) => {
         code: 'BAD_REQUEST',
       });
     }
+
+    // Sanitização de texto: strippa caracteres exóticos (árabe/hebraico/CJK)
+    // que a IA esporadicamente injeta (ex: "tempero italiano" virou
+    // "tempero الإيطaliano" em um caso real). Whitelist explícito de
+    // caracteres latinos + acentos PT-BR + pontuação.
+    recipe = sanitizeRecipe(recipe);
 
     // Sanity check determinístico: se a IA mentiu nas porções (caso clássico:
     // servings=1 numa receita que serve 4), recalcula baseado nas kcal totais

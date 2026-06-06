@@ -86,18 +86,9 @@ export const TabBar: React.FC<Props> = ({ state, navigation, onFabPress }) => {
                 gap: 2,
               }}
             >
-              <View
-                style={{
-                  width: 36,
-                  height: 28,
-                  borderRadius: 14,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: isActive ? theme.primarySoft : 'transparent',
-                }}
-              >
+              <TabPill active={isActive}>
                 <IconC size={20} color={isActive ? theme.primaryDeep : theme.textMuted} stroke={isActive ? 2 : 1.75} />
-              </View>
+              </TabPill>
               <Text
                 style={{
                   fontFamily: FONT.body,
@@ -116,6 +107,87 @@ export const TabBar: React.FC<Props> = ({ state, navigation, onFabPress }) => {
 
       {/* FAB camera */}
       <Fab onPress={onFabPress} />
+    </View>
+  );
+};
+
+// Pill da tab ativa — replica o padrão do FAB (pulse interno + ring externo)
+// mas em escala menor proporcional ao tamanho da pill. Quando inativa, é
+// só um View transparente sem animação rodando (loops cancelados).
+const TabPill: React.FC<{ active: boolean; children: React.ReactNode }> = ({ active, children }) => {
+  const theme = useTheme();
+  const scale = useRef(new Animated.Value(1)).current;
+  const ringOpacity = useRef(new Animated.Value(0)).current;
+  const ringScale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!active) {
+      scale.stopAnimation();
+      scale.setValue(1);
+      ringOpacity.stopAnimation();
+      ringOpacity.setValue(0);
+      ringScale.stopAnimation();
+      ringScale.setValue(1);
+      return;
+    }
+    // Pulse interno da pill (1.0 → 1.05 → 1.0) — mesmo timing do FAB
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 1.05, duration: 1200, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1, duration: 1200, useNativeDriver: true }),
+      ]),
+    );
+    pulse.start();
+    // Anel sage cresce e some — escala 1.5 (FAB usa 1.8, escala menor pra
+    // pill caber sem invadir as tabs vizinhas)
+    const ring = Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(ringScale, { toValue: 1.5, duration: 2400, useNativeDriver: true }),
+          Animated.timing(ringScale, { toValue: 1, duration: 0, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.timing(ringOpacity, { toValue: 0, duration: 2400, useNativeDriver: true }),
+          Animated.timing(ringOpacity, { toValue: 0.5, duration: 0, useNativeDriver: true }),
+        ]),
+      ]),
+    );
+    ring.start();
+    return () => {
+      pulse.stop();
+      ring.stop();
+    };
+  }, [active, scale, ringOpacity, ringScale]);
+
+  return (
+    <View style={{ width: 36, height: 28, alignItems: 'center', justifyContent: 'center' }}>
+      {active && (
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            width: 36,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: theme.primary,
+            opacity: ringOpacity,
+            transform: [{ scale: ringScale }],
+          }}
+        />
+      )}
+      <Animated.View
+        style={{
+          width: 36,
+          height: 28,
+          borderRadius: 14,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: active ? theme.primarySoft : 'transparent',
+          transform: [{ scale }],
+        }}
+      >
+        {children}
+      </Animated.View>
     </View>
   );
 };

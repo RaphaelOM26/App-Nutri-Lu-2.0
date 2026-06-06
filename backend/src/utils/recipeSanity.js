@@ -1,4 +1,4 @@
-// Sanity check determinístico do campo `servings` retornado pela IA.
+// Sanitização determinística da receita retornada pela IA.
 //
 // Problema: GPT-5.4-mini ocasionalmente retorna servings=1 mesmo pra receitas
 // que claramente alimentam 4+ pessoas (caso real: Fettuccine Alfredo com
@@ -192,4 +192,51 @@ export function reconcileServings(declaredServings, ingredients) {
 
   // Tá ok, confia na IA
   return Math.max(1, declared);
+}
+
+// ─── Sanitização de texto ─────────────────────────────────────────
+//
+// IA esporadicamente inclui caracteres exóticos (árabe, hebraico, CJK, símbolos
+// raros) que não fazem sentido em uma receita em PT-BR e quebram a renderização
+// no app. Caso real reportado: "tempero italiano" extraído como
+// "tempero الإيطaliano" (com bloco árabe injetado no meio).
+//
+// Whitelist explícito: só permite ASCII, Latin-1, Latin Extended A/B (cobre
+// todos acentos PT-BR), pontuação geral e espaços. Qualquer outra coisa some.
+
+// Ranges Unicode permitidos:
+//    -~  → ASCII printável
+//    -ɏ  → Latin-1 Supplement + Latin Extended A + Latin Extended B
+//                     (cobre á,é,í,ó,ú,ã,õ,ç,ñ,ü, etc.)
+//    -⁯  → General Punctuation (en/em dash, ellipsis, etc.)
+//   \s             → whitespace (tab, newline)
+const ALLOWED_CHARS_RE = /[^ -~ -ɏ -⁯\s]/g;
+
+export function sanitizeText(text) {
+  if (typeof text !== 'string') return text;
+  const cleaned = text.replace(ALLOWED_CHARS_RE, '');
+  // Colapsa múltiplos espaços que possam ter sobrado após remoção
+  return cleaned.replace(/\s+/g, ' ').trim();
+}
+
+/** Aplica sanitização nos campos de texto da receita extraída. Idempotente. */
+export function sanitizeRecipe(recipe) {
+  if (!recipe || typeof recipe !== 'object') return recipe;
+  const out = { ...recipe };
+  out.title = sanitizeText(recipe.title);
+  if (Array.isArray(recipe.ingredients)) {
+    out.ingredients = recipe.ingredients.map((ing) => ({
+      ...ing,
+      name: sanitizeText(ing.name),
+      quantity: sanitizeText(ing.quantity),
+      unit: sanitizeText(ing.unit),
+    }));
+  }
+  if (Array.isArray(recipe.steps)) {
+    out.steps = recipe.steps.map(sanitizeText);
+  }
+  if (typeof recipe.time === 'string') {
+    out.time = sanitizeText(recipe.time);
+  }
+  return out;
 }
