@@ -19,6 +19,9 @@ export type Ingredient = {
   name: string;
 };
 
+/** Categoria de refeição extraída pela IA. 'unknown' = IA não conseguiu inferir. */
+export type MealCategory = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'dessert' | 'unknown';
+
 export type ExtractedRecipe = {
   title: string;
   ingredients: Ingredient[];
@@ -28,6 +31,8 @@ export type ExtractedRecipe = {
   confidence: 'high' | 'medium' | 'low';
   /** Query em inglês pro Unsplash (ex: "pie,chickpea,rustic"). */
   imageQuery?: string;
+  /** Categoria de refeição inferida pela IA. 'unknown' = sem confiança. */
+  mealCategory?: MealCategory;
 };
 
 export type FoodAnalysisItem = {

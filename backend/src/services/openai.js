@@ -17,7 +17,7 @@ export const RECIPE_SCHEMA = {
   schema: {
     type: 'object',
     additionalProperties: false,
-    required: ['title', 'ingredients', 'steps', 'time', 'servings', 'confidence', 'imageQuery'],
+    required: ['title', 'ingredients', 'steps', 'time', 'servings', 'confidence', 'imageQuery', 'mealCategory'],
     properties: {
       title: {
         type: 'string',
@@ -70,6 +70,11 @@ export const RECIPE_SCHEMA = {
         type: 'string',
         enum: ['high', 'medium', 'low'],
         description: 'Confiança da extração: high = todos os campos legíveis, medium = alguns campos inferidos, low = muita inferência.',
+      },
+      mealCategory: {
+        type: 'string',
+        enum: ['breakfast', 'lunch', 'dinner', 'snack', 'dessert', 'unknown'],
+        description: 'Categoria de refeição mais provável da receita. breakfast = café da manhã (tapioca, omelete, panqueca, mingau, smoothie, vitamina, granola); lunch = almoço (prato principal robusto: massas, risoto, frango assado, carne, peixe, prato com arroz/feijão); dinner = jantar (prato principal mais leve OU sopa/caldo OU receita explicitamente noturna); snack = lanche (sanduíche, wrap, tosta, salgadinho, petisco entre refeições); dessert = sobremesa (bolo, pudim, brownie, mousse, sorvete, doce). Use "unknown" se realmente não der pra inferir com segurança — ex: receita ambígua que cabe em 3+ categorias.',
       },
     },
   },

@@ -24,7 +24,7 @@ import { newRecipeId, type SavedRecipe } from '../storage/recipes';
 import { categorize } from '../storage/shoppingList';
 import { estimateRecipeMacros, parseToGrams } from '../utils/recipeMacros';
 import { SEED_RECIPES_BY_ID } from '../data/seedRecipes';
-import type { Ingredient, ExtractedRecipe } from '../api/client';
+import type { Ingredient, ExtractedRecipe, MealCategory } from '../api/client';
 import type { RootStackParamList } from '../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'RecipeDetail'>;
@@ -121,6 +121,9 @@ export const RecipeDetailScreen: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [savedJustNow, setSavedJustNow] = useState(false);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
+  // Aberta quando a IA não conseguiu classificar a refeição (mealCategory='unknown'
+  // ou ausente). User escolhe manualmente antes de salvar.
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   // Notas livres do usuário — só editável em receitas saved (já persistidas).
   // Pra extracted: ainda sem id estável, então campo só ativa depois de salvar.
   const initialNotes = view?.kind === 'saved' ? (view.data.userNotes ?? '') : '';
@@ -256,10 +259,24 @@ export const RecipeDetailScreen: React.FC = () => {
 
   const onSave = async () => {
     if (view.kind !== 'extracted') return;
+    // Se IA não conseguiu classificar a refeição com segurança, abre picker
+    // pro user escolher antes de salvar (em vez de salvar em "limbo").
+    const aiCategory = view.data.mealCategory;
+    if (!aiCategory || aiCategory === 'unknown') {
+      setCategoryPickerOpen(true);
+      return;
+    }
+    await saveWithCategory(aiCategory);
+  };
+
+  const saveWithCategory = async (category: MealCategory) => {
+    if (view.kind !== 'extracted') return;
     setSaving(true);
+    setCategoryPickerOpen(false);
     try {
       const saved: SavedRecipe = {
         ...view.data,
+        mealCategory: category,
         id: newRecipeId(),
         savedAt: Date.now(),
         source: view.data.sourceUrl ? 'url' : view.data.imageDataUrl ? 'image' : 'manual',
@@ -845,6 +862,65 @@ export const RecipeDetailScreen: React.FC = () => {
             ))}
             <Pressable onPress={() => setMealPickerOpen(false)} style={{ padding: 12, alignItems: 'center', marginTop: 4 }}>
               <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '600', color: theme.textMuted }}>Cancelar</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Picker de categoria de refeição — abre quando IA não consegue classificar */}
+      <Modal visible={categoryPickerOpen} transparent animationType="fade" onRequestClose={() => setCategoryPickerOpen(false)}>
+        <Pressable
+          onPress={() => setCategoryPickerOpen(false)}
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
+        >
+          <Pressable
+            onPress={() => {}}
+            style={{
+              backgroundColor: theme.bg,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              padding: 20,
+              paddingBottom: Math.max(32, insets.bottom + 20),
+              gap: 12,
+            }}
+          >
+            <View style={{ alignItems: 'center', paddingBottom: 6 }}>
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
+            </View>
+            <Text style={{ fontFamily: FONT.headExtra, fontSize: 17, fontWeight: '800', color: theme.text }}>
+              Em qual categoria salvar?
+            </Text>
+            <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, lineHeight: 18, marginBottom: 4 }}>
+              A Lu não conseguiu identificar a categoria dessa receita com confiança. Escolha você mesmo:
+            </Text>
+            {([
+              { k: 'breakfast', label: 'Café da manhã' },
+              { k: 'lunch', label: 'Almoço' },
+              { k: 'dinner', label: 'Jantar' },
+              { k: 'snack', label: 'Lanche' },
+              { k: 'dessert', label: 'Sobremesa' },
+            ] as { k: MealCategory; label: string }[]).map((opt) => (
+              <Pressable
+                key={opt.k}
+                onPress={() => saveWithCategory(opt.k)}
+                style={{
+                  backgroundColor: theme.bgElev,
+                  borderRadius: 14,
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '700', color: theme.text }}>{opt.label}</Text>
+              </Pressable>
+            ))}
+            <Pressable
+              onPress={() => saveWithCategory('unknown')}
+              style={{ padding: 12, alignItems: 'center', marginTop: 4 }}
+            >
+              <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '600', color: theme.textMuted }}>
+                Pular — salvar sem categoria
+              </Text>
             </Pressable>
           </Pressable>
         </Pressable>

@@ -467,9 +467,11 @@ function inferCategory(title: string): Exclude<FilterKey, 'all' | 'favorites'> |
 
 const MyRecipes: React.FC<MyRecipesProps> = ({ filter, setFilter, savedRecipes, foodDB, query, sortMode, favoriteIds, onToggleFavorite, onOpen, onDeleteSaved, onImport }) => {
   const theme = useTheme();
-  // "Todas" foi removida — o estado interno 'all' é o default invisível.
-  // Tocar num chip ativo desmarca e volta pra 'all'.
-  const filters: { k: Exclude<FilterKey, 'all'>; label: string }[] = [
+  // "Todas" é o default — ativo quando nenhum outro filtro está selecionado.
+  // Garante caminho discoverable pra voltar pra view sem filtro (sem precisar
+  // saber que clicar no chip ativo desmarca).
+  const filters: { k: FilterKey; label: string }[] = [
+    { k: 'all', label: 'Todas' },
     { k: 'favorites', label: 'Favoritas' },
     { k: 'breakfast', label: 'Café' },
     { k: 'lunch', label: 'Almoço' },
@@ -485,8 +487,13 @@ const MyRecipes: React.FC<MyRecipesProps> = ({ filter, setFilter, savedRecipes, 
       if (query && !r.title.toLowerCase().includes(query)) return false;
       if (filter === 'all') return true;
       if (filter === 'favorites') return favoriteIds.includes(r.id);
-      // Categoria inferida do título — se não conseguir classificar, não aparece no filtro
-      return inferCategory(r.title) === filter;
+      // Prefere a categoria que a IA classificou (mealCategory) — fallback pra
+      // heurística por título caso campo não exista (legacy SavedRecipes pré-fix).
+      const cat =
+        r.mealCategory && r.mealCategory !== 'unknown'
+          ? r.mealCategory
+          : inferCategory(r.title);
+      return cat === filter;
     });
     return sortMode === 'alpha' ? [...out].sort((a, b) => a.title.localeCompare(b.title, 'pt-BR')) : out;
   }, [savedRecipes, filter, query, favoriteIds, sortMode]);
