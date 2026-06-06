@@ -8,6 +8,7 @@
 
 import { Router } from 'express';
 import { openai, MODEL, RECIPE_SCHEMA, RECIPE_SYSTEM_PROMPT } from '../services/openai.js';
+import { reconcileServings, estimateTotalKcal } from '../utils/recipeSanity.js';
 
 const router = Router();
 
@@ -40,6 +41,18 @@ router.post('/', async (req, res, next) => {
         error: `source inválido: "${source}". Use "image", "url" ou "video".`,
         code: 'BAD_REQUEST',
       });
+    }
+
+    // Sanity check determinístico: se a IA mentiu nas porções (caso clássico:
+    // servings=1 numa receita que serve 4), recalcula baseado nas kcal totais
+    // estimadas dos ingredientes. Log pra auditar a frequência do override.
+    const originalServings = recipe.servings;
+    recipe.servings = reconcileServings(recipe.servings, recipe.ingredients);
+    if (recipe.servings !== originalServings) {
+      const total = estimateTotalKcal(recipe.ingredients);
+      console.log(
+        `[sanity] servings override: ${originalServings} → ${recipe.servings} (total estimado: ${total} kcal, título: "${recipe.title}")`,
+      );
     }
 
     res.json(recipe);
