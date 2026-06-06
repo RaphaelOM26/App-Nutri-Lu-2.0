@@ -9,6 +9,7 @@
 
 import React, { useRef, useState } from 'react';
 import { View, Text, Pressable, Modal, ActivityIndicator, Platform, Linking } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { useTheme, FONT } from '../theme';
@@ -29,6 +30,7 @@ function formatTodayBR(): string {
 
 export const ShareProgressModal: React.FC<Props> = ({ visible, onClose }) => {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const { displayedMacros, water } = useApp();
   const toast = useToast();
   const shotRef = useRef<ViewShot>(null);
@@ -81,7 +83,7 @@ export const ShareProgressModal: React.FC<Props> = ({ visible, onClose }) => {
       <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
         <Pressable
           onPress={() => {}}
-          style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 32, gap: 16, maxHeight: '90%' }}
+          style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: Math.max(32, insets.bottom + 16), gap: 16, maxHeight: '90%' }}
         >
           <View style={{ alignItems: 'center', paddingBottom: 4 }}>
             <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />

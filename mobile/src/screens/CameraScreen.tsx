@@ -8,6 +8,7 @@
 
 import React, { useRef, useState } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, type RouteProp } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -28,6 +29,7 @@ export const CameraScreen: React.FC = () => {
   const mealId = route.params?.mealId;
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
+  const insets = useSafeAreaInsets();
   const [capturing, setCapturing] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
@@ -191,7 +193,7 @@ export const CameraScreen: React.FC = () => {
       <View
         style={{
           position: 'absolute',
-          bottom: 50,
+          bottom: Math.max(50, insets.bottom + 32),
           left: 0,
           right: 0,
           flexDirection: 'row',

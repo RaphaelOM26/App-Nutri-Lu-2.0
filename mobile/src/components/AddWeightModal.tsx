@@ -12,6 +12,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, FONT } from '../theme';
 import { Btn } from './Btn';
 
@@ -23,6 +24,7 @@ type Props = {
 
 export const AddWeightModal: React.FC<Props> = ({ visible, onClose, onSave }) => {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const [value, setValue] = useState('');
 
   // Reset ao abrir
@@ -63,7 +65,7 @@ export const AddWeightModal: React.FC<Props> = ({ visible, onClose, onSave }) =>
               borderTopRightRadius: 24,
               paddingHorizontal: 20,
               paddingTop: 12,
-              paddingBottom: 40,
+              paddingBottom: Math.max(40, insets.bottom + 24),
             }}
           >
             {/* Handle drag indicator */}

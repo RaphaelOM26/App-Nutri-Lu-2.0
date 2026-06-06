@@ -7,6 +7,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, Image, Pressable, Alert, Modal, TextInput } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, FONT } from '../theme';
@@ -41,6 +42,7 @@ export const RecipeDetailScreen: React.FC = () => {
   const theme = useTheme();
   const route = useRoute<Rt>();
   const nav = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const replayKey = useFocusReplay();
   const {
     addSavedRecipe,
@@ -740,7 +742,7 @@ export const RecipeDetailScreen: React.FC = () => {
       </ScrollView>
 
       {/* Sticky action — bottom */}
-      <View style={{ position: 'absolute', bottom: 24, left: 16, right: 16, flexDirection: 'row', gap: 8 }}>
+      <View style={{ position: 'absolute', bottom: Math.max(24, insets.bottom + 12), left: 16, right: 16, flexDirection: 'row', gap: 8 }}>
         {view.kind === 'extracted' && !savedJustNow ? (
           <Btn variant="primary" size="lg" icon={Icon.check} onPress={onSave} disabled={saving} full>
             {saving ? 'Salvando…' : 'Salvar receita'}

@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, Image, Alert, Modal, TextInput } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, FONT } from '../theme';
@@ -30,6 +31,7 @@ export const CameraResultScreen: React.FC = () => {
   const theme = useTheme();
   const route = useRoute<Rt>();
   const nav = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const { analysis, imageDataUrl, mode = 'food', mealId: paramMealId } = route.params;
   const { addToMeal, addPantryItem } = useApp();
   const toast = useToast();
@@ -314,7 +316,7 @@ export const CameraResultScreen: React.FC = () => {
       <View
         style={{
           position: 'absolute',
-          bottom: 24,
+          bottom: Math.max(24, insets.bottom + 12),
           left: 16,
           right: 16,
           backgroundColor: theme.bgElev,

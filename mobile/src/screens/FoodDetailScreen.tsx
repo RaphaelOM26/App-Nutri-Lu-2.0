@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, FONT } from '../theme';
@@ -27,6 +27,7 @@ export const FoodDetailScreen: React.FC = () => {
   const theme = useTheme();
   const nav = useNavigation<Nav>();
   const route = useRoute<Rt>();
+  const insets = useSafeAreaInsets();
   const replayKey = useFocusReplay();
   const { addToMeal } = useApp();
   const toast = useToast();
@@ -179,7 +180,7 @@ export const FoodDetailScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      <View style={{ position: 'absolute', bottom: 24, left: 16, right: 16 }}>
+      <View style={{ position: 'absolute', bottom: Math.max(24, insets.bottom + 12), left: 16, right: 16 }}>
         <Btn variant="primary" full onPress={onAdd} icon={Icon.plus}>
           Adicionar · {kcal} kcal
         </Btn>

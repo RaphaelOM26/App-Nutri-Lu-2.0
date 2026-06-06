@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, Pressable, Modal, TextInput, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, FONT } from '../theme';
 import { IconBtn } from './IconBtn';
 import { Btn } from './Btn';
@@ -16,6 +17,7 @@ type Editing = { id?: string; name: string; time: string };
 
 export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const { meals, addMeal, updateMeal, removeMeal } = useApp();
   const toast = useToast();
   const [editing, setEditing] = useState<Editing | null>(null);
@@ -87,7 +89,7 @@ export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
 
           {/* Editor inline (se editando) ou lista */}
           {editing ? (
-            <View style={{ paddingHorizontal: 20, gap: 14, paddingBottom: 20 }}>
+            <View style={{ paddingHorizontal: 20, gap: 14, paddingBottom: Math.max(20, insets.bottom + 12) }}>
               <View>
                 <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>
                   Nome
@@ -203,7 +205,7 @@ export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
                 )}
               </ScrollView>
 
-              <View style={{ padding: 20, paddingTop: 8, borderTopWidth: 1, borderTopColor: theme.border }}>
+              <View style={{ padding: 20, paddingTop: 8, paddingBottom: Math.max(20, insets.bottom + 12), borderTopWidth: 1, borderTopColor: theme.border }}>
                 <Btn variant="primary" size="md" icon={Icon.plus} onPress={startAdd} full>
                   Adicionar refeição personalizada
                 </Btn>

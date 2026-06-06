@@ -4,6 +4,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { View, Text, Pressable, Modal } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, FONT } from '../theme';
 import { Icon } from './Icons';
 import { IconBtn } from './IconBtn';
@@ -16,6 +17,7 @@ type Props = { visible: boolean; onClose: () => void };
 
 export const WeightCalendarModal: React.FC<Props> = ({ visible, onClose }) => {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const { weightEntries } = useApp();
   const [offset, setOffset] = useState(0); // 0 = mês atual, -1 = anterior, etc.
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -79,7 +81,7 @@ export const WeightCalendarModal: React.FC<Props> = ({ visible, onClose }) => {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
-        <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 28, gap: 14, maxHeight: '85%' }}>
+        <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: Math.max(28, insets.bottom + 16), gap: 14, maxHeight: '85%' }}>
           {/* Header */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

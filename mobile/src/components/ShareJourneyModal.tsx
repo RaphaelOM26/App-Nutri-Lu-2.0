@@ -5,6 +5,7 @@
 
 import React, { useRef, useState, useMemo } from 'react';
 import { View, Text, Pressable, Modal, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import Svg, { Polyline, Defs, LinearGradient, Stop, Path } from 'react-native-svg';
@@ -21,6 +22,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const ShareJourneyModal: React.FC<Props> = ({ visible, onClose }) => {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const { weightEntries, weightGoalKg } = useApp();
   const toast = useToast();
   const shotRef = useRef<ViewShot>(null);
@@ -74,7 +76,7 @@ export const ShareJourneyModal: React.FC<Props> = ({ visible, onClose }) => {
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             padding: 18,
-            paddingBottom: 32,
+            paddingBottom: Math.max(32, insets.bottom + 16),
             gap: 14,
             maxHeight: '92%',
           }}

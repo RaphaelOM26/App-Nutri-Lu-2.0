@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { View, Text, Pressable, Modal } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, FONT } from '../theme';
 import { Icon } from './Icons';
 
@@ -16,13 +17,14 @@ type Props = {
 
 export const ProgressMenuSheet: React.FC<Props> = ({ visible, onClose, onEditGoal, onReminders, onShare }) => {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   // Aguarda 250ms (tempo da animação de fade do Modal) antes de abrir o próximo,
   // pra evitar dois modais sobrepostos brevemente.
   const pick = (cb: () => void) => () => { onClose(); setTimeout(cb, 250); };
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
-        <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 28, gap: 4 }}>
+        <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: Math.max(28, insets.bottom + 16), gap: 4 }}>
           <View style={{ alignItems: 'center', paddingBottom: 6 }}>
             <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
           </View>
