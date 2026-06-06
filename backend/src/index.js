@@ -4,12 +4,14 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import { initSchema } from './db.js';
 import extractRecipeRouter from './routes/extractRecipe.js';
 import analyzeFoodRouter from './routes/analyzeFood.js';
 import chatRouter from './routes/chat.js';
 import insightRouter from './routes/insight.js';
 import dayReviewRouter from './routes/dayReview.js';
 import transcribeMealRouter from './routes/transcribeMeal.js';
+import daySnapshotRouter from './routes/daySnapshot.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -36,6 +38,7 @@ app.use('/chat', chatRouter);
 app.use('/insight', insightRouter);
 app.use('/day-review', dayReviewRouter);
 app.use('/transcribe-meal', transcribeMealRouter);
+app.use('/day-snapshot', daySnapshotRouter);
 
 // Handler de erro padrão (último na cadeia)
 app.use((err, req, res, next) => {
@@ -53,8 +56,26 @@ if (!process.env.OPENAI_API_KEY) {
   process.exit(1);
 }
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🥗 Nutri Lu Backend rodando em http://0.0.0.0:${PORT}`);
-  console.log(`   Modelo: ${process.env.OPENAI_MODEL || 'gpt-5.4-mini'}`);
-  console.log(`   Health: http://0.0.0.0:${PORT}/health\n`);
-});
+// Bootstrap do DB e listen. Se DATABASE_URL não estiver configurada, logamos
+// warning mas seguimos com o servidor de pé — endpoints de IA continuam OK,
+// só /day-snapshot vai devolver 500 até a env ser configurada. Isso garante
+// que um restart do Railway durante config inicial não trave tudo.
+async function start() {
+  if (process.env.DATABASE_URL) {
+    try {
+      await initSchema();
+    } catch (e) {
+      console.error('[boot] falha ao inicializar schema:', e.message);
+    }
+  } else {
+    console.warn('[boot] DATABASE_URL ausente — endpoints /day-snapshot vão falhar');
+  }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n🥗 Nutri Lu Backend rodando em http://0.0.0.0:${PORT}`);
+    console.log(`   Modelo: ${process.env.OPENAI_MODEL || 'gpt-5.4-mini'}`);
+    console.log(`   Health: http://0.0.0.0:${PORT}/health\n`);
+  });
+}
+
+start();
