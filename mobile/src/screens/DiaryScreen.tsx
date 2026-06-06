@@ -255,7 +255,7 @@ export const DiaryScreen: React.FC = () => {
                 <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center' }}>
                   {isToday
                     ? 'Use as ações rápidas acima pra começar.'
-                    : 'No MVP, o histórico de outros dias vem com o backend conectado.'}
+                    : 'Nenhum dado registrado nesse dia.'}
                 </Text>
               </View>
             </Card>

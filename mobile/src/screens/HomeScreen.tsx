@@ -367,7 +367,7 @@ const EmptyDayState: React.FC<{ isToday: boolean }> = ({ isToday }) => {
         <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center' }}>
           {isToday
             ? 'Comece tocando no "+" de uma refeição abaixo.'
-            : 'No MVP, o histórico de outros dias vem com o backend conectado.'}
+            : 'Nenhum dado registrado nesse dia.'}
         </Text>
       </View>
     </Card>

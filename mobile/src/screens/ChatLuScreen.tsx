@@ -3,7 +3,7 @@
 // Versão completa (Semana 2): tool calling, histórico persistido, stream.
 
 import React, { useState, useRef, useMemo } from 'react';
-import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme, FONT } from '../theme';
@@ -113,7 +113,12 @@ export const ChatLuScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
       <ScreenHeader
         left={[<IconBtn key="b" icon={Icon.back} onPress={() => nav.goBack()} />]}
         right={[<IconBtn key="m" icon={Icon.more} onPress={() => setMenuOpen(true)} />]}
@@ -130,7 +135,7 @@ export const ChatLuScreen: React.FC = () => {
         }
       />
 
-      <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 140 }}>
+      <ScrollView ref={scrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 10 }}>
         {messages.map((m, i) => (
           <View key={i} style={{ flexDirection: 'row', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
             <View
@@ -179,7 +184,7 @@ export const ChatLuScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      <View style={{ position: 'absolute', bottom: 16, left: 0, right: 0, paddingHorizontal: 16 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 }}>
         <View
           style={{
             backgroundColor: theme.bgElev,
@@ -316,6 +321,7 @@ export const ChatLuScreen: React.FC = () => {
           </Pressable>
         </Pressable>
       </Modal>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
