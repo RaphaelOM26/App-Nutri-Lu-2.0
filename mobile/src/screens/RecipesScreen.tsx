@@ -487,8 +487,12 @@ const MyRecipes: React.FC<MyRecipesProps> = ({ filter, setFilter, savedRecipes, 
       if (query && !r.title.toLowerCase().includes(query)) return false;
       if (filter === 'all') return true;
       if (filter === 'favorites') return favoriteIds.includes(r.id);
-      // Prefere a categoria que a IA classificou (mealCategory) — fallback pra
-      // heurística por título caso campo não exista (legacy SavedRecipes pré-fix).
+      // Prioridade: (1) array mealCategories escolhido pelo user no picker;
+      // (2) campo mealCategory singular de versão anterior (legacy); (3) heurística
+      // por título pra receitas SAVED antes de qualquer um desses fixes.
+      if (r.mealCategories && r.mealCategories.length > 0) {
+        return r.mealCategories.includes(filter as never);
+      }
       const cat =
         r.mealCategory && r.mealCategory !== 'unknown'
           ? r.mealCategory

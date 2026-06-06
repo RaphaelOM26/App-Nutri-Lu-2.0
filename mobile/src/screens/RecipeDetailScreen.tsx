@@ -121,9 +121,12 @@ export const RecipeDetailScreen: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [savedJustNow, setSavedJustNow] = useState(false);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
-  // Aberta quando a IA não conseguiu classificar a refeição (mealCategory='unknown'
-  // ou ausente). User escolhe manualmente antes de salvar.
+  // Aberta SEMPRE no Salvar de extracted. User decide em quais categorias
+  // a receita vai (multi-select). Pode pular pra salvar sem categoria.
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
+  // Categorias marcadas no picker. Pré-marcadas com a sugestão da IA ou
+  // do inferCategory(title) quando abre.
+  const [pickerSelected, setPickerSelected] = useState<MealCategory[]>([]);
   // Notas livres do usuário — só editável em receitas saved (já persistidas).
   // Pra extracted: ainda sem id estável, então campo só ativa depois de salvar.
   const initialNotes = view?.kind === 'saved' ? (view.data.userNotes ?? '') : '';
@@ -257,26 +260,29 @@ export const RecipeDetailScreen: React.FC = () => {
     });
   };
 
-  const onSave = async () => {
+  const onSave = () => {
     if (view.kind !== 'extracted') return;
-    // Se IA não conseguiu classificar a refeição com segurança, abre picker
-    // pro user escolher antes de salvar (em vez de salvar em "limbo").
-    const aiCategory = view.data.mealCategory;
-    if (!aiCategory || aiCategory === 'unknown') {
-      setCategoryPickerOpen(true);
-      return;
-    }
-    await saveWithCategory(aiCategory);
+    // SEMPRE abre o picker — usuário decide as categorias. A IA fica apenas
+    // como pré-marcação no checkbox correspondente (hint, não decisão).
+    const aiHint = view.data.mealCategory;
+    setPickerSelected(aiHint && aiHint !== 'unknown' ? [aiHint] : []);
+    setCategoryPickerOpen(true);
   };
 
-  const saveWithCategory = async (category: MealCategory) => {
+  const togglePickerCategory = (cat: MealCategory) => {
+    setPickerSelected((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
+    );
+  };
+
+  const saveWithCategories = async (categories: MealCategory[]) => {
     if (view.kind !== 'extracted') return;
     setSaving(true);
     setCategoryPickerOpen(false);
     try {
       const saved: SavedRecipe = {
         ...view.data,
-        mealCategory: category,
+        mealCategories: categories,
         id: newRecipeId(),
         savedAt: Date.now(),
         source: view.data.sourceUrl ? 'url' : view.data.imageDataUrl ? 'image' : 'manual',
@@ -285,7 +291,13 @@ export const RecipeDetailScreen: React.FC = () => {
       };
       await addSavedRecipe(saved);
       setSavedJustNow(true);
-      toast('Receita salva');
+      toast(
+        categories.length === 0
+          ? 'Receita salva sem categoria'
+          : categories.length === 1
+            ? 'Receita salva'
+            : `Receita salva em ${categories.length} categorias`,
+      );
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Erro ao salvar receita', 'error');
     } finally {
@@ -867,7 +879,7 @@ export const RecipeDetailScreen: React.FC = () => {
         </Pressable>
       </Modal>
 
-      {/* Picker de categoria de refeição — abre quando IA não consegue classificar */}
+      {/* Picker de categorias — sempre abre ao Salvar. Multi-select. */}
       <Modal visible={categoryPickerOpen} transparent animationType="fade" onRequestClose={() => setCategoryPickerOpen(false)}>
         <Pressable
           onPress={() => setCategoryPickerOpen(false)}
@@ -880,18 +892,18 @@ export const RecipeDetailScreen: React.FC = () => {
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
               padding: 20,
-              paddingBottom: Math.max(32, insets.bottom + 20),
-              gap: 12,
+              paddingBottom: Math.max(24, insets.bottom + 16),
+              gap: 10,
             }}
           >
             <View style={{ alignItems: 'center', paddingBottom: 6 }}>
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
             </View>
             <Text style={{ fontFamily: FONT.headExtra, fontSize: 17, fontWeight: '800', color: theme.text }}>
-              Em qual categoria salvar?
+              Em quais categorias salvar?
             </Text>
             <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, lineHeight: 18, marginBottom: 4 }}>
-              A Lu não conseguiu identificar a categoria dessa receita com confiança. Escolha você mesmo:
+              Pode marcar mais de uma — a receita aparece em todas. Algumas combinam (panqueca de banana → Café + Sobremesa).
             </Text>
             {([
               { k: 'breakfast', label: 'Café da manhã' },
@@ -899,28 +911,62 @@ export const RecipeDetailScreen: React.FC = () => {
               { k: 'dinner', label: 'Jantar' },
               { k: 'snack', label: 'Lanche' },
               { k: 'dessert', label: 'Sobremesa' },
-            ] as { k: MealCategory; label: string }[]).map((opt) => (
-              <Pressable
-                key={opt.k}
-                onPress={() => saveWithCategory(opt.k)}
-                style={{
-                  backgroundColor: theme.bgElev,
-                  borderRadius: 14,
-                  paddingVertical: 14,
-                  paddingHorizontal: 16,
-                  alignItems: 'center',
-                }}
+            ] as { k: MealCategory; label: string }[]).map((opt) => {
+              const checked = pickerSelected.includes(opt.k);
+              return (
+                <Pressable
+                  key={opt.k}
+                  onPress={() => togglePickerCategory(opt.k)}
+                  style={{
+                    backgroundColor: checked ? theme.primarySoft : theme.bgElev,
+                    borderRadius: 14,
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    borderWidth: 1.5,
+                    borderColor: checked ? theme.primary : 'transparent',
+                  }}
+                >
+                  {/* Checkbox visual */}
+                  <View
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 6,
+                      borderWidth: 2,
+                      borderColor: checked ? theme.primary : theme.borderStrong,
+                      backgroundColor: checked ? theme.primary : 'transparent',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {checked && <Icon.check size={14} color={theme.bg} stroke={3} />}
+                  </View>
+                  <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '700', color: theme.text, flex: 1 }}>{opt.label}</Text>
+                </Pressable>
+              );
+            })}
+            {/* Botão Confirmar */}
+            <View style={{ marginTop: 8 }}>
+              <Btn
+                variant="primary"
+                size="lg"
+                icon={Icon.check}
+                full
+                disabled={saving}
+                onPress={() => saveWithCategories(pickerSelected)}
               >
-                <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '700', color: theme.text }}>{opt.label}</Text>
-              </Pressable>
-            ))}
-            <Pressable
-              onPress={() => saveWithCategory('unknown')}
-              style={{ padding: 12, alignItems: 'center', marginTop: 4 }}
-            >
-              <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '600', color: theme.textMuted }}>
-                Pular — salvar sem categoria
-              </Text>
+                {pickerSelected.length === 0
+                  ? 'Salvar sem categoria'
+                  : pickerSelected.length === 1
+                    ? 'Salvar em 1 categoria'
+                    : `Salvar em ${pickerSelected.length} categorias`}
+              </Btn>
+            </View>
+            <Pressable onPress={() => setCategoryPickerOpen(false)} style={{ padding: 8, alignItems: 'center' }}>
+              <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '600', color: theme.textMuted }}>Cancelar</Text>
             </Pressable>
           </Pressable>
         </Pressable>

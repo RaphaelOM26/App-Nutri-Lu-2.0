@@ -3,7 +3,7 @@
 // aqui guardamos apenas as criadas/importadas pelo usuário.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { ExtractedRecipe } from '../api/client';
+import type { ExtractedRecipe, MealCategory } from '../api/client';
 
 const STORAGE_KEY = '@nutri-lu/saved-recipes';
 
@@ -15,6 +15,13 @@ export type SavedRecipe = ExtractedRecipe & {
   sourceUrl?: string; // URL original se vier de link
   /** Notas/observações livres escritas pelo usuário. Persistido. */
   userNotes?: string;
+  /**
+   * Categorias de refeição escolhidas pelo USUÁRIO no momento de salvar.
+   * Pode ter múltiplas (uma receita de panqueca de banana cabe em "Café"
+   * E "Sobremesa"). A IA continua sugerindo via .mealCategory (herdado de
+   * ExtractedRecipe) mas a decisão final é do usuário.
+   */
+  mealCategories?: MealCategory[];
 };
 
 export async function loadRecipes(): Promise<SavedRecipe[]> {
