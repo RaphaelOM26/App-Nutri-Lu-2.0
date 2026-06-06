@@ -7,6 +7,9 @@
     "preview": {
       "distribution": "internal",
       "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://app-nutri-lu-20-production.up.railway.app"
+      },
       "android": {
         "buildType": "apk"
       },

@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, FONT } from '../theme';
@@ -58,6 +58,9 @@ export const DiaryScreen: React.FC = () => {
   const theme = useTheme();
   const nav = useNavigation<Nav>();
   const replayKey = useFocusReplay();
+  // Inset bottom pra os bottom-sheets não ficarem cobertos pela nav bar
+  // do sistema (Samsung 3-button, gesture indicator iOS, etc.).
+  const insets = useSafeAreaInsets();
   const {
     selectedDay, setSelectedDay, displayedMacros, displayedMeals, isToday, meals,
     restoreDayFromSnapshot,
@@ -327,7 +330,7 @@ export const DiaryScreen: React.FC = () => {
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
               padding: 20,
-              paddingBottom: 32,
+              paddingBottom: Math.max(32, insets.bottom + 20),
               gap: 12,
             }}
           >
@@ -381,7 +384,7 @@ export const DiaryScreen: React.FC = () => {
       {/* Menu ⋮ do Diário */}
       <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
         <Pressable onPress={() => setMenuOpen(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
-          <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 28, gap: 6 }}>
+          <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: Math.max(28, insets.bottom + 16), gap: 6 }}>
             <View style={{ alignItems: 'center', paddingBottom: 6 }}>
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
             </View>

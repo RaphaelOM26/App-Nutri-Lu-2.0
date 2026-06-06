@@ -1,12 +1,17 @@
 // Cliente HTTP do backend. Lê o host de `EXPO_PUBLIC_API_URL`
-// (definido em .env do mobile) ou usa fallback localhost:3001.
+// (definido em mobile/.env OU em eas.json `env` por profile).
 //
-// IMPORTANTE: pra rodar no celular físico via Expo Go, troque pelo IP da
-// máquina na rede local (ex: http://192.168.0.10:3001). Localhost no
-// celular aponta pro próprio celular, não pro seu computador.
+// Fallback: URL de produção no Railway. Isso garante que o APK funcione
+// mesmo se o env var não tiver sido bundlado (caso clássico: .env é
+// gitignored e EAS por default respeita .gitignore — o env precisa
+// estar no eas.json pra ser bundlado em produção).
+//
+// Pra rodar local em dev (Expo Go), o mobile/.env aponta pro IP da
+// máquina na rede local (localhost no celular = o próprio celular).
 
-const BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+const PRODUCTION_API_URL = 'https://app-nutri-lu-20-production.up.railway.app';
+
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || PRODUCTION_API_URL;
 
 export type Ingredient = {
   quantity: string;
