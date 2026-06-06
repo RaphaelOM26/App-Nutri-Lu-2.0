@@ -21,9 +21,10 @@ import {
   NunitoSans_700Bold,
 } from '@expo-google-fonts/nunito-sans';
 import { DMSerifDisplay_400Regular, DMSerifDisplay_400Regular_Italic } from '@expo-google-fonts/dm-serif-display';
-import { AppProvider } from './src/state/AppContext';
+import { AppProvider, useApp } from './src/state/AppContext';
 import { ToastProvider } from './src/state/ToastContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { OnboardingNavigator } from './src/navigation/OnboardingNavigator';
 import { MacrosWatcher } from './src/components/MacrosWatcher';
 import { useTheme } from './src/theme';
 import { ThemeProvider } from './src/theme/ThemeContext';
@@ -40,11 +41,19 @@ if (__DEV__ && typeof window !== 'undefined') {
 
 function AppContent() {
   const theme = useTheme();
+  const { isOnboarded, hydrated } = useApp();
+
+  // Enquanto a hidratação do AsyncStorage não termina, mostra o splash —
+  // evita flash da tela de onboarding pra usuários que já onboardearam.
+  if (!hydrated) {
+    return <SplashFallback />;
+  }
+
   return (
     <>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
       <NavigationContainer ref={navigationRef}>
-        <RootNavigator />
+        {isOnboarded ? <RootNavigator /> : <OnboardingNavigator />}
       </NavigationContainer>
     </>
   );

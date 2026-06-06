@@ -117,28 +117,78 @@ export type RecipeFitCandidate = {
   score: number;
 };
 
+export type MealContext = 'breakfast' | 'lunch' | 'snack' | 'dinner' | 'any';
+
 /**
- * Ranqueia receitas pela proximidade aos macros que faltam no dia.
+ * Deriva o contexto da refeição com base no horário do dia.
+ * Janelas com sobreposição (almoço/lanche, jantar/lanche) porque sugestões válidas
+ * podem cair em mais de um — o caller usa só pra filtrar tags, não pra excluir.
+ */
+export function mealContextFromHour(hour: number): MealContext {
+  if (hour >= 5 && hour < 10) return 'breakfast';
+  if (hour >= 10 && hour < 14) return 'lunch';
+  if (hour >= 14 && hour < 17) return 'snack';
+  if (hour >= 17 && hour < 23) return 'dinner';
+  return 'any';
+}
+
+// Mapeia contexto → tags aceitáveis. Tags ESTRITAS por contexto — "Lanche" só
+// passa em snack, senão a sugestão de almoço/jantar vira suco/iogurte (que era
+// o bug reportado pelo Raphael: "Suco Detox de 702 kcal" sugerido às 19h).
+const TAGS_BY_CONTEXT: Record<MealContext, string[]> = {
+  breakfast: ['Café', 'Café da manhã'],
+  lunch: ['Almoço', 'Refeição'],
+  snack: ['Lanche', 'Sobremesa'],
+  dinner: ['Jantar', 'Almoço', 'Refeição'],
+  any: [],
+};
+
+// Limites de kcal por porção. Snack/lanche bem restrito (50-250 kcal — Suco Detox
+// 702kcal não passa) pra evitar sugerir refeição inteira como lanche.
+const KCAL_RANGE_BY_CONTEXT: Record<MealContext, [number, number]> = {
+  breakfast: [150, 550],
+  lunch: [300, 800],
+  snack: [50, 250],
+  dinner: [300, 800],
+  any: [80, 900],
+};
+
+/**
+ * Ranqueia receitas pela proximidade aos macros restantes E pelo contexto da
+ * refeição (horário), com randomização leve pra variedade entre sessões.
+ *
  * Heurística (lower=better):
- *  - Penaliza estourar kcal/macros (peso 3x).
- *  - Recompensa proteína próxima ao restante (peso 2x — é o macro mais "caro").
- *  - Penaliza receitas com matchRatio baixo no foodDB.
- *  - Filtra porções fora da faixa razoável (60-900 kcal).
+ *  - Filtra por tag estrita por horário (almoço só aceita refeições principais)
+ *  - Filtra por kcal/porção do contexto (snack max 250 kcal)
+ *  - Rejeita receitas com matchRatio < 0.5 (antes era 0.3 — muito permissivo)
+ *  - Recompensa proteína próxima ao restante (peso 2x)
+ *  - Penaliza estourar macros do dia
+ *
+ * Pra variedade: pega top 3×topN ranqueados, embaralha (Fisher-Yates seedado pela
+ * hora) e retorna topN. Cada vez que user abre a sugestão em horários diferentes,
+ * vê opções diferentes dentro do tier de qualidade. Antes era determinístico:
+ * mesma entrada → mesmos 6 candidatos sempre.
  */
 export function pickRecipesForRemainingMacros(
   recipes: SeedRecipe[],
   remaining: { kcal: number; p: number; c: number; f: number },
   foodDB: Food[],
   topN = 5,
+  context: MealContext = 'any',
 ): RecipeFitCandidate[] {
-  const targetK = Math.max(80, Math.min(remaining.kcal, 700));
+  const [kMin, kMax] = KCAL_RANGE_BY_CONTEXT[context];
+  const targetK = Math.max(kMin, Math.min(remaining.kcal, kMax));
   const targetP = Math.max(8, Math.min(remaining.p, 40));
+  const acceptedTags = TAGS_BY_CONTEXT[context];
+  const acceptedSet = new Set(acceptedTags.map((t) => t.toLowerCase()));
 
   const scored: RecipeFitCandidate[] = [];
   for (const r of recipes) {
     if (!r.ingredients || r.ingredients.length === 0) continue;
+    if (acceptedSet.size > 0 && !acceptedSet.has(r.tag.toLowerCase())) continue;
+
     const est = estimateRecipeMacros(r.ingredients, foodDB);
-    if (est.matchRatio < 0.3) continue;
+    if (est.matchRatio < 0.5) continue; // threshold mais estrito (antes 0.3)
     const servings = r.servings || 1;
     const per = {
       kcal: Math.round(est.kcal / servings),
@@ -146,7 +196,7 @@ export function pickRecipesForRemainingMacros(
       c: Math.round(est.c / servings),
       f: Math.round(est.f / servings),
     };
-    if (per.kcal < 60 || per.kcal > 900) continue;
+    if (per.kcal < kMin || per.kcal > kMax) continue;
 
     const fitK = Math.abs(per.kcal - targetK);
     const fitP = Math.abs(per.p - targetP) * 2;
@@ -159,5 +209,13 @@ export function pickRecipesForRemainingMacros(
     scored.push({ recipe: r, perServing: per, score });
   }
   scored.sort((a, b) => a.score - b.score);
-  return scored.slice(0, topN);
+
+  // Top pool 3× maior que o necessário — embaralhamos pra dar variedade.
+  // Sem seed determinístico (Math.random) — cada chamada produz ordem diferente.
+  const pool = scored.slice(0, topN * 3);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, topN);
 }

@@ -31,10 +31,13 @@ export const CameraLoadingScreen: React.FC = () => {
           const imageDataUrl = `data:image/jpeg;base64,${imageBase64}`;
           nav.replace('RecipeDetail', { extracted: { ...recipe, imageDataUrl } });
         } else {
+          // 'food' e 'pantry' usam o mesmo endpoint de análise (identifica alimentos
+          // na foto). A ramificação acontece em CameraResult: 'food' adiciona como
+          // item de refeição no diário, 'pantry' adiciona à despensa com shelf-life.
           const analysis = await analyzeFood(imageBase64);
           if (cancelled) return;
           const imageDataUrl = `data:image/jpeg;base64,${imageBase64}`;
-          nav.replace('CameraResult', { analysis, imageDataUrl, mealId });
+          nav.replace('CameraResult', { analysis, imageDataUrl, mode, mealId });
         }
       } catch (err) {
         if (cancelled) return;
@@ -62,10 +65,18 @@ export const CameraLoadingScreen: React.FC = () => {
       </View>
       <View style={{ alignItems: 'center', gap: 6 }}>
         <Text style={{ fontFamily: FONT.headExtra, fontSize: 22, fontWeight: '800', color: '#fff', letterSpacing: -0.3 }}>
-          {mode === 'recipe' ? 'Extraindo receita' : 'Analisando seu prato'}
+          {mode === 'recipe'
+            ? 'Extraindo receita'
+            : mode === 'pantry'
+              ? 'Lendo sua geladeira'
+              : 'Analisando seu prato'}
         </Text>
         <Text style={{ fontFamily: FONT.body, fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>
-          {mode === 'recipe' ? 'Lendo ingredientes e passos…' : 'Identificando ingredientes e porções…'}
+          {mode === 'recipe'
+            ? 'Lendo ingredientes e passos…'
+            : mode === 'pantry'
+              ? 'Identificando alimentos e validade…'
+              : 'Identificando ingredientes e porções…'}
         </Text>
       </View>
       <Pressable

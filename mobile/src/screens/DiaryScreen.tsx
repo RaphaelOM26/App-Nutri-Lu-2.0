@@ -25,7 +25,8 @@ import { useToast } from '../state/ToastContext';
 import { useFocusReplay } from '../utils/useFocusReplay';
 import { TODAY, TODAY_MONTH, TODAY_YEAR } from '../state/AppContext';
 import { todayKey } from '../storage/completedDays';
-import { generateDayReview, ApiError } from '../api/client';
+import { getDeviceId } from '../storage/deviceId';
+import { generateDayReview, getDaySnapshot, ApiError, type DaySnapshotPayload } from '../api/client';
 import { MarkdownText } from '../components/MarkdownText';
 import { ActivityIndicator } from 'react-native';
 
@@ -39,29 +40,16 @@ function formatDayBR(day: number, month: number, year: number): string {
 }
 import type { RootStackParamList } from '../navigation/types';
 
-// Refeição "do dia anterior" usada pela opção "Copiar dia anterior".
-// No MVP é hardcoded — versão real virá com histórico no backend.
-const YESTERDAY_ITEMS: Record<string, Array<{ name: string; portion: string; amount: number; kcal: number; p: number; c: number; f: number }>> = {
-  breakfast: [
-    { name: 'Pão integral com queijo', portion: '80g', amount: 1, kcal: 240, p: 12, c: 32, f: 7 },
-    { name: 'Café com leite', portion: '1 xícara', amount: 1, kcal: 102, p: 6, c: 9, f: 4 },
-  ],
-  lunch: [
-    { name: 'Arroz integral', portion: '120g', amount: 1, kcal: 144, p: 3, c: 30, f: 1 },
-    { name: 'Frango grelhado', portion: '150g', amount: 1, kcal: 247, p: 46, c: 0, f: 5 },
-    { name: 'Salada verde', portion: '1 prato', amount: 1, kcal: 60, p: 2, c: 7, f: 2 },
-    { name: 'Feijão preto cozido', portion: '100g', amount: 1, kcal: 77, p: 4, c: 14, f: 1 },
-  ],
-  snack: [
-    { name: 'Iogurte natural', portion: '170g', amount: 1, kcal: 90, p: 9, c: 12, f: 1 },
-    { name: 'Granola', portion: '30g', amount: 1, kcal: 130, p: 3, c: 22, f: 4 },
-  ],
-  dinner: [
-    { name: 'Salmão grelhado', portion: '150g', amount: 1, kcal: 280, p: 31, c: 0, f: 17 },
-    { name: 'Batata-doce assada', portion: '150g', amount: 1, kcal: 134, p: 2, c: 31, f: 0 },
-    { name: 'Brócolis no vapor', portion: '100g', amount: 1, kcal: 35, p: 3, c: 7, f: 0 },
-  ],
-};
+// "Copiar dia anterior" puxa o snapshot de ontem do backend Postgres via
+// deviceId anônimo (sem auth). Se 404, toast "nada registrado". Se hoje já
+// tem dados, abre modal de confirmação antes de sobrescrever.
+
+// Retorna o dayKey de ontem no mesmo formato YYYY-MM-DD do todayKey.
+function yesterdayKey(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type QuickAction = 'photo' | 'search' | 'barcode' | 'voice';
@@ -71,8 +59,9 @@ export const DiaryScreen: React.FC = () => {
   const nav = useNavigation<Nav>();
   const replayKey = useFocusReplay();
   const {
-    selectedDay, setSelectedDay, displayedMacros, displayedMeals, isToday, meals, replaceDay,
-    water, todayCompleted, completeDay, uncompleteDay,
+    selectedDay, setSelectedDay, displayedMacros, displayedMeals, isToday, meals,
+    restoreDayFromSnapshot,
+    water, todayCompleted, completeDay, uncompleteDay, name,
   } = useApp();
   const subtitle = isToday
     ? formatDayBR(TODAY, TODAY_MONTH, TODAY_YEAR)
@@ -86,6 +75,9 @@ export const DiaryScreen: React.FC = () => {
   const [configMealsOpen, setConfigMealsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [copyConfirmOpen, setCopyConfirmOpen] = useState(false);
+  // Snapshot já carregado de ontem, guardado entre o GET e o "Substituir" do modal.
+  const [pendingSnapshot, setPendingSnapshot] = useState<DaySnapshotPayload | null>(null);
+  const [copyLoading, setCopyLoading] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewText, setReviewText] = useState<string | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -101,7 +93,7 @@ export const DiaryScreen: React.FC = () => {
     setReviewLoading(true);
     try {
       const { text } = await generateDayReview({
-        profile: { name: 'Larissa', goal: 'Perder peso', weightKg: 85.2, goalWeightKg: 82 },
+        profile: { name: name ?? 'Anônima', goal: 'Perder peso', weightKg: 85.2, goalWeightKg: 82 },
         macros: { kcal: displayedMacros.kcal, p: displayedMacros.p, c: displayedMacros.c, f: displayedMacros.f },
         meals: displayedMeals.map((m) => ({
           name: m.name,
@@ -126,18 +118,49 @@ export const DiaryScreen: React.FC = () => {
 
   const showToast = (msg: string) => toast(msg);
 
-  const requestCopyYesterday = () => {
+  const requestCopyYesterday = async () => {
     setMenuOpen(false);
-    // Se já tem registros hoje, confirma antes de sobrescrever
-    if (hasAnyRegisteredMeal) setCopyConfirmOpen(true);
-    else doCopyYesterday();
+    if (copyLoading) return;
+    setCopyLoading(true);
+    try {
+      const deviceId = await getDeviceId();
+      const snapshot = await getDaySnapshot(deviceId, yesterdayKey());
+      if (!snapshot) {
+        toast('Você não registrou nada ontem.', 'info');
+        return;
+      }
+      const hasItemsInSnapshot = snapshot.meals.some((m) => m.items.length > 0);
+      if (!hasItemsInSnapshot) {
+        toast('Você não registrou refeições ontem.', 'info');
+        return;
+      }
+      setPendingSnapshot(snapshot);
+      if (hasAnyRegisteredMeal) {
+        // Hoje já tem refeições — pede confirmação antes de sobrescrever.
+        setCopyConfirmOpen(true);
+      } else {
+        // Hoje está vazio — copia direto, sem fricção.
+        restoreDayFromSnapshot(snapshot);
+        setPendingSnapshot(null);
+        toast('Refeições de ontem copiadas.', 'success');
+      }
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : 'Não consegui buscar o histórico de ontem.';
+      toast(`⚠️ ${msg}`, 'error');
+    } finally {
+      setCopyLoading(false);
+    }
   };
 
   const doCopyYesterday = () => {
     setCopyConfirmOpen(false);
-    // Substitui completamente as refeições de hoje pelas de ontem
-    replaceDay(YESTERDAY_ITEMS);
-    showToast('Refeições de ontem copiadas');
+    if (!pendingSnapshot) {
+      toast('Snapshot indisponível, tente de novo.', 'error');
+      return;
+    }
+    restoreDayFromSnapshot(pendingSnapshot);
+    setPendingSnapshot(null);
+    toast('Refeições de ontem copiadas.', 'success');
   };
 
   const openConfig = () => { setMenuOpen(false); setConfigMealsOpen(true); };

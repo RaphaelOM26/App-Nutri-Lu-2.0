@@ -62,23 +62,3 @@ export async function saveHabits(habits: Habit[]): Promise<void> {
 export function newHabitId(): string {
   return `hb_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 }
-
-// Seed inicial pra demo (idêntico ao mock antigo, com IDs estáveis e dias concluídos
-// retroativos pra refletir streaks visíveis no app).
-function seedCompletedDays(days: number): string[] {
-  const out: string[] = [];
-  const cursor = new Date();
-  cursor.setHours(0, 0, 0, 0);
-  for (let i = 0; i < days; i++) {
-    out.push(dayKey(cursor));
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return out;
-}
-
-export const SEED_HABITS: Habit[] = [
-  { id: 'hb_seed_sleep', name: 'Dormir 8h', reminderTime: '22:30', completedDays: seedCompletedDays(9) },
-  { id: 'hb_seed_water', name: 'Beber 2L de água', reminderTime: '10:00', completedDays: seedCompletedDays(12) },
-  { id: 'hb_seed_clean', name: 'Sem ultraprocessados', completedDays: seedCompletedDays(4).slice(1) /* sem hoje */ },
-  { id: 'hb_seed_walk', name: 'Caminhada 30min', reminderTime: '18:00', completedDays: seedCompletedDays(7) },
-];

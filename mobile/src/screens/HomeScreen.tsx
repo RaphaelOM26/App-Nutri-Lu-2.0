@@ -20,6 +20,7 @@ import { useFocusReplay } from '../utils/useFocusReplay';
 import type { RootStackParamList } from '../navigation/types';
 import { formatRelativeTime, type AppNotification } from '../data/notifications';
 import { generateInsight, ApiError, computeInsightTone, type InsightTone } from '../api/client';
+import { calcStreak } from '../storage/habits';
 import { loadInsight, saveInsight, makeStateHash } from '../storage/insight';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -43,7 +44,19 @@ export const HomeScreen: React.FC = () => {
     markAllNotificationsRead,
     markNotificationRead,
     profilePhotoUri,
+    name,
+    completedDays,
+    weightEntries,
   } = useApp();
+  // Nome de display + iniciais com fallbacks pra usuários pré-onboarding.
+  const displayName = name ?? 'você';
+  const initials = name ? name.trim().charAt(0).toUpperCase() : 'L';
+  // Streak real baseado em dias completados — começa em 0 pra user novo.
+  const streakDays = calcStreak(completedDays);
+  // Hidratação alvo = ~35ml/kg do peso atual. Fallback 2000ml pra usuário pré-onboarding.
+  const currentWeightKg = weightEntries[0]?.kg ?? 0;
+  const dailyWaterTargetMl =
+    currentWeightKg > 0 ? Math.round((currentWeightKg * 35) / 50) * 50 : 2000;
   const [notifOpen, setNotifOpen] = useState(false);
 
   // Insight regenerado a cada mudança real nos macros/refeições/hidratação.
@@ -78,7 +91,7 @@ export const HomeScreen: React.FC = () => {
         const macros = { kcal: displayedMacros.kcal, p: displayedMacros.p, c: displayedMacros.c, f: displayedMacros.f };
         const tone = computeInsightTone(macros);
         const { text, tone: returnedTone } = await generateInsight({
-          profile: { name: 'Larissa', goal: 'Perder peso', weightKg: 85.2, goalWeightKg: 82 },
+          profile: { name: name ?? 'Anônima', goal: 'Perder peso', weightKg: 85.2, goalWeightKg: 82 },
           macros,
           meals: displayedMeals.map((m) => ({
             name: m.name,
@@ -117,14 +130,14 @@ export const HomeScreen: React.FC = () => {
             onPress={() => nav.navigate('Tabs', { screen: 'Profile' } as never)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
           >
-            <Avatar uri={profilePhotoUri} initials="LS" size={38} />
+            <Avatar uri={profilePhotoUri} initials={initials} size={38} />
             <View>
               <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted }}>Olá,</Text>
-              <Text style={{ fontFamily: FONT.headExtra, fontSize: 16, fontWeight: '800', color: theme.text }}>Larissa</Text>
+              <Text style={{ fontFamily: FONT.headExtra, fontSize: 16, fontWeight: '800', color: theme.text }}>{displayName}</Text>
             </View>
           </Pressable>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-            <StreakPill days={12} />
+            <StreakPill days={streakDays} />
             <View>
               <IconBtn icon={Icon.bell} onPress={() => setNotifOpen(true)} />
               {unreadNotificationsCount > 0 && (
@@ -249,8 +262,13 @@ export const HomeScreen: React.FC = () => {
             <Card pad={16} radius={22}>
               {(() => {
                 const ml = water * 250;
-                const metGoal = water >= 8;
+                const metGoal = ml >= dailyWaterTargetMl;
                 const slotColor = metGoal ? theme.primary : theme.waterIce;
+                // Mostra goalMl como 1,5L / 2L / 2,5L / 3L (mais legível que "2975ml")
+                const targetDisplay = (dailyWaterTargetMl / 1000).toFixed(1).replace('.', ',') + 'L';
+                // 8 slots fixos por design — visual representa "8 copos de 250ml ≈ 2L".
+                // Pra targets diferentes, os 8 slots mapeiam linearmente até a meta;
+                // se user passa de 8 copos, os slots permanecem cheios e ml continua subindo.
                 return (
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View>
@@ -259,7 +277,7 @@ export const HomeScreen: React.FC = () => {
                       </Text>
                       <Text style={{ fontFamily: FONT.headExtra, fontSize: 18, fontWeight: '800', color: theme.text, marginTop: 4 }}>
                         {ml}ml{!metGoal && (
-                          <Text style={{ fontSize: 11, color: theme.textMuted, fontWeight: '600' }}> / 2000ml</Text>
+                          <Text style={{ fontSize: 11, color: theme.textMuted, fontWeight: '600' }}> / {targetDisplay}</Text>
                         )}
                       </Text>
                     </View>
@@ -356,26 +374,47 @@ const EmptyDayState: React.FC<{ isToday: boolean }> = ({ isToday }) => {
   );
 };
 
-// Pill animada do streak: monta expandida ("12 dias consecutivos!"), contrai
-// em ~3s, e ao tocar reexpande. Ao expandir, pulsa pra chamar atenção.
-// O fogo + número FICAM SEMPRE VISÍVEIS — só o texto extra entra/sai.
+// Pill animada do streak. Comportamento:
+//
+// - Texto dinâmico baseado em `days`:
+//     0   → "Comece registrando!" (anima a primeira ação)
+//     1   → "Primeiro dia! 🎉" (comemora o início)
+//     2+  → "X dias seguidos!" (comemora a sequência)
+//
+// - Auto-expande na PRIMEIRA vez que aparece na sessão E quando o streak SOBE
+//   (ex: 0→1, 5→6). Em re-renders normais ou tab switches sem mudança, fica
+//   no estado colapsado. Toque manual sempre reexpande por 3s.
+//
+// O fogo + número FICAM SEMPRE VISÍVEIS — só o texto extra entra/sai. Pra dias=0
+// escondemos o "0" (visualmente fica só o fogo + texto).
+
+// Module-level: persiste enquanto o app está em memória. Reseta no reload do app.
+// Usamos pra:
+//   1. Saber se já mostramos a expansão nesta sessão (skip em remounts/tab switches)
+//   2. Detectar SUBIDA real do streak (animar quando 5→6, mas não em renders extras)
+let lastSeenStreak = -1;
+
 const StreakPill: React.FC<{ days: number }> = ({ days }) => {
   const theme = useTheme();
-  const expand = useRef(new Animated.Value(1)).current; // começa expandido
+  const expand = useRef(new Animated.Value(0)).current; // começa COLAPSADA — animate decide se expande
   const pulse = useRef(new Animated.Value(1)).current;
-  // Pulse contínuo do ícone do fogo (igual ao FAB da câmera)
   const flameScale = useRef(new Animated.Value(1)).current;
   const ringOpacity = useRef(new Animated.Value(0.5)).current;
   const ringScale = useRef(new Animated.Value(1)).current;
-  const COLLAPSED_W = 66;  // largura quando só fogo+número aparecem
-  const EXPANDED_W = 188;
+  const COLLAPSED_W = days === 0 ? 36 : 66; // sem número quando 0
+  const EXPANDED_W = 210; // largura pra acomodar "Comece registrando!" ou "X dias seguidos!"
+
+  // Label dinâmico — curto pra caber bem
+  const label =
+    days === 0
+      ? 'Comece registrando!'
+      : days === 1
+        ? 'Primeiro dia! 🎉'
+        : `${days} dias seguidos!`;
 
   const animate = (toValue: number) => {
     Animated.spring(expand, { toValue, useNativeDriver: false, friction: 6, tension: 90 }).start();
     if (toValue === 1) {
-      // pulse vive na MESMA Animated.View que `width` (que é JS-driven).
-      // Native driver junto com JS driver na mesma view → crash no Android.
-      // Mantemos pulse em JS driver também.
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1.12, duration: 180, useNativeDriver: false }),
         Animated.spring(pulse, { toValue: 1, useNativeDriver: false, friction: 4, tension: 100 }),
@@ -384,36 +423,51 @@ const StreakPill: React.FC<{ days: number }> = ({ days }) => {
   };
 
   useEffect(() => {
-    // Pulse inicial pra "anunciar" a abertura — JS driver (mesma view tem width animado)
-    Animated.sequence([
-      Animated.timing(pulse, { toValue: 1.12, duration: 180, useNativeDriver: false }),
-      Animated.spring(pulse, { toValue: 1, useNativeDriver: false, friction: 4, tension: 100 }),
-    ]).start();
-    // Auto-contrai depois de 3s
-    const t = setTimeout(() => animate(0), 3000);
+    // Auto-expand SÓ na primeira vez na sessão OU quando streak sobe (delta positivo).
+    // Casos:
+    //   - Sessão nova, days=0: lastSeenStreak=-1 → -1 < 0 → anima (1ª vez vendo)
+    //   - Tab switch, days=0: lastSeenStreak=0 → 0 < 0 falso → NÃO anima
+    //   - User completa dia (0→1): lastSeenStreak=0 → 0 < 1 → anima (subiu)
+    //   - User reset (5→0): lastSeenStreak=5 → 5 < 0 falso → NÃO anima
+    const shouldAnimate = lastSeenStreak < days || lastSeenStreak === -1;
+    lastSeenStreak = days;
 
-    // Loop infinito de pulse no fogo (mesmo padrão do FAB de câmera)
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(flameScale, { toValue: 1.18, duration: 900, useNativeDriver: true }),
-        Animated.timing(flameScale, { toValue: 1, duration: 900, useNativeDriver: true }),
-      ]),
-    ).start();
-    // Anel pulsante atrás do fogo (cresce e some)
-    Animated.loop(
-      Animated.parallel([
+    if (shouldAnimate) {
+      animate(1);
+      // Auto-contrai depois de 3s
+      const t = setTimeout(() => animate(0), 3000);
+
+      // Loop infinito de pulse no fogo (mesmo padrão do FAB de câmera)
+      Animated.loop(
         Animated.sequence([
-          Animated.timing(ringScale, { toValue: 2.2, duration: 1800, useNativeDriver: true }),
-          Animated.timing(ringScale, { toValue: 1, duration: 0, useNativeDriver: true }),
+          Animated.timing(flameScale, { toValue: 1.18, duration: 900, useNativeDriver: true }),
+          Animated.timing(flameScale, { toValue: 1, duration: 900, useNativeDriver: true }),
         ]),
+      ).start();
+      // Anel pulsante atrás do fogo (cresce e some)
+      Animated.loop(
+        Animated.parallel([
+          Animated.sequence([
+            Animated.timing(ringScale, { toValue: 2.2, duration: 1800, useNativeDriver: true }),
+            Animated.timing(ringScale, { toValue: 1, duration: 0, useNativeDriver: true }),
+          ]),
+          Animated.sequence([
+            Animated.timing(ringOpacity, { toValue: 0, duration: 1800, useNativeDriver: true }),
+            Animated.timing(ringOpacity, { toValue: 0.5, duration: 0, useNativeDriver: true }),
+          ]),
+        ]),
+      ).start();
+      return () => clearTimeout(t);
+    } else {
+      // Já mostrou nesta sessão — apenas mantém o loop do fogo rolando, sem expand.
+      Animated.loop(
         Animated.sequence([
-          Animated.timing(ringOpacity, { toValue: 0, duration: 1800, useNativeDriver: true }),
-          Animated.timing(ringOpacity, { toValue: 0.5, duration: 0, useNativeDriver: true }),
+          Animated.timing(flameScale, { toValue: 1.18, duration: 900, useNativeDriver: true }),
+          Animated.timing(flameScale, { toValue: 1, duration: 900, useNativeDriver: true }),
         ]),
-      ]),
-    ).start();
-    return () => clearTimeout(t);
-  }, []);
+      ).start();
+    }
+  }, [days]); // re-roda se days mudar (ex: user completa um dia novo)
 
   const onPress = () => {
     animate(1);
@@ -424,19 +478,16 @@ const StreakPill: React.FC<{ days: number }> = ({ days }) => {
   const labelOpacity = expand.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0, 1] });
 
   return (
-    // Wrapper reserva apenas o tamanho COLAPSADO no flex layout do header.
-    // A pill expande VIA ABSOLUTE positioning sobre o avatar/nome à esquerda,
-    // sem empurrar a sineta nem o avatar/nome.
     <Pressable
       onPress={onPress}
-      accessibilityLabel={`${days} dias consecutivos`}
+      accessibilityLabel={`${days} dias consecutivos · ${label}`}
       style={{ width: COLLAPSED_W, height: 32 }}
     >
       <Animated.View
         style={{
           position: 'absolute',
           top: 0,
-          right: 0, // ancorada à direita, expande pra esquerda sobre o conteúdo
+          right: 0,
           width,
           height: 32,
           flexDirection: 'row',
@@ -451,7 +502,6 @@ const StreakPill: React.FC<{ days: number }> = ({ days }) => {
         }}
       >
         <View style={{ width: 18, height: 18, alignItems: 'center', justifyContent: 'center' }}>
-          {/* Anel pulsante atrás do fogo */}
           <Animated.View
             pointerEvents="none"
             style={{
@@ -468,7 +518,10 @@ const StreakPill: React.FC<{ days: number }> = ({ days }) => {
             <Icon.flame size={14} color={theme.warning} />
           </Animated.View>
         </View>
-        <Text style={{ fontFamily: FONT.head, fontSize: 13, fontWeight: '700', color: theme.text }}>{days}</Text>
+        {/* Número só aparece quando days >= 1 — pra 0 mostramos só o fogo */}
+        {days >= 1 && (
+          <Text style={{ fontFamily: FONT.head, fontSize: 13, fontWeight: '700', color: theme.text }}>{days}</Text>
+        )}
         <Animated.Text
           numberOfLines={1}
           style={{
@@ -480,7 +533,7 @@ const StreakPill: React.FC<{ days: number }> = ({ days }) => {
             color: theme.textMuted,
           }}
         >
-          dias consecutivos!
+          {label}
         </Animated.Text>
       </Animated.View>
     </Pressable>

@@ -55,34 +55,37 @@ export type Food = {
   fav: boolean;
 };
 
+// Valores INICIAIS — zero. Targets são placeholders que vão ser sobrescritos pelo
+// cálculo de macros do onboarding (computeMacros + setMacroTargets na Tela 15).
+// Pra usuário antes do onboarding, esses targets aparecem brevemente mas o splash
+// gating no App.tsx esconde isso até a hidratação terminar.
 export const INITIAL_MACROS: DailyMacros = {
-  kcal: { value: 1248, target: 2200 },
-  p: { value: 86, target: 135 },
-  c: { value: 132, target: 240 },
-  f: { value: 38, target: 70 },
+  kcal: { value: 0, target: 2000 },
+  p: { value: 0, target: 150 },
+  c: { value: 0, target: 200 },
+  f: { value: 0, target: 67 },
 };
 
-export const INITIAL_WATER = 5; // copos de 250ml (meta 8)
+export const INITIAL_WATER = 0; // copos de 250ml (meta 8)
 
 // Ícones das refeições — URLs Unsplash escolhidas pra dar uma vista lateral
 // padronizada (não top-down). crop=entropy ajuda no enquadramento.
 const MEAL_IMG = (id: string) =>
   `https://images.unsplash.com/photo-${id}?w=180&h=180&fit=crop&crop=entropy&auto=format&q=70`;
 
+// As 4 refeições padrão começam VAZIAS — sem items, sem kcal acumulado.
+// O user registra no Diário, ou usa "Foto IA"/"Buscar"/"Voz" pra adicionar.
+// User pode também customizar via Diário > Configurar refeições.
 export const INITIAL_MEALS: Meal[] = [
   {
     id: 'breakfast',
     name: 'Café da manhã',
     q: 'breakfast,bread,coffee',
-    // Café preto + pão vista lateral
     iconSrc: MEAL_IMG('1495474472287-4d71bcdd2085'),
     time: '07:30',
     color: '#EACBD1',
-    kcal: 412,
-    items: [
-      { id: 1, q: 'oats,bowl', name: 'Aveia com banana', portion: '1 tigela · 80g', kcal: 310, p: 11, c: 56, f: 6 },
-      { id: 2, q: 'coffee,milk', name: 'Café com leite', portion: '1 xícara', kcal: 102, p: 6, c: 9, f: 4 },
-    ],
+    kcal: 0,
+    items: [],
   },
   {
     id: 'lunch',
@@ -91,33 +94,23 @@ export const INITIAL_MEALS: Meal[] = [
     iconSrc: MEAL_IMG('1567620905732-2d1ec7ab7445'),
     time: '12:30',
     color: '#D6E0CF',
-    kcal: 638,
-    items: [
-      { id: 3, q: 'rice,brown', name: 'Arroz integral', portion: '120g', kcal: 144, p: 3, c: 30, f: 1 },
-      { id: 4, q: 'chicken,grilled', name: 'Frango grelhado', portion: '150g', kcal: 247, p: 46, c: 0, f: 5 },
-      { id: 5, q: 'salad,green', name: 'Salada verde', portion: '1 prato', kcal: 60, p: 2, c: 7, f: 2 },
-      { id: 6, q: 'broccoli,steamed', name: 'Brócolis', portion: '100g', kcal: 35, p: 3, c: 7, f: 0 },
-    ],
+    kcal: 0,
+    items: [],
   },
   {
     id: 'snack',
     name: 'Lanche',
     q: 'sandwich,bread',
-    // Sanduíche de pão de forma vista lateral
     iconSrc: MEAL_IMG('1528735602780-2552fd46c7af'),
     time: '16:00',
     color: '#D4E0EE',
-    kcal: 198,
-    items: [
-      { id: 7, q: 'apple,red', name: 'Maçã', portion: '1 unidade', kcal: 95, p: 0, c: 25, f: 0 },
-      { id: 8, q: 'almond,nuts', name: 'Amêndoas', portion: '20g', kcal: 103, p: 4, c: 4, f: 9 },
-    ],
+    kcal: 0,
+    items: [],
   },
   {
     id: 'dinner',
     name: 'Jantar',
     q: 'salmon,vegetables',
-    // Prato com proteína + acompanhamentos, vista lateral
     iconSrc: MEAL_IMG('1467003909585-2f8a72700288'),
     time: '19:30',
     color: '#C0CFE6',

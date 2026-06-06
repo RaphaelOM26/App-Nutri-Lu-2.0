@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme, FONT } from '../theme';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { LuBtn } from '../components/LuBtn';
@@ -32,11 +33,58 @@ type MenuItem = {
   accent?: boolean;
 };
 
+// Pill DEV-only que limpa TODA a persistência do app via AsyncStorage.clear().
+// Reseta onboarding + meals + recipes + pantry + photos + habits + collections + etc.
+// REMOVER antes do lançamento (ou esconder atrás de uma flag mais restrita).
+const DevResetOnboarding: React.FC = () => {
+  const theme = useTheme();
+  const toast = useToast();
+
+  const reset = async () => {
+    try {
+      // AsyncStorage.clear() apaga TUDO do app — onboarding fields, refeições
+      // customizadas (Pré treino/Pós treino/Sobremesa), receitas importadas,
+      // pantry, weight entries, fotos de progresso, hábitos, favoritos, recents,
+      // collections, completedDays, macroTargets, mealReminders, theme pref.
+      // É o reset definitivo. Próximo reload → app em branco como instalação nova.
+      await AsyncStorage.clear();
+      toast('Tudo limpo · feche e reabra o app pra ver onboarding', 'info');
+    } catch (err) {
+      console.warn('[dev] AsyncStorage.clear falhou:', err);
+      toast('Falha ao limpar · vê o console', 'error');
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={reset}
+      style={{
+        marginHorizontal: 20,
+        marginTop: 8,
+        marginBottom: 4,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 100,
+        backgroundColor: theme.warningSoft,
+        alignSelf: 'flex-start',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+      }}
+    >
+      <Text style={{ fontFamily: FONT.bodyBold, fontSize: 12, color: theme.warningDeep }}>
+        🔧 DEV · Limpar tudo e voltar ao onboarding
+      </Text>
+    </Pressable>
+  );
+};
+
 export const ProfileScreen: React.FC = () => {
   const theme = useTheme();
   const nav = useNavigation<Nav>();
   const toast = useToast();
-  const { weightEntries, weightGoalKg, displayedMacros, habits, setWeightGoal, setMacroTargets, profilePhotoUri, setProfilePhoto } = useApp();
+  const { weightEntries, weightGoalKg, displayedMacros, habits, setWeightGoal, setMacroTargets, profilePhotoUri, setProfilePhoto, name } = useApp();
+  const displayName = name ?? 'Você';
   const [editGoalOpen, setEditGoalOpen] = useState(false);
   const [remindersOpen, setRemindersOpen] = useState(false);
   const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
@@ -84,8 +132,8 @@ export const ProfileScreen: React.FC = () => {
 
   // Streak: maior streak entre os hábitos (proxy de "dias de constância")
   const bestStreak = habits.reduce((max, h) => Math.max(max, calcStreak(h.completedDays)), 0);
-  // Conquistas: tem 7 seeds, mostramos hardcoded como antes
-  const achievementsCount = 7;
+  // Conquistas: user começa em 0 — sistema de unlock virá depois.
+  const achievementsCount = 0;
 
   // (Share inline removido — agora abre a tela dedicada InviteFriends com link + gameficação)
 
@@ -135,6 +183,8 @@ export const ProfileScreen: React.FC = () => {
         ]}
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 130 }}>
+        {/* DEV-only — refazer onboarding pra teste. Remove antes do lançamento. */}
+        {__DEV__ && <DevResetOnboarding />}
         {/* Profile card */}
         <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
           <Card pad={18} radius={22}>
@@ -168,7 +218,7 @@ export const ProfileScreen: React.FC = () => {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: FONT.headExtra, fontSize: 18, fontWeight: '800', color: theme.text }}>
-                  Larissa Souza
+                  {displayName}
                 </Text>
                 <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
                   Perder peso · {fmtKg(currentKg)} / {fmtKg(weightGoalKg)} kg

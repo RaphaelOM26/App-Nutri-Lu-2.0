@@ -13,6 +13,29 @@ export type TabParamList = {
   Profile: undefined;
 };
 
+// Stack do onboarding (rodado quando onboardedAt == null).
+// Na Fase A só tem Welcome como placeholder. Fase B expande pras 16 telas reais.
+// Tela "Projection" foi dropada em 2026-06-05 após validação do protótipo
+// Claude Design — ver ONBOARDING_SPEC.md §5 nota da Tela 11.
+export type OnboardingStackParamList = {
+  Welcome: undefined;
+  Name: undefined;
+  Gender: undefined;
+  BirthDate: undefined;
+  HeightWeight: undefined;
+  Activity: undefined;
+  LuExplains: undefined;
+  Goal: undefined;
+  DesiredWeight: undefined;
+  Speed: undefined;
+  Barriers: undefined;
+  Motivations: undefined;
+  Notifications: undefined;
+  Ceremony: undefined;
+  Generating: undefined;
+  PlanReady: undefined;
+};
+
 // Root stack (contém as tabs + telas modais fullscreen)
 export type RootStackParamList = {
   Tabs: undefined;
@@ -20,9 +43,9 @@ export type RootStackParamList = {
   AddFood: { mealId?: string };
   FoodDetail: { food: Food; mealId?: string };
   // Câmera & IA — mealId opcional flui da origem (AddFood/Diary/etc.)
-  Camera: { mode?: 'food' | 'recipe'; mealId?: string };
-  CameraLoading: { imageBase64: string; mode: 'food' | 'recipe'; mealId?: string };
-  CameraResult: { analysis: FoodAnalysis; imageDataUrl: string; mealId?: string };
+  Camera: { mode?: 'food' | 'recipe' | 'pantry'; mealId?: string };
+  CameraLoading: { imageBase64: string; mode: 'food' | 'recipe' | 'pantry'; mealId?: string };
+  CameraResult: { analysis: FoodAnalysis; imageDataUrl: string; mode?: 'food' | 'pantry'; mealId?: string };
   Voice: { mealId?: string };
   Barcode: { mealId?: string };
   // Receitas

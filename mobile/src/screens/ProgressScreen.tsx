@@ -160,6 +160,10 @@ const AchievementsModal: React.FC<{ visible: boolean; onClose: () => void }> = (
     if (t === 'warning') return theme.warning;
     return theme.primary;
   };
+  // User começa com 0 conquistas desbloqueadas. Mostra os 8 catálogos como
+  // BLOQUEADAS (cinza, sem data, opacity 50%) — assim user vê o que tem pra
+  // conquistar, mas fica claro que nada foi desbloqueado ainda.
+  const unlockedCount = 0;
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 16 }}>
@@ -173,27 +177,46 @@ const AchievementsModal: React.FC<{ visible: boolean; onClose: () => void }> = (
                 Conquistas
               </Text>
               <Text style={{ fontFamily: FONT.headExtra, fontSize: 17, fontWeight: '800', color: theme.text, marginTop: 1 }}>
-                {SEED_ACHIEVEMENTS.length} desbloqueadas
+                {unlockedCount} de {SEED_ACHIEVEMENTS.length} desbloqueadas
               </Text>
             </View>
           </View>
           <ScrollView style={{ maxHeight: 460 }} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
             {SEED_ACHIEVEMENTS.map((a) => {
               const IconC = Icon[a.icon];
-              const color = toneToColor(a.tone);
+              // Tudo bloqueado por enquanto — quando sistema de unlock existir,
+              // gating real determina cor/data por achievement.
+              const locked = true;
+              const color = locked ? theme.textFaint : toneToColor(a.tone);
               return (
-                <View key={a.id} style={{ flexDirection: 'row', gap: 12, padding: 12, borderRadius: 14, backgroundColor: theme.bgElev }}>
-                  <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: color + '22', alignItems: 'center', justifyContent: 'center' }}>
-                    <IconC size={20} color={color} stroke={2} />
+                <View
+                  key={a.id}
+                  style={{
+                    flexDirection: 'row',
+                    gap: 12,
+                    padding: 12,
+                    borderRadius: 14,
+                    backgroundColor: theme.bgElev,
+                    opacity: locked ? 0.55 : 1,
+                  }}
+                >
+                  <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: theme.bgSubtle, alignItems: 'center', justifyContent: 'center' }}>
+                    {locked ? (
+                      <Icon.lock size={18} color={theme.textFaint} stroke={2} />
+                    ) : (
+                      <IconC size={20} color={color} stroke={2} />
+                    )}
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '700', color: theme.text, flex: 1 }}>
                         {a.title}
                       </Text>
-                      <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, marginLeft: 8 }}>
-                        {formatUnlockedDate(a.unlockedAt)}
-                      </Text>
+                      {!locked && (
+                        <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, marginLeft: 8 }}>
+                          {formatUnlockedDate(a.unlockedAt)}
+                        </Text>
+                      )}
                     </View>
                     <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
                       {a.description}
@@ -212,33 +235,46 @@ const AchievementsModal: React.FC<{ visible: boolean; onClose: () => void }> = (
   );
 };
 
-// ─── Streak card (12 dias + 7 mini indicadores da semana atual) ──
-// Semana segunda→domingo (padrão BR). Check nos dias até HOJE, vazio nos futuros.
-// Dia de hoje fica destacado com borda branca.
+// ─── Streak card ──
+// Conta dias consecutivos em que o user marcou um dia como "completo" no Diário.
+// User novo começa com 0. Semana segunda→domingo (padrão BR), check nos dias completados.
 const StreakCard: React.FC = () => {
   const theme = useTheme();
+  const { completedDays } = useApp();
   const today = new Date();
   // getDay(): 0=Dom..6=Sáb. Mapeia pra semana começando segunda: Seg=0, ..., Dom=6.
   const todayWeekday = (today.getDay() + 6) % 7;
   const labels = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+
+  // Streak: conta dias consecutivos retrocedendo a partir de hoje.
+  const streak = calcStreak(completedDays);
+
+  // Dias completados desta semana (pra marcar os indicadores).
+  const completedSet = new Set(completedDays);
+  const weekDoneFlags = labels.map((_, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (todayWeekday - i));
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return completedSet.has(key);
+  });
+
   return (
     <Card pad={16} radius={20} style={{ flex: 1.3, backgroundColor: theme.primarySoft }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View>
           <Text style={{ fontFamily: FONT.headExtra, fontSize: 30, fontWeight: '800', color: theme.primaryDeep, letterSpacing: -0.4 }}>
-            12
+            {streak}
           </Text>
           <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.primaryDeep, fontWeight: '600' }}>
-            dias seguidos
+            {streak === 1 ? 'dia seguido' : 'dias seguidos'}
           </Text>
         </View>
         <Icon.flame size={32} color={theme.primaryDeep} stroke={1.5} />
       </View>
       <View style={{ flexDirection: 'row', gap: 4, marginTop: 12 }}>
         {labels.map((d, i) => {
-          const isPast = i < todayWeekday;
           const isToday = i === todayWeekday;
-          const done = isPast || isToday; // marca como feito até hoje (mock)
+          const done = weekDoneFlags[i];
           return (
             <View key={i} style={{ flex: 1, alignItems: 'center', gap: 3 }}>
               <View
@@ -264,20 +300,23 @@ const StreakCard: React.FC = () => {
   );
 };
 
-// ─── Achievements card (7 + badges stacked) ──────────────────────
+
+// ─── Achievements card ──
+// User começa com 0 conquistas. Sistema de unlock real vem depois.
 const AchievementsCard: React.FC<{ onPress?: () => void }> = ({ onPress }) => {
   const theme = useTheme();
   const badges = [theme.fatsGold, theme.primaryDeep, theme.proteinPink, theme.carbsBlue];
+  const count: number = 0; // TODO: derivar de sistema de unlock quando existir
   return (
     <Pressable onPress={onPress} style={{ flex: 1 }}>
     <Card pad={16} radius={20} style={{ flex: 1 }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
         <View>
           <Text style={{ fontFamily: FONT.headExtra, fontSize: 30, fontWeight: '800', color: theme.text, letterSpacing: -0.4 }}>
-            7
+            {count}
           </Text>
           <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, fontWeight: '600' }}>
-            conquistas
+            {count === 1 ? 'conquista' : 'conquistas'}
           </Text>
         </View>
         <Icon.award size={34} color={theme.fatsGold} stroke={1.5} />
@@ -586,46 +625,14 @@ const WeightTab: React.FC = () => {
                   Sem pesagens nos últimos {period === '7D' ? '7' : '30'} dias
                 </Text>
               </View>
-            ) : filteredEntries.length === 1 ? (
-              // Um ponto só — marca a posição visualmente
-              <View style={{ flex: 1 }}>
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: `${(yFor(filteredEntries[0].kg) / H) * 100}%`,
-                    left: `${(xFor(filteredEntries[0].date) / W) * 100}%`,
-                    width: 10,
-                    height: 10,
-                    borderRadius: 5,
-                    backgroundColor: theme.primary,
-                    marginLeft: -5,
-                    marginTop: -5,
-                  }}
-                />
-                <Text
-                  style={{
-                    position: 'absolute',
-                    top: `${(yFor(filteredEntries[0].kg) / H) * 100}%`,
-                    left: `${(xFor(filteredEntries[0].date) / W) * 100}%`,
-                    marginLeft: 14,
-                    marginTop: -8,
-                    fontFamily: FONT.head,
-                    fontSize: 11,
-                    fontWeight: '700',
-                    color: theme.text,
-                  }}
-                >
-                  {fmtKg(filteredEntries[0].kg)}
-                </Text>
-              </View>
             ) : (
               <Svg width="100%" height={CHART_H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-                {/* Barras verticais — cada pesagem é uma barra arredondada */}
+                {/* Barras verticais — cada pesagem vira uma barra arredondada.
+                    Inclui o caso de 1 só entry (do onboarding) — antes mostrava só um dot. */}
                 {(() => {
                   const n = filteredEntries.length;
-                  const slotW = W / n;
-                  // Barras mais "grossas" pra ficarem parecidas com macros (pill rounded)
-                  const barW = Math.min(4, Math.max(2, slotW * 0.6));
+                  const slotW = W / Math.max(n, 7); // pelo menos 7 slots pra barra não ficar gigante
+                  const barW = Math.min(5, Math.max(3, slotW * 0.6));
                   return filteredEntries.map((e, i) => {
                     const isLast = i === n - 1;
                     const x = xFor(e.date) - barW / 2;
@@ -663,8 +670,8 @@ const WeightTab: React.FC = () => {
               </Svg>
             )}
 
-            {/* Overlay tocável: hit-area por barra */}
-            {filteredEntries.length >= 2 &&
+            {/* Overlay tocável: hit-area por barra (habilitada pra 1+ pesagens) */}
+            {filteredEntries.length >= 1 &&
               filteredEntries.map((e, i) => {
                 const pct = ((e.date - startMs) / (endMs - startMs)) * 100;
                 const HIT_W = 28;
@@ -992,48 +999,52 @@ const MacrosTab: React.FC = () => {
   const theme = useTheme();
   const { displayedMacros, isToday } = useApp();
   // Targets vêm do state (mesma fonte que Home e Diário).
-  // No futuro, virão do perfil; por ora estão no mock alinhados com Larissa.
+  // No futuro virão do perfil real do user; por ora seguem o seed de demo.
   const targets = {
     p: displayedMacros.p.target,
     c: displayedMacros.c.target,
     f: displayedMacros.f.target,
   };
-  // Últimos 6 dias = mock (até ter histórico real de macros). HOJE = state real
-  // do AppContext, então qualquer refeição adicionada/removida reflete aqui também.
+  // Dias passados começam zerados — vão preencher conforme user registrar refeições.
+  // (Histórico real virá do backend quando subir. No MVP, só HOJE tem dado real.)
   const todayWeekdayLetter = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][new Date().getDay()];
-  const mockPastDays = [
-    { d: 'S', p: 110, c: 180, f: 60 },
-    { d: 'T', p: 125, c: 220, f: 55 },
-    { d: 'Q', p: 95, c: 165, f: 70 },
-    { d: 'Q', p: 130, c: 195, f: 62 },
-    { d: 'S', p: 118, c: 175, f: 58 },
-    { d: 'S', p: 105, c: 240, f: 75 },
+  const emptyDay = (letter: string) => ({ d: letter, p: 0, c: 0, f: 0 });
+  const days = [
+    emptyDay('S'),
+    emptyDay('T'),
+    emptyDay('Q'),
+    emptyDay('Q'),
+    emptyDay('S'),
+    emptyDay('S'),
+    {
+      d: todayWeekdayLetter,
+      p: isToday ? displayedMacros.p.value : 0,
+      c: isToday ? displayedMacros.c.value : 0,
+      f: isToday ? displayedMacros.f.value : 0,
+    },
   ];
-  const today = {
-    d: todayWeekdayLetter,
-    p: isToday ? displayedMacros.p.value : 0,
-    c: isToday ? displayedMacros.c.value : 0,
-    f: isToday ? displayedMacros.f.value : 0,
-  };
-  const days = [...mockPastDays, today];
 
-  const avgPct = {
-    p: Math.round((days.reduce((a, x) => a + x.p, 0) / days.length / targets.p) * 100),
-    c: Math.round((days.reduce((a, x) => a + x.c, 0) / days.length / targets.c) * 100),
-    f: Math.round((days.reduce((a, x) => a + x.f, 0) / days.length / targets.f) * 100),
+  // % avg real (apenas dias com registro contribuem — não dilui com zeros)
+  const safeAvg = (key: 'p' | 'c' | 'f', target: number) => {
+    const withData = days.filter((d) => d[key] > 0);
+    if (withData.length === 0 || target === 0) return 0;
+    const sum = withData.reduce((a, x) => a + x[key], 0);
+    return Math.round((sum / withData.length / target) * 100);
   };
+  const avgPct = {
+    p: safeAvg('p', targets.p),
+    c: safeAvg('c', targets.c),
+    f: safeAvg('f', targets.f),
+  };
+  const overallAvg = Math.round((avgPct.p + avgPct.c + avgPct.f) / 3);
   const macroDefs = [
     { k: 'p' as const, label: 'Proteína', color: theme.proteinPink, target: targets.p, avg: avgPct.p },
     { k: 'c' as const, label: 'Carbo', color: theme.carbsBlue, target: targets.c, avg: avgPct.c },
     { k: 'f' as const, label: 'Gordura', color: theme.fatsGold, target: targets.f, avg: avgPct.f },
   ];
 
-  // Heatmap (estável via seed senoidal)
-  const heatmapCells = Array.from({ length: 12 * 7 }).map((_, i) => {
-    const seed = (Math.sin(i * 12.9898) * 43758.5453) % 1;
-    const v = Math.abs(seed);
-    return v < 0.2 ? 0.08 : v < 0.4 ? 0.3 : v < 0.7 ? 0.6 : 0.95;
-  });
+  // Heatmap começa vazio (cinza claro) — vai preencher conforme histórico real chega.
+  const heatmapCells = Array.from({ length: 12 * 7 }).map(() => 0);
 
   return (
     <View style={{ paddingHorizontal: 16, gap: 14 }}>
@@ -1058,7 +1069,7 @@ const MacrosTab: React.FC = () => {
             </Text>
           </View>
           <View style={{ backgroundColor: theme.primarySoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 }}>
-            <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.primaryDeep, fontWeight: '700' }}>97% meta</Text>
+            <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.primaryDeep, fontWeight: '700' }}>{overallAvg}% meta</Text>
           </View>
         </View>
 

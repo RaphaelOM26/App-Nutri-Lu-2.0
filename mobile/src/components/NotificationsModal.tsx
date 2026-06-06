@@ -204,7 +204,7 @@ export const NotificationsModal: React.FC<Props> = ({ visible, onClose }) => {
                     {isPicker && (
                       <View style={{ paddingHorizontal: 8, paddingVertical: 8 }}>
                         <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted }}>
-                          Edite o horário em Diário > Configurar refeições.
+                          Edite o horário em Diário {'>'} Configurar refeições.
                         </Text>
                       </View>
                     )}
@@ -217,7 +217,7 @@ export const NotificationsModal: React.FC<Props> = ({ visible, onClose }) => {
             <Section title="Hábitos" disabled={silenceAll}>
               {habits.length === 0 ? (
                 <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, padding: 12, textAlign: 'center' }}>
-                  Crie hábitos na aba Progresso > Hábitos pra receber lembretes.
+                  Crie hábitos na aba Progresso {'>'} Hábitos pra receber lembretes.
                 </Text>
               ) : (
                 habits.map((h) => {

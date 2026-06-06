@@ -188,4 +188,48 @@ export function transcribeMealAudio(
   return postJSON<VoiceMealResponse>('/transcribe-meal', { audio: audioBase64, format });
 }
 
+// ─── Snapshot diário (histórico) ────────────────────────────────
+
+export type DaySnapshotPayload = {
+  meals: Array<{
+    id: string;
+    items: Array<{
+      id: string;
+      name: string;
+      portion: string;
+      kcal: number;
+      p: number;
+      c: number;
+      f: number;
+    }>;
+  }>;
+  macros: { kcal: number; p: number; c: number; f: number };
+  water: number;
+};
+
+/** Upserta o snapshot do dia (device_id + date como PK). */
+export async function saveDaySnapshot(
+  deviceId: string,
+  date: string,
+  payload: DaySnapshotPayload,
+): Promise<void> {
+  await postJSON<{ ok: true }>('/day-snapshot', { device_id: deviceId, date, payload });
+}
+
+/** Busca o snapshot do dia. Retorna null se ainda não existe (404). */
+export async function getDaySnapshot(
+  deviceId: string,
+  date: string,
+): Promise<DaySnapshotPayload | null> {
+  const url = `${BASE_URL}/day-snapshot?device_id=${encodeURIComponent(deviceId)}&date=${encodeURIComponent(date)}`;
+  const res = await fetch(url);
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new ApiError(`Erro HTTP ${res.status}: ${text}`, res.status);
+  }
+  const data = await res.json();
+  return data.payload as DaySnapshotPayload;
+}
+
 export { BASE_URL };

@@ -20,6 +20,8 @@ export const PALETTE = {
   // Cores fixas para estados especiais
   warning: '#E59A5B',
   warningDeep: '#C77642',
+  // warningSoft fica fora do PALETTE porque precisa variar entre LIGHT/DARK
+  // (laranja claro no light, marrom-laranja escuro no dark).
   insightText: '#2D3F5C',
   insightAccent: '#4F6791',
 } as const;
@@ -37,6 +39,8 @@ export type Theme = typeof PALETTE & {
   borderStrong: string;
   ringTrack: string;
   shadow: string;
+  /** Background suave de alerta (pill de "cuidado" no onboarding, badges contextuais). */
+  warningSoft: string;
 };
 
 export const LIGHT: Theme = {
@@ -52,6 +56,7 @@ export const LIGHT: Theme = {
   borderStrong: 'rgba(27,27,27,0.14)',
   ringTrack: 'rgba(27,27,27,0.06)',
   shadow: 'rgba(27,27,27,0.08)',
+  warningSoft: '#F5C8A0',
 };
 
 export const DARK: Theme = {
@@ -67,6 +72,7 @@ export const DARK: Theme = {
   borderStrong: 'rgba(255,255,255,0.16)',
   ringTrack: 'rgba(255,255,255,0.08)',
   shadow: 'rgba(0,0,0,0.5)',
+  warningSoft: '#3A2C1D',
 };
 
 // Hook que retorna o tema apropriado.

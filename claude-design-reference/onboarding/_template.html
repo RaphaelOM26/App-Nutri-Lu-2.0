@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onboarding — Nutri Lu</title>
+
+<style>
+  html, body { margin: 0; padding: 0; background: #EFEEEA; min-height: 100%; }
+  body { font-family: "Nunito Sans", -apple-system, system-ui, sans-serif; }
+  #root { min-height: 100vh; }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="26d81a59-9781-4a8a-9fc3-99971714516f" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="e52ac734-1d3c-4121-ac24-dd854dcd59c3" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="5ede92ab-167e-4037-ab6b-887055dc17a7" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="3f35ec53-3ca5-41af-94bc-ef076fb9e8d8"></script>
+<script type="text/babel" src="850471bf-0517-4486-a0a5-2333d74ee745"></script>
+<script type="text/babel" src="49eca0e4-9ec1-4c64-a9d4-5aa241d81b7c"></script>
+<script type="text/babel" src="521cd2c7-e820-4249-a2b2-c41a3c735874"></script>
+<script type="text/babel" src="f886140f-b441-4a8f-b7b4-4ce0f885e786"></script>
+<script type="text/babel" src="7be2b889-4f80-48bd-b2a6-f201d1fb0a68"></script>
+<script type="text/babel" src="b4acfdb3-bf4b-4366-95a0-cfd08cd9fb69"></script>
+<script type="text/babel" src="c4cb0b4b-a839-4f29-82ba-e8a3fbac2394"></script>
+<script type="text/babel" src="c58e135d-020d-4e52-90d1-49722edf4d08"></script>
+
+<script type="text/babel">
+function OnboardingDemo() {
+  const [frame, setFrame] = React.useState('ios');
+  const [runKey, setRunKey] = React.useState(0);
+  const theme = getTheme({ dark: false, palette: 'sage', ringStyle: 'concentric', density: 'airy', fabPulse: true });
+  const Device = frame === 'ios' ? IOSDevice : AndroidDevice;
+  return (
+    <div style={{ minHeight: '100vh', padding: '70px 20px 50px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22, background: '#EFEEEA' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 4, background: '#fff', borderRadius: 100, padding: 4, boxShadow: '0 2px 10px rgba(27,27,27,0.06)' }}>
+          {[['ios','iOS'],['android','Android']].map(([id, label]) => (
+            <button key={id} onClick={() => setFrame(id)} style={{
+              padding: '8px 18px', borderRadius: 100, border: 'none', cursor: 'pointer',
+              background: frame === id ? '#1B1B1B' : 'transparent', color: frame === id ? '#fff' : '#1B1B1B',
+              fontFamily: '"Plus Jakarta Sans", system-ui', fontSize: 13, fontWeight: 700,
+            }}>{label}</button>
+          ))}
+        </div>
+        <button onClick={() => setRunKey(k => k + 1)} style={{
+          padding: '10px 18px', borderRadius: 100, border: 'none', cursor: 'pointer',
+          background: '#97AF8F', color: '#fff', fontFamily: '"Plus Jakarta Sans", system-ui', fontSize: 13, fontWeight: 700,
+          boxShadow: '0 4px 14px rgba(151,175,143,0.4)',
+        }}>Reiniciar fluxo</button>
+      </div>
+
+      <Device width={390} height={844} dark={false}>
+        <div key={frame + runKey} style={{ height: '100%', background: theme.bg }}>
+          <OnboardingFlow theme={theme} frame={frame} onComplete={() => setRunKey(k => k + 1)} />
+        </div>
+      </Device>
+
+      <div style={{ fontFamily: '"Nunito Sans", system-ui', fontSize: 12, color: 'rgba(27,27,27,0.45)', textAlign: 'center', maxWidth: 360 }}>
+        Onboarding Nutri Lu · 17 telas · protótipo navegável. Ao concluir, o fluxo reinicia automaticamente.
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<OnboardingDemo />);
+</script>
+
+
+
+</body></html>

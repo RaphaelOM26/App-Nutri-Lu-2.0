@@ -2,7 +2,7 @@
 // Porte do `useAppState()` em Design 2.0/app.jsx, mas usando react-navigation
 // para a parte de telas (não precisamos mais de screen/history/params no state).
 
-import React, { createContext, useContext, useEffect, useReducer } from 'react';
+import React, { createContext, useContext, useEffect, useReducer, useRef } from 'react';
 import {
   INITIAL_MACROS,
   INITIAL_MEALS,
@@ -37,7 +37,6 @@ import {
   loadWeightEntries,
   saveWeightEntries,
   newEntryId,
-  SEED_WEIGHT_ENTRIES,
   type WeightEntry,
 } from '../storage/weightEntries';
 import {
@@ -51,14 +50,36 @@ import {
   saveMealReminders,
   loadSilenceAll,
   saveSilenceAll,
+  loadName,
+  saveName,
+  loadGender,
+  saveGender,
+  loadBirthDate,
+  saveBirthDate,
+  loadHeight,
+  saveHeight,
+  loadActivityLevel,
+  saveActivityLevel,
+  loadGoalType,
+  saveGoalType,
+  loadWeeklyRate,
+  saveWeeklyRate,
+  loadBarriers,
+  saveBarriers,
+  loadMotivations,
+  saveMotivations,
+  loadOnboardedAt,
+  saveOnboardedAt,
   type MacroTargets,
   type MealReminders,
+  type Gender,
+  type ActivityLevel,
+  type GoalType,
 } from '../storage/userProfile';
 import {
   loadProgressPhotos,
   saveProgressPhotos,
   newPhotoId,
-  buildSeedProgressPhotos,
   type ProgressPhoto,
 } from '../storage/progressPhotos';
 import {
@@ -66,7 +87,6 @@ import {
   saveHabits,
   newHabitId,
   dayKey,
-  SEED_HABITS,
   type Habit,
 } from '../storage/habits';
 import {
@@ -103,8 +123,10 @@ import {
   pickMealImageForName,
 } from '../storage/mealsConfig';
 import { loadReadIds, saveReadIds } from '../storage/notifications';
-import { seedNotifications, type AppNotification } from '../data/notifications';
+import { type AppNotification } from '../data/notifications';
 import { loadCompletedDays, saveCompletedDays, todayKey } from '../storage/completedDays';
+import { getDeviceId } from '../storage/deviceId';
+import { saveDaySnapshot, type DaySnapshotPayload } from '../api/client';
 
 // ─── Tipos ───────────────────────────────────────────────────────
 // "Hoje" usa a data REAL do dispositivo. Mock de macros/refeições continua o
@@ -151,6 +173,27 @@ type State = {
   mealReminders: MealReminders;
   /** Silenciar TODAS as notificações (master switch). Persistido. */
   silenceAllNotifications: boolean;
+  // ─── Onboarding ──
+  /** Nome do user. null = ainda não respondeu. Fallback de display = 'você'. */
+  name: string | null;
+  /** Sexo biológico (pro cálculo de BMR). null = ainda não respondeu. */
+  gender: Gender | null;
+  /** Data de nascimento (timestamp ms). null = ainda não respondeu. */
+  birthDate: number | null;
+  /** Altura em cm. null = ainda não respondeu. */
+  heightCm: number | null;
+  /** Nível de atividade derivado de treinos/semana. null = ainda não respondeu. */
+  activityLevel: ActivityLevel | null;
+  /** Objetivo (perder/manter/ganhar). null = ainda não respondeu. */
+  goal: GoalType | null;
+  /** Ritmo semanal escolhido em kg. null = ainda não respondeu (ou goal=maintain). */
+  weeklyRateKg: number | null;
+  /** Barreiras escolhidas (multi-select). IDs estáveis. */
+  barriers: string[];
+  /** Motivações escolhidas (multi-select). IDs estáveis. */
+  motivations: string[];
+  /** Timestamp de quando o user concluiu o onboarding. null = nunca fez. */
+  onboardedAt: number | null;
   // estado de loading da hidratação inicial do AsyncStorage
   hydrated: boolean;
   // Dia visualizado pelas telas com DateStrip (Home + Diary compartilham)
@@ -161,6 +204,7 @@ type Action =
   | { type: 'ADD_WATER' }
   | { type: 'REMOVE_WATER' }
   | { type: 'REPLACE_DAY'; mealsItems: Record<string, NewMealItemInput[]> }
+  | { type: 'RESTORE_DAY_FROM_SNAPSHOT'; payload: DaySnapshotPayload }
   | { type: 'ADD_TO_MEAL'; mealId: string; items: NewMealItemInput[]; total: { kcal: number; p: number; c: number; f: number } }
   | { type: 'SET_SAVED_RECIPES'; recipes: SavedRecipe[] }
   | { type: 'ADD_SAVED_RECIPE'; recipe: SavedRecipe }
@@ -216,6 +260,16 @@ type Action =
   | { type: 'SET_COMPLETED_DAYS'; days: string[] }
   | { type: 'COMPLETE_DAY'; dayKey: string }
   | { type: 'UNCOMPLETE_DAY'; dayKey: string }
+  | { type: 'SET_NAME'; name: string | null }
+  | { type: 'SET_GENDER'; gender: Gender | null }
+  | { type: 'SET_BIRTH_DATE'; ts: number | null }
+  | { type: 'SET_HEIGHT'; cm: number | null }
+  | { type: 'SET_ACTIVITY_LEVEL'; level: ActivityLevel | null }
+  | { type: 'SET_GOAL'; goal: GoalType | null }
+  | { type: 'SET_WEEKLY_RATE'; kg: number | null }
+  | { type: 'SET_BARRIERS'; ids: string[] }
+  | { type: 'SET_MOTIVATIONS'; ids: string[] }
+  | { type: 'SET_ONBOARDED_AT'; ts: number | null }
   | { type: 'HYDRATED' };
 
 type NewMealItemInput = {
@@ -241,7 +295,7 @@ const INITIAL_STATE: State = {
   recentRecipeIds: [],
   collections: [],
   pantry: [],
-  notifications: seedNotifications(),
+  notifications: [], // user começa sem notificações — futuras virão do backend
   readNotificationIds: [],
   completedDays: [],
   shoppingList: [],
@@ -252,17 +306,30 @@ const INITIAL_STATE: State = {
   profilePhotoUri: null,
   mealReminders: {},
   silenceAllNotifications: false,
+  // ─── Onboarding ──
+  name: null,
+  gender: null,
+  birthDate: null,
+  heightCm: null,
+  activityLevel: null,
+  goal: null,
+  weeklyRateKg: null,
+  barriers: [],
+  motivations: [],
+  onboardedAt: null,
   hydrated: false,
   selectedDay: TODAY,
 };
 
-// Empty placeholders pra dias diferentes de hoje (MVP — historico real vira com backend)
-const EMPTY_MACROS: DailyMacros = {
-  kcal: { value: 0, target: INITIAL_MACROS.kcal.target },
-  p: { value: 0, target: INITIAL_MACROS.p.target },
-  c: { value: 0, target: INITIAL_MACROS.c.target },
-  f: { value: 0, target: INITIAL_MACROS.f.target },
-};
+// Empty placeholders pra dias diferentes de hoje (MVP — historico real vira com backend).
+// Targets são derivados dinâmicamente do state.dailyMacros (= valores reais do user),
+// não de INITIAL_MACROS que tem placeholders pré-onboarding.
+const buildEmptyMacros = (state: State): DailyMacros => ({
+  kcal: { value: 0, target: state.dailyMacros.kcal.target },
+  p: { value: 0, target: state.dailyMacros.p.target },
+  c: { value: 0, target: state.dailyMacros.c.target },
+  f: { value: 0, target: state.dailyMacros.f.target },
+});
 const EMPTY_MEALS: Meal[] = INITIAL_MEALS.map((m) => ({ ...m, kcal: 0, items: [] }));
 
 // ─── Reducer ─────────────────────────────────────────────────────
@@ -307,6 +374,45 @@ function reducer(state: State, action: Action): State {
           c: { ...state.dailyMacros.c, value: totals.c },
           f: { ...state.dailyMacros.f, value: totals.f },
         },
+      };
+    }
+
+    case 'RESTORE_DAY_FROM_SNAPSHOT': {
+      // Restaura o dia a partir de payload do backend. Diferente do REPLACE_DAY:
+      // os items já vêm com kcal/macros computados (não precisa multiplicar por
+      // amount). Mantém a metadata das refeições (name/time/color) do estado
+      // atual — só os items + macros + water são substituídos.
+      const totals = { kcal: 0, p: 0, c: 0, f: 0 };
+      const newMeals = state.meals.map((meal) => {
+        const snap = action.payload.meals.find((m) => m.id === meal.id);
+        if (!snap) return { ...meal, items: [], kcal: 0 };
+        const items: MealItem[] = snap.items.map((it, idx) => ({
+          id: Date.now() + idx + Math.random(),
+          q: 'food',
+          name: it.name,
+          portion: it.portion,
+          kcal: it.kcal,
+          p: it.p,
+          c: it.c,
+          f: it.f,
+        }));
+        const mealKcal = items.reduce((s, x) => s + x.kcal, 0);
+        totals.kcal += mealKcal;
+        totals.p += items.reduce((s, x) => s + x.p, 0);
+        totals.c += items.reduce((s, x) => s + x.c, 0);
+        totals.f += items.reduce((s, x) => s + x.f, 0);
+        return { ...meal, items, kcal: mealKcal };
+      });
+      return {
+        ...state,
+        meals: newMeals,
+        dailyMacros: {
+          kcal: { ...state.dailyMacros.kcal, value: totals.kcal },
+          p: { ...state.dailyMacros.p, value: totals.p },
+          c: { ...state.dailyMacros.c, value: totals.c },
+          f: { ...state.dailyMacros.f, value: totals.f },
+        },
+        water: action.payload.water,
       };
     }
 
@@ -634,6 +740,37 @@ function reducer(state: State, action: Action): State {
     case 'UNCOMPLETE_DAY':
       return { ...state, completedDays: state.completedDays.filter((d) => d !== action.dayKey) };
 
+    // ─── Onboarding ──────────────────────────────────────────────
+    case 'SET_NAME':
+      return { ...state, name: action.name };
+
+    case 'SET_GENDER':
+      return { ...state, gender: action.gender };
+
+    case 'SET_BIRTH_DATE':
+      return { ...state, birthDate: action.ts };
+
+    case 'SET_HEIGHT':
+      return { ...state, heightCm: action.cm };
+
+    case 'SET_ACTIVITY_LEVEL':
+      return { ...state, activityLevel: action.level };
+
+    case 'SET_GOAL':
+      return { ...state, goal: action.goal };
+
+    case 'SET_WEEKLY_RATE':
+      return { ...state, weeklyRateKg: action.kg };
+
+    case 'SET_BARRIERS':
+      return { ...state, barriers: action.ids };
+
+    case 'SET_MOTIVATIONS':
+      return { ...state, motivations: action.ids };
+
+    case 'SET_ONBOARDED_AT':
+      return { ...state, onboardedAt: action.ts };
+
     case 'HYDRATED':
       return { ...state, hydrated: true };
 
@@ -648,6 +785,8 @@ type AppContextValue = State & {
   removeWater: () => void;
   /** Substitui completamente as refeições do dia. Usado pelo "Copiar dia anterior". */
   replaceDay: (mealsItems: Record<string, NewMealItemInput[]>) => void;
+  /** Restaura o dia a partir de um snapshot do backend (Copiar dia anterior). */
+  restoreDayFromSnapshot: (payload: DaySnapshotPayload) => void;
   addToMeal: (mealId: string, items: NewMealItemInput[], total: { kcal: number; p: number; c: number; f: number }) => void;
   addSavedRecipe: (recipe: SavedRecipe) => Promise<void>;
   removeSavedRecipe: (id: string) => Promise<void>;
@@ -710,6 +849,19 @@ type AppContextValue = State & {
   displayedMeals: Meal[];
   /** true se está visualizando hoje. */
   isToday: boolean;
+  // ─── Setters do onboarding ──
+  setName: (name: string | null) => void;
+  setGender: (gender: Gender | null) => void;
+  setBirthDate: (ts: number | null) => void;
+  setHeight: (cm: number | null) => void;
+  setActivityLevel: (level: ActivityLevel | null) => void;
+  setGoal: (goal: GoalType | null) => void;
+  setWeeklyRate: (kg: number | null) => void;
+  setBarriers: (ids: string[]) => void;
+  setMotivations: (ids: string[]) => void;
+  setOnboardedAt: (ts: number | null) => void;
+  /** true se o user já concluiu o onboarding (onboardedAt != null). */
+  isOnboarded: boolean;
 };
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -718,14 +870,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
 
   // Em dev, expõe o dispatcher no window pra testes via preview_eval.
-  // @ts-expect-error - __DEV__ é global do RN
   if (__DEV__ && typeof window !== 'undefined') (window as any).__appDispatch = dispatch;
 
   // Hidratação inicial: carrega receitas + lista de compras + pesagens + prefs de alimento
   useEffect(() => {
     (async () => {
       try {
-        const [recipes, list, weights, favs, recents, readNotifs, completed, favRecipes, recentRecipes, cols, pantry, mealsCfg, weightGoal, photos, habits, macroTargets, profilePhoto, mealReminders, silenceAll] = await Promise.all([
+        const [
+          recipes, list, weights, favs, recents, readNotifs, completed,
+          favRecipes, recentRecipes, cols, pantry, mealsCfg, weightGoal,
+          photos, habits, macroTargets, profilePhoto, mealReminders, silenceAll,
+          // ─── Onboarding ──
+          name, gender, birthDate, heightCm, activityLevel, goalType, weeklyRate,
+          barriers, motivations, onboardedAt,
+        ] = await Promise.all([
           loadRecipes(),
           loadShoppingList(),
           loadWeightEntries(),
@@ -745,11 +903,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           loadProfilePhoto(),
           loadMealReminders(),
           loadSilenceAll(),
+          // ─── Onboarding ──
+          loadName(),
+          loadGender(),
+          loadBirthDate(),
+          loadHeight(),
+          loadActivityLevel(),
+          loadGoalType(),
+          loadWeeklyRate(),
+          loadBarriers(),
+          loadMotivations(),
+          loadOnboardedAt(),
         ]);
         dispatch({ type: 'SET_SAVED_RECIPES', recipes });
         dispatch({ type: 'SET_SHOPPING_LIST', items: list });
-        // Se nunca registrou nada, usa seed pra demo
-        dispatch({ type: 'SET_WEIGHT_ENTRIES', entries: weights.length > 0 ? weights : SEED_WEIGHT_ENTRIES });
+        // App começa SEM pesagens — primeira entrada é registrada na Tela 5 do onboarding.
+        dispatch({ type: 'SET_WEIGHT_ENTRIES', entries: weights });
         dispatch({ type: 'SET_FAVORITE_FOODS', ids: favs });
         dispatch({ type: 'SET_RECENT_FOODS', ids: recents });
         dispatch({ type: 'SET_READ_NOTIFICATIONS', ids: readNotifs });
@@ -765,10 +934,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (weightGoal != null) {
           dispatch({ type: 'SET_WEIGHT_GOAL', kg: weightGoal });
         }
-        // Se nunca tiver fotos persistidas, semeia com 2 mock pra demo
-        dispatch({ type: 'SET_PROGRESS_PHOTOS', photos: photos.length > 0 ? photos : buildSeedProgressPhotos() });
-        // Se nunca tiver hábitos, semeia com 4 de exemplo. Senão usa o que persistiu.
-        dispatch({ type: 'SET_HABITS', habits: habits.length > 0 ? habits : SEED_HABITS });
+        // App começa sem fotos de progresso — user adiciona conforme quiser.
+        dispatch({ type: 'SET_PROGRESS_PHOTOS', photos });
+        // App começa sem hábitos — user adiciona conforme quiser via Progresso > Hábitos.
+        dispatch({ type: 'SET_HABITS', habits });
         if (macroTargets) {
           dispatch({ type: 'SET_MACRO_TARGETS', targets: macroTargets });
         }
@@ -777,6 +946,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
         dispatch({ type: 'SET_MEAL_REMINDERS', cfg: mealReminders });
         dispatch({ type: 'SET_SILENCE_ALL', silenced: silenceAll });
+        // ─── Onboarding ──
+        dispatch({ type: 'SET_NAME', name });
+        dispatch({ type: 'SET_GENDER', gender });
+        dispatch({ type: 'SET_BIRTH_DATE', ts: birthDate });
+        dispatch({ type: 'SET_HEIGHT', cm: heightCm });
+        dispatch({ type: 'SET_ACTIVITY_LEVEL', level: activityLevel });
+        dispatch({ type: 'SET_GOAL', goal: goalType });
+        dispatch({ type: 'SET_WEEKLY_RATE', kg: weeklyRate });
+        dispatch({ type: 'SET_BARRIERS', ids: barriers });
+        dispatch({ type: 'SET_MOTIVATIONS', ids: motivations });
+        dispatch({ type: 'SET_ONBOARDED_AT', ts: onboardedAt });
       } catch (err) {
         console.warn('[app] falha ao hidratar:', err);
       } finally {
@@ -918,6 +1098,51 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   }, [state.meals, state.hydrated]);
 
+  // Auto-save do snapshot do dia no backend (debounce 3s).
+  // Dispara em qualquer mudança de meals/water. Macros são derivados de meals
+  // (recalculados pelo reducer), então tracking de meals já cobre todos os
+  // cenários de alteração nutricional do dia.
+  //
+  // Falhas silenciosas (offline, backend down): logamos um warning mas não
+  // mostramos toast — UX limpa, retry vai acontecer na próxima mudança.
+  const saveSnapshotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!state.hydrated) return;
+    if (saveSnapshotTimerRef.current) clearTimeout(saveSnapshotTimerRef.current);
+    saveSnapshotTimerRef.current = setTimeout(async () => {
+      try {
+        const deviceId = await getDeviceId();
+        const payload: DaySnapshotPayload = {
+          meals: state.meals.map((m) => ({
+            id: m.id,
+            items: m.items.map((it) => ({
+              id: String(it.id),
+              name: it.name,
+              portion: it.portion,
+              kcal: it.kcal,
+              p: it.p,
+              c: it.c,
+              f: it.f,
+            })),
+          })),
+          macros: {
+            kcal: state.dailyMacros.kcal.value,
+            p: state.dailyMacros.p.value,
+            c: state.dailyMacros.c.value,
+            f: state.dailyMacros.f.value,
+          },
+          water: state.water,
+        };
+        await saveDaySnapshot(deviceId, todayKey(), payload);
+      } catch (err) {
+        console.warn('[day-snapshot] falha no auto-save:', err);
+      }
+    }, 3000);
+    return () => {
+      if (saveSnapshotTimerRef.current) clearTimeout(saveSnapshotTimerRef.current);
+    };
+  }, [state.meals, state.water, state.hydrated]);
+
   useEffect(() => {
     if (!state.hydrated) return;
     saveCompletedDays(state.completedDays).catch((err) =>
@@ -925,15 +1150,67 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   }, [state.completedDays, state.hydrated]);
 
+  // ─── Persistência dos campos do onboarding ──
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveName(state.name).catch((err) => console.warn('[app] falha ao persistir name:', err));
+  }, [state.name, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveGender(state.gender).catch((err) => console.warn('[app] falha ao persistir gender:', err));
+  }, [state.gender, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveBirthDate(state.birthDate).catch((err) => console.warn('[app] falha ao persistir birthDate:', err));
+  }, [state.birthDate, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveHeight(state.heightCm).catch((err) => console.warn('[app] falha ao persistir heightCm:', err));
+  }, [state.heightCm, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveActivityLevel(state.activityLevel).catch((err) => console.warn('[app] falha ao persistir activityLevel:', err));
+  }, [state.activityLevel, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveGoalType(state.goal).catch((err) => console.warn('[app] falha ao persistir goal:', err));
+  }, [state.goal, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveWeeklyRate(state.weeklyRateKg).catch((err) => console.warn('[app] falha ao persistir weeklyRate:', err));
+  }, [state.weeklyRateKg, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveBarriers(state.barriers).catch((err) => console.warn('[app] falha ao persistir barriers:', err));
+  }, [state.barriers, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveMotivations(state.motivations).catch((err) => console.warn('[app] falha ao persistir motivations:', err));
+  }, [state.motivations, state.hydrated]);
+
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveOnboardedAt(state.onboardedAt).catch((err) => console.warn('[app] falha ao persistir onboardedAt:', err));
+  }, [state.onboardedAt, state.hydrated]);
+
   const isToday = state.selectedDay === TODAY;
   const value: AppContextValue = {
     ...state,
     isToday,
-    displayedMacros: isToday ? state.dailyMacros : EMPTY_MACROS,
+    displayedMacros: isToday ? state.dailyMacros : buildEmptyMacros(state),
     displayedMeals: isToday ? state.meals : EMPTY_MEALS,
     addWater: () => dispatch({ type: 'ADD_WATER' }),
     removeWater: () => dispatch({ type: 'REMOVE_WATER' }),
     replaceDay: (mealsItems) => dispatch({ type: 'REPLACE_DAY', mealsItems }),
+    restoreDayFromSnapshot: (payload) => dispatch({ type: 'RESTORE_DAY_FROM_SNAPSHOT', payload }),
     addToMeal: (mealId, items, total) => dispatch({ type: 'ADD_TO_MEAL', mealId, items, total }),
     addSavedRecipe: async (recipe) => {
       await saveRecipe(recipe);
@@ -1015,6 +1292,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     completeDay: (dayKey) => dispatch({ type: 'COMPLETE_DAY', dayKey }),
     uncompleteDay: (dayKey) => dispatch({ type: 'UNCOMPLETE_DAY', dayKey }),
     todayCompleted: state.completedDays.includes(todayKey()),
+    // ─── Onboarding ──
+    setName: (name) => dispatch({ type: 'SET_NAME', name }),
+    setGender: (gender) => dispatch({ type: 'SET_GENDER', gender }),
+    setBirthDate: (ts) => dispatch({ type: 'SET_BIRTH_DATE', ts }),
+    setHeight: (cm) => dispatch({ type: 'SET_HEIGHT', cm }),
+    setActivityLevel: (level) => dispatch({ type: 'SET_ACTIVITY_LEVEL', level }),
+    setGoal: (goal) => dispatch({ type: 'SET_GOAL', goal }),
+    setWeeklyRate: (kg) => dispatch({ type: 'SET_WEEKLY_RATE', kg }),
+    setBarriers: (ids) => dispatch({ type: 'SET_BARRIERS', ids }),
+    setMotivations: (ids) => dispatch({ type: 'SET_MOTIVATIONS', ids }),
+    setOnboardedAt: (ts) => dispatch({ type: 'SET_ONBOARDED_AT', ts }),
+    isOnboarded: state.onboardedAt != null,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

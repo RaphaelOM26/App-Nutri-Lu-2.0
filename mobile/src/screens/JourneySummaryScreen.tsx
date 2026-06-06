@@ -34,7 +34,9 @@ export const JourneySummaryScreen: React.FC = () => {
   const theme = useTheme();
   const nav = useNavigation<Nav>();
   const toast = useToast();
-  const { weightEntries, weightGoalKg, habits, progressPhotos, profilePhotoUri } = useApp();
+  const { weightEntries, weightGoalKg, habits, progressPhotos, profilePhotoUri, name } = useApp();
+  const displayName = name ?? 'Você';
+  const initials = name ? name.trim().charAt(0).toUpperCase() : 'L';
   const shotRef = useRef<ViewShot>(null);
   const [sharing, setSharing] = useState(false);
 
@@ -298,9 +300,9 @@ export const JourneySummaryScreen: React.FC = () => {
               “{quote}”
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 }}>
-              <Avatar uri={profilePhotoUri} initials="LS" size={28} />
+              <Avatar uri={profilePhotoUri} initials={initials} size={28} />
               <Text style={{ fontFamily: FONT.body, fontSize: 11, color: sub }}>
-                Larissa · resumo de Lu
+                {displayName} · resumo de Lu
               </Text>
             </View>
           </View>

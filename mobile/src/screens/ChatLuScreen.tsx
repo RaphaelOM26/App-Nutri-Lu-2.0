@@ -2,7 +2,7 @@
 // Envia macros do dia + refeições + perfil mock como contexto pra cada turno.
 // Versão completa (Semana 2): tool calling, histórico persistido, stream.
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -15,15 +15,18 @@ import { chatWithLu, ApiError, type ChatMessage, type LuContext } from '../api/c
 import { useApp } from '../state/AppContext';
 import { addReport } from '../storage/luReports';
 
-const INITIAL_MESSAGE: ChatMessage = {
+const makeInitialMessage = (name: string | null): ChatMessage => ({
   role: 'lu',
-  text: 'Oi, Larissa! Sou a Lu, sua nutri IA 🍃 No que posso te ajudar hoje?',
-};
+  text: name
+    ? `Oi, ${name}! Sou a Lu, sua nutri IA 🍃 No que posso te ajudar hoje?`
+    : 'Oi! Sou a Lu, sua nutri IA 🍃 No que posso te ajudar hoje?',
+});
 
 export const ChatLuScreen: React.FC = () => {
   const theme = useTheme();
   const nav = useNavigation();
-  const { water, displayedMacros, displayedMeals } = useApp();
+  const { water, displayedMacros, displayedMeals, name } = useApp();
+  const INITIAL_MESSAGE = useMemo(() => makeInitialMessage(name), [name]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
@@ -69,7 +72,7 @@ export const ChatLuScreen: React.FC = () => {
 
   const buildContext = (): LuContext => ({
     profile: {
-      name: 'Larissa',
+      name: name ?? 'Anônima',
       goal: 'Perder peso',
       weightKg: 85.2,
       goalWeightKg: 82.0,

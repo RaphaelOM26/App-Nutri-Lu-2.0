@@ -25,7 +25,12 @@ import type { SavedRecipe } from '../storage/recipes';
 import type { RecipeCollection } from '../storage/collections';
 import { daysUntilExpiry, type PantryItem } from '../storage/pantry';
 import { categorize } from '../storage/shoppingList';
-import { estimateRecipeMacros, pickRecipesForRemainingMacros, type RecipeFitCandidate } from '../utils/recipeMacros';
+import {
+  estimateRecipeMacros,
+  pickRecipesForRemainingMacros,
+  mealContextFromHour,
+  type RecipeFitCandidate,
+} from '../utils/recipeMacros';
 import { SEED_RECIPES } from '../data/seedRecipes';
 import type { Recipe, Food } from '../data/mockData';
 
@@ -832,8 +837,10 @@ const DiscoverRecipes: React.FC<DiscoverProps> = ({ recipes, onOpen, onOpenLuCha
 
   const askLuForSuggestion = () => {
     setSuggestOpen(true);
-    // Sempre recomputa candidatos quando abre (macros podem ter mudado)
-    const top = pickRecipesForRemainingMacros(SEED_RECIPES, remaining, foodDB, 6);
+    // Contexto da refeição baseado no horário atual — evita sugerir bife às 9h
+    // ou suco de 700 kcal como "lanche da tarde". Recalcula sempre que abre.
+    const context = mealContextFromHour(new Date().getHours());
+    const top = pickRecipesForRemainingMacros(SEED_RECIPES, remaining, foodDB, 6, context);
     setCandidates(top);
     setCursor(0);
     if (top.length > 0) {
@@ -1567,7 +1574,7 @@ const PantryView: React.FC<{ nav: Nav }> = ({ nav }) => {
           </Btn>
         </View>
         <View style={{ flex: 1 }}>
-          <Btn variant="outline" size="md" icon={Icon.camera} full onPress={() => nav.navigate('Camera', { mode: 'food' })}>
+          <Btn variant="outline" size="md" icon={Icon.camera} full onPress={() => nav.navigate('Camera', { mode: 'pantry' })}>
             Foto geladeira
           </Btn>
         </View>
