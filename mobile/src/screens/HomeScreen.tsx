@@ -402,15 +402,17 @@ const StreakPill: React.FC<{ days: number }> = ({ days }) => {
   const ringOpacity = useRef(new Animated.Value(0.5)).current;
   const ringScale = useRef(new Animated.Value(1)).current;
   const COLLAPSED_W = days === 0 ? 36 : 66; // sem número quando 0
-  const EXPANDED_W = 210; // largura pra acomodar "Comece registrando!" ou "X dias seguidos!"
+  // Largura limitada pra pill NÃO invadir a área do nome do user.
+  // Calibrado pra caber labels curtos em screens de 360dp+ sem sobreposição.
+  const EXPANDED_W = 140;
 
-  // Label dinâmico — curto pra caber bem
+  // Labels curtos — encaixam em EXPANDED_W e mantêm tom encorajador.
   const label =
     days === 0
-      ? 'Comece registrando!'
+      ? 'Comece já!'
       : days === 1
-        ? 'Primeiro dia! 🎉'
-        : `${days} dias seguidos!`;
+        ? 'Dia 1! 🎉'
+        : `${days} dias!`;
 
   const animate = (toValue: number) => {
     Animated.spring(expand, { toValue, useNativeDriver: false, friction: 6, tension: 90 }).start();
