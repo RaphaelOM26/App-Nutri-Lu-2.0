@@ -39,6 +39,7 @@ import { SEED_ACHIEVEMENTS, formatUnlockedDate } from '../data/achievements';
 const AnimatedPolyline = Animated.createAnimatedComponent(Polyline);
 const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
 const AnimatedCircle = Animated.createAnimatedComponent(SCircle);
+const AnimatedSRect = Animated.createAnimatedComponent(SRect);
 
 type TabId = 'weight' | 'macros' | 'photos' | 'habits';
 type Period = '7D' | '30D';
@@ -424,6 +425,9 @@ const WeightTab: React.FC = () => {
     // Auto-fecha após 2.5s sem mais interação
     hoverTimer.current = setTimeout(() => setHoveredIdx(null), 2500);
   };
+  // Animação 0→1 das barras (mesmo padrão do AnimatedBar do MacrosTab).
+  // Cada barra deriva y/height por interpolação. Re-anima ao trocar período.
+  const chartAnim = useRef(new Animated.Value(0)).current;
 
   // ─── Definição do range do período ──────────────────────────────
   // Janela fixa (7 ou 30 dias) terminando hoje.
@@ -439,6 +443,18 @@ const WeightTab: React.FC = () => {
       .filter((e) => e.date >= startMs && e.date <= endMs)
       .sort((a, b) => a.date - b.date);
   }, [weightEntries, startMs, endMs]);
+
+  // Re-anima as barras 0→1 ao mount, ao trocar período (7D/30D) ou quando
+  // entradas mudam. Mesma duração (700ms) e easing default do AnimatedBar
+  // do MacrosTab pra coerência visual.
+  useEffect(() => {
+    chartAnim.setValue(0);
+    Animated.timing(chartAnim, {
+      toValue: 1,
+      duration: 700,
+      useNativeDriver: false,
+    }).start();
+  }, [period, filteredEntries.length, chartAnim]);
 
   // Faixa de peso pra eixo Y — começa em ZERO pra preservar a proporção real.
   // Assim a meta (ex: 82kg) aparece visualmente próxima do topo das barras
@@ -628,7 +644,9 @@ const WeightTab: React.FC = () => {
             ) : (
               <Svg width="100%" height={CHART_H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
                 {/* Barras verticais — cada pesagem vira uma barra arredondada.
-                    Inclui o caso de 1 só entry (do onboarding) — antes mostrava só um dot. */}
+                    Inclui o caso de 1 só entry (do onboarding) — antes mostrava só um dot.
+                    Animação: y e height interpolam de (H, 0) → (H-h, h). Cada barra
+                    cresce de baixo pra cima conforme chartAnim vai de 0→1. */}
                 {(() => {
                   const n = filteredEntries.length;
                   const slotW = W / Math.max(n, 7); // pelo menos 7 slots pra barra não ficar gigante
@@ -638,13 +656,15 @@ const WeightTab: React.FC = () => {
                     const x = xFor(e.date) - barW / 2;
                     const y = yFor(e.kg);
                     const h = Math.max(barW, H - y);
+                    const animY = chartAnim.interpolate({ inputRange: [0, 1], outputRange: [H, H - h] });
+                    const animH = chartAnim.interpolate({ inputRange: [0, 1], outputRange: [0, h] });
                     return (
-                      <SRect
+                      <AnimatedSRect
                         key={i}
                         x={x}
-                        y={H - h}
+                        y={animY}
                         width={barW}
-                        height={h}
+                        height={animH}
                         rx={barW / 2}
                         ry={barW / 2}
                         fill={theme.primary}

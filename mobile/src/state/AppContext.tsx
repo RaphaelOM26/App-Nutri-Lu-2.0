@@ -670,8 +670,34 @@ function reducer(state: State, action: Action): State {
     case 'CLEAR_PANTRY':
       return { ...state, pantry: [] };
 
-    case 'SET_MEALS':
-      return { ...state, meals: action.meals };
+    case 'SET_MEALS': {
+      // CRÍTICO: recomputar dailyMacros.value somando os items das meals.
+      // Sem isso, na hidratação (mealsConfig restaurado do AsyncStorage com items)
+      // os macros ficavam zerados, e o próximo ADD_TO_MEAL somava só o novo,
+      // perdendo o que já existia (bug reportado: dashboard 343 ≠ 652+470=1122).
+      const totals = action.meals.reduce(
+        (acc, m) => {
+          for (const it of m.items) {
+            acc.kcal += it.kcal;
+            acc.p += it.p;
+            acc.c += it.c;
+            acc.f += it.f;
+          }
+          return acc;
+        },
+        { kcal: 0, p: 0, c: 0, f: 0 },
+      );
+      return {
+        ...state,
+        meals: action.meals,
+        dailyMacros: {
+          kcal: { ...state.dailyMacros.kcal, value: totals.kcal },
+          p: { ...state.dailyMacros.p, value: totals.p },
+          c: { ...state.dailyMacros.c, value: totals.c },
+          f: { ...state.dailyMacros.f, value: totals.f },
+        },
+      };
+    }
 
     case 'ADD_MEAL':
       // Adiciona ordenando por horário (HH:MM) pra manter ordem cronológica
