@@ -1,25 +1,95 @@
-// Persistência da configuração de refeições do usuário.
-// Salva o array completo de Meal[] no AsyncStorage. Items vivem aqui também
-// (podem ser efêmeros em runtime — MVP sem histórico backend).
+// Persistência das refeições do usuário.
+//
+// Dois conceitos separados:
+//
+// 1. TEMPLATE (`@nutri-lu/meals-template`) — config compartilhada entre dias:
+//    id, name, time, color, iconSrc. SEM items, SEM kcal. É o "esqueleto" que
+//    cada dia herda. Renomear "Almoço" pra "Refeição pós-treino" muda em todo
+//    dia que ainda não tinha snapshot próprio.
+//
+// 2. POR DIA (`@nutri-lu/meals-by-date`) — Record<YYYY-MM-DD, Meal[]>: para
+//    cada dia em que o user registrou algo, guarda as meals COM items.
+//    Source of truth pro histórico local. Backend serve como espelho/recovery.
+//
+// Migração legacy: até 2026-06-08 existia `@nutri-lu/meals-config` (Meal[]
+// plano sem data). Na primeira leitura nova-versão, se a chave legacy existir,
+// extrai o template e joga os items todos como sendo de "hoje" no by-date.
+// Trade-off aceitável: user perde a noção de em que dia exatamente registrou
+// (já estava confuso de qualquer jeito por causa do bug), mas não perde dados.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Meal } from '../data/mockData';
 
-const STORAGE_KEY = '@nutri-lu/meals-config';
+const LEGACY_KEY = '@nutri-lu/meals-config';
+const TEMPLATE_KEY = '@nutri-lu/meals-template';
+const BY_DATE_KEY = '@nutri-lu/meals-by-date';
 
-export async function loadMealsConfig(): Promise<Meal[] | null> {
+export type MealsByDate = Record<string, Meal[]>;
+
+/**
+ * Carrega o template (config-only) das refeições. Retorna null se nunca foi
+ * salvo — AppContext deve cair no INITIAL_MEALS.
+ */
+export async function loadMealsTemplate(): Promise<Meal[] | null> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const raw = await AsyncStorage.getItem(TEMPLATE_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as Meal[];
   } catch (err) {
-    console.warn('[storage] falha ao ler config de refeições:', err);
+    console.warn('[storage] falha ao ler template de refeições:', err);
     return null;
   }
 }
 
-export async function saveMealsConfig(meals: Meal[]): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
+export async function saveMealsTemplate(template: Meal[]): Promise<void> {
+  // Persiste apenas a "casca" — id/name/time/color/iconSrc/q. Items/kcal são
+  // por-dia e não pertencem ao template.
+  const sanitized = template.map((m) => ({
+    ...m,
+    items: [],
+    kcal: 0,
+  }));
+  await AsyncStorage.setItem(TEMPLATE_KEY, JSON.stringify(sanitized));
+}
+
+/**
+ * Carrega o mapa data→meals. Faz migração transparente da chave legacy se
+ * encontrar `@nutri-lu/meals-config` antigo (Meal[] plano sem data) e não
+ * tiver ainda a nova chave.
+ */
+export async function loadMealsByDate(): Promise<MealsByDate> {
+  try {
+    const raw = await AsyncStorage.getItem(BY_DATE_KEY);
+    if (raw) return JSON.parse(raw) as MealsByDate;
+    // Migração: chave nova não existe — tenta legacy.
+    const legacyRaw = await AsyncStorage.getItem(LEGACY_KEY);
+    if (!legacyRaw) return {};
+    const legacy = JSON.parse(legacyRaw) as Meal[];
+    // Heurística de migração: items que estavam "vazando" como hoje viram um
+    // snapshot fixo de hoje. Backend (saveDaySnapshot) já tem o snapshot real
+    // com a data certa — esse fallback só protege quem nunca chegou a syncar.
+    const today = todayKeyInternal();
+    const migrated: MealsByDate = legacy.some((m) => m.items.length > 0)
+      ? { [today]: legacy }
+      : {};
+    await AsyncStorage.setItem(BY_DATE_KEY, JSON.stringify(migrated));
+    await AsyncStorage.removeItem(LEGACY_KEY);
+    return migrated;
+  } catch (err) {
+    console.warn('[storage] falha ao ler meals-by-date (ou migrar legacy):', err);
+    return {};
+  }
+}
+
+export async function saveMealsByDate(byDate: MealsByDate): Promise<void> {
+  await AsyncStorage.setItem(BY_DATE_KEY, JSON.stringify(byDate));
+}
+
+// Helper local pra evitar dep circular com completedDays.ts (que importa daqui
+// indiretamente via outros módulos). Mesma fórmula do todayKey() do app.
+function todayKeyInternal(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export function newMealId(): string {

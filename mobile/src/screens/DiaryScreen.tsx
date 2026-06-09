@@ -62,13 +62,15 @@ export const DiaryScreen: React.FC = () => {
   // do sistema (Samsung 3-button, gesture indicator iOS, etc.).
   const insets = useSafeAreaInsets();
   const {
-    selectedDay, setSelectedDay, displayedMacros, displayedMeals, isToday, meals,
+    selectedDateKey, setSelectedDate, displayedMacros, displayedMeals, isToday,
     restoreDayFromSnapshot,
     water, todayCompleted, completeDay, uncompleteDay, name,
   } = useApp();
+  // Decompõe YYYY-MM-DD do dia selecionado pro subtitle.
+  const [selYear, selMonth, selDay] = selectedDateKey.split('-').map((n) => parseInt(n, 10));
   const subtitle = isToday
     ? formatDayBR(TODAY, TODAY_MONTH, TODAY_YEAR)
-    : `Dia ${selectedDay} de ${MONTHS[TODAY_MONTH - 1]}`;
+    : formatDayBR(selDay, selMonth, selYear);
 
   // Quando o usuário aperta uma das 4 quick actions, perguntamos pra qual refeição
   // antes de navegar — evita ir sempre pro "café da manhã" por default.
@@ -86,7 +88,7 @@ export const DiaryScreen: React.FC = () => {
   const [reviewLoading, setReviewLoading] = useState(false);
   const toast = useToast();
 
-  const hasAnyRegisteredMeal = meals.some((m) => m.items.length > 0);
+  const hasAnyRegisteredMeal = displayedMeals.some((m) => m.items.length > 0);
 
   const completeToday = async () => {
     const key = todayKey();
@@ -191,14 +193,14 @@ export const DiaryScreen: React.FC = () => {
         ]}
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 130 }}>
-        <DateStrip selected={selectedDay} onSelect={setSelectedDay} />
+        <DateStrip selectedDateKey={selectedDateKey} onSelectDate={setSelectedDate} />
 
         {/* Mini resumo sticky */}
         <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
           <Card pad={14} radius={18}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
               <MacroRing
-                key={`diary-ring-${replayKey}-${selectedDay}`}
+                key={`diary-ring-${replayKey}-${selectedDateKey}`}
                 value={displayedMacros.kcal.value / displayedMacros.kcal.target}
                 size={56}
                 stroke={6}
@@ -245,7 +247,7 @@ export const DiaryScreen: React.FC = () => {
 
         {/* Lista de refeições */}
         <View style={{ paddingHorizontal: 16, gap: 10 }}>
-          {displayedMeals.length === 0 || !isToday ? (
+          {displayedMeals.length === 0 || displayedMeals.every((m) => m.items.length === 0) ? (
             <Card pad={24} radius={22}>
               <View style={{ alignItems: 'center', gap: 12 }}>
                 <Icon.calendar size={32} color={theme.primary} stroke={1.5} />
@@ -255,8 +257,17 @@ export const DiaryScreen: React.FC = () => {
                 <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center' }}>
                   {isToday
                     ? 'Use as ações rápidas acima pra começar.'
-                    : 'Nenhum dado registrado nesse dia.'}
+                    : 'Você ainda não registrou nada neste dia.'}
                 </Text>
+                {!isToday && displayedMeals.length > 0 && (
+                  <Btn
+                    variant="primary"
+                    icon={Icon.plus}
+                    onPress={() => nav.navigate('AddFood', { mealId: displayedMeals[0].id })}
+                  >
+                    Adicionar refeição
+                  </Btn>
+                )}
               </View>
             </Card>
           ) : (

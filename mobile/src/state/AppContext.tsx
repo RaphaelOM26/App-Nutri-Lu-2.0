@@ -3,6 +3,7 @@
 // para a parte de telas (não precisamos mais de screen/history/params no state).
 
 import React, { createContext, useContext, useEffect, useReducer, useRef } from 'react';
+import { Alert } from 'react-native';
 import {
   INITIAL_MACROS,
   INITIAL_MEALS,
@@ -116,17 +117,20 @@ import {
   type PantryItem,
 } from '../storage/pantry';
 import {
-  loadMealsConfig,
-  saveMealsConfig,
+  loadMealsTemplate,
+  saveMealsTemplate,
+  loadMealsByDate,
+  saveMealsByDate,
   newMealId,
   pickMealColor,
   pickMealImageForName,
+  type MealsByDate,
 } from '../storage/mealsConfig';
 import { loadReadIds, saveReadIds } from '../storage/notifications';
 import { type AppNotification } from '../data/notifications';
 import { loadCompletedDays, saveCompletedDays, todayKey } from '../storage/completedDays';
 import { getDeviceId } from '../storage/deviceId';
-import { saveDaySnapshot, type DaySnapshotPayload } from '../api/client';
+import { saveDaySnapshot, getDaySnapshot, type DaySnapshotPayload } from '../api/client';
 
 // ─── Tipos ───────────────────────────────────────────────────────
 // "Hoje" usa a data REAL do dispositivo. Mock de macros/refeições continua o
@@ -137,8 +141,22 @@ export const TODAY_YEAR = new Date().getFullYear();
 
 type State = {
   water: number;
-  dailyMacros: DailyMacros;
-  meals: Meal[];
+  /**
+   * Items registrados por dia (YYYY-MM-DD → Meal[]). Source of truth pro
+   * histórico local. Dia sem entry no map = dia sem registro (mostra empty
+   * state ou puxa do backend).
+   */
+  mealsByDate: MealsByDate;
+  /**
+   * Config compartilhada das refeições (id, name, time, color, iconSrc). Items
+   * ficam zerados aqui — só descreve a estrutura. Renomear "Almoço" muda em
+   * todos os dias que herdam o template (= todos exceto os já snapshotados).
+   */
+  mealsTemplate: Meal[];
+  /** YYYY-MM-DD do dia que as telas com DateStrip estão visualizando. */
+  selectedDateKey: string;
+  /** Targets de macros (vêm do onboarding via macroTargets storage). */
+  macroTargets: { kcal: number; p: number; c: number; f: number };
   recipes: Recipe[]; // receitas seed (mock)
   savedRecipes: SavedRecipe[]; // receitas extraídas/salvas pelo usuário
   foodDB: Food[];
@@ -196,8 +214,6 @@ type State = {
   onboardedAt: number | null;
   // estado de loading da hidratação inicial do AsyncStorage
   hydrated: boolean;
-  // Dia visualizado pelas telas com DateStrip (Home + Diary compartilham)
-  selectedDay: number;
 };
 
 type Action =
@@ -209,7 +225,6 @@ type Action =
   | { type: 'SET_SAVED_RECIPES'; recipes: SavedRecipe[] }
   | { type: 'ADD_SAVED_RECIPE'; recipe: SavedRecipe }
   | { type: 'REMOVE_SAVED_RECIPE'; id: string }
-  | { type: 'SET_SELECTED_DAY'; day: number }
   | { type: 'SET_SHOPPING_LIST'; items: ShoppingListItem[] }
   | { type: 'UPSERT_SHOPPING_ITEM'; item: ShoppingListItem }
   | { type: 'REMOVE_SHOPPING_ITEM'; id: string }
@@ -250,7 +265,9 @@ type Action =
   | { type: 'ADD_PANTRY_ITEM'; item: PantryItem }
   | { type: 'REMOVE_PANTRY_ITEM'; id: string }
   | { type: 'CLEAR_PANTRY' }
-  | { type: 'SET_MEALS'; meals: Meal[] }
+  | { type: 'HYDRATE_MEALS'; byDate: MealsByDate; template: Meal[] }
+  | { type: 'SET_SELECTED_DATE'; dateKey: string }
+  | { type: 'SET_MEALS_FOR_DATE'; dateKey: string; meals: Meal[] }
   | { type: 'ADD_MEAL'; meal: Meal }
   | { type: 'UPDATE_MEAL'; id: string; name?: string; time?: string }
   | { type: 'REMOVE_MEAL'; id: string }
@@ -284,8 +301,15 @@ type NewMealItemInput = {
 
 const INITIAL_STATE: State = {
   water: INITIAL_WATER,
-  dailyMacros: INITIAL_MACROS,
-  meals: INITIAL_MEALS,
+  mealsByDate: {},
+  mealsTemplate: INITIAL_MEALS,
+  selectedDateKey: todayKey(),
+  macroTargets: {
+    kcal: INITIAL_MACROS.kcal.target,
+    p: INITIAL_MACROS.p.target,
+    c: INITIAL_MACROS.c.target,
+    f: INITIAL_MACROS.f.target,
+  },
   recipes: INITIAL_RECIPES,
   savedRecipes: [],
   foodDB: FOOD_DB,
@@ -318,19 +342,56 @@ const INITIAL_STATE: State = {
   motivations: [],
   onboardedAt: null,
   hydrated: false,
-  selectedDay: TODAY,
 };
 
-// Empty placeholders pra dias diferentes de hoje (MVP — historico real vira com backend).
-// Targets são derivados dinâmicamente do state.dailyMacros (= valores reais do user),
-// não de INITIAL_MACROS que tem placeholders pré-onboarding.
-const buildEmptyMacros = (state: State): DailyMacros => ({
-  kcal: { value: 0, target: state.dailyMacros.kcal.target },
-  p: { value: 0, target: state.dailyMacros.p.target },
-  c: { value: 0, target: state.dailyMacros.c.target },
-  f: { value: 0, target: state.dailyMacros.f.target },
-});
-const EMPTY_MEALS: Meal[] = INITIAL_MEALS.map((m) => ({ ...m, kcal: 0, items: [] }));
+// ─── Helpers de derivação por data ──────────────────────────────
+// O state guarda mealsByDate (por dia) e mealsTemplate (config). Tudo que
+// "as telas veem" é derivado dessas duas fontes + selectedDateKey.
+
+const cloneTemplate = (template: Meal[]): Meal[] =>
+  template.map((m) => ({ ...m, items: [], kcal: 0 }));
+
+/** Refeições do dia (do snapshot do dia, ou template vazio se nunca registrou). */
+function mealsForDate(state: State, dateKey: string): Meal[] {
+  return state.mealsByDate[dateKey] ?? cloneTemplate(state.mealsTemplate);
+}
+
+/** Soma kcal/macros dos items de uma lista de meals. */
+function sumMacros(meals: Meal[]): { kcal: number; p: number; c: number; f: number } {
+  return meals.reduce(
+    (acc, m) => {
+      for (const it of m.items) {
+        acc.kcal += it.kcal;
+        acc.p += it.p;
+        acc.c += it.c;
+        acc.f += it.f;
+      }
+      return acc;
+    },
+    { kcal: 0, p: 0, c: 0, f: 0 },
+  );
+}
+
+/** Reconstroi um DailyMacros com targets atuais + valores do dia. */
+function macrosForDate(state: State, dateKey: string): DailyMacros {
+  const sum = sumMacros(mealsForDate(state, dateKey));
+  return {
+    kcal: { value: sum.kcal, target: state.macroTargets.kcal },
+    p: { value: sum.p, target: state.macroTargets.p },
+    c: { value: sum.c, target: state.macroTargets.c },
+    f: { value: sum.f, target: state.macroTargets.f },
+  };
+}
+
+const MONTHS_BR_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const WEEKDAY_BR = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+/** Formata YYYY-MM-DD em "Sábado, 6 de jun" pra usar no Alert. */
+function formatDateKeyBR(dateKey: string): string {
+  const [y, m, d] = dateKey.split('-').map((n) => parseInt(n, 10));
+  const date = new Date(y, m - 1, d);
+  return `${WEEKDAY_BR[date.getDay()]}, ${d} de ${MONTHS_BR_SHORT[m - 1]}`;
+}
 
 // ─── Reducer ─────────────────────────────────────────────────────
 function reducer(state: State, action: Action): State {
@@ -344,9 +405,10 @@ function reducer(state: State, action: Action): State {
       return { ...state, water: Math.max(0, state.water - 1) };
 
     case 'REPLACE_DAY': {
-      // Substitui completamente os items de cada refeição. Recalcula totais.
-      const totals = { kcal: 0, p: 0, c: 0, f: 0 };
-      const newMeals = state.meals.map((meal) => {
+      // Substitui completamente os items de cada refeição NO DIA SELECIONADO.
+      // Recalcula totais; armazena em mealsByDate[selectedDateKey].
+      const base = mealsForDate(state, state.selectedDateKey);
+      const newMeals = base.map((meal) => {
         const items = action.mealsItems[meal.id] || [];
         const mealItems: MealItem[] = items.map((it, idx) => ({
           id: Date.now() + idx + Math.random(),
@@ -358,32 +420,20 @@ function reducer(state: State, action: Action): State {
           c: Math.round(it.c * it.amount),
           f: Math.round(it.f * it.amount),
         }));
-        const mealKcal = mealItems.reduce((s, x) => s + x.kcal, 0);
-        totals.kcal += mealKcal;
-        totals.p += mealItems.reduce((s, x) => s + x.p, 0);
-        totals.c += mealItems.reduce((s, x) => s + x.c, 0);
-        totals.f += mealItems.reduce((s, x) => s + x.f, 0);
-        return { ...meal, items: mealItems, kcal: mealKcal };
+        return { ...meal, items: mealItems, kcal: mealItems.reduce((s, x) => s + x.kcal, 0) };
       });
       return {
         ...state,
-        meals: newMeals,
-        dailyMacros: {
-          kcal: { ...state.dailyMacros.kcal, value: totals.kcal },
-          p: { ...state.dailyMacros.p, value: totals.p },
-          c: { ...state.dailyMacros.c, value: totals.c },
-          f: { ...state.dailyMacros.f, value: totals.f },
-        },
+        mealsByDate: { ...state.mealsByDate, [state.selectedDateKey]: newMeals },
       };
     }
 
     case 'RESTORE_DAY_FROM_SNAPSHOT': {
-      // Restaura o dia a partir de payload do backend. Diferente do REPLACE_DAY:
-      // os items já vêm com kcal/macros computados (não precisa multiplicar por
-      // amount). Mantém a metadata das refeições (name/time/color) do estado
-      // atual — só os items + macros + water são substituídos.
-      const totals = { kcal: 0, p: 0, c: 0, f: 0 };
-      const newMeals = state.meals.map((meal) => {
+      // Restaura o dia selecionado a partir de payload do backend. Diferente do
+      // REPLACE_DAY: items já vêm com kcal/macros computados. Mantém metadata
+      // (name/time/color) do template — só items + water são substituídos.
+      const base = mealsForDate(state, state.selectedDateKey);
+      const newMeals = base.map((meal) => {
         const snap = action.payload.meals.find((m) => m.id === meal.id);
         if (!snap) return { ...meal, items: [], kcal: 0 };
         const items: MealItem[] = snap.items.map((it, idx) => ({
@@ -396,29 +446,19 @@ function reducer(state: State, action: Action): State {
           c: it.c,
           f: it.f,
         }));
-        const mealKcal = items.reduce((s, x) => s + x.kcal, 0);
-        totals.kcal += mealKcal;
-        totals.p += items.reduce((s, x) => s + x.p, 0);
-        totals.c += items.reduce((s, x) => s + x.c, 0);
-        totals.f += items.reduce((s, x) => s + x.f, 0);
-        return { ...meal, items, kcal: mealKcal };
+        return { ...meal, items, kcal: items.reduce((s, x) => s + x.kcal, 0) };
       });
       return {
         ...state,
-        meals: newMeals,
-        dailyMacros: {
-          kcal: { ...state.dailyMacros.kcal, value: totals.kcal },
-          p: { ...state.dailyMacros.p, value: totals.p },
-          c: { ...state.dailyMacros.c, value: totals.c },
-          f: { ...state.dailyMacros.f, value: totals.f },
-        },
+        mealsByDate: { ...state.mealsByDate, [state.selectedDateKey]: newMeals },
         water: action.payload.water,
       };
     }
 
     case 'ADD_TO_MEAL': {
-      const { mealId, items, total } = action;
-      const meals = state.meals.map((m) => {
+      const { mealId, items } = action;
+      const base = mealsForDate(state, state.selectedDateKey);
+      const newMeals = base.map((m) => {
         if (m.id !== mealId) return m;
         const newItems: MealItem[] = [
           ...m.items,
@@ -433,17 +473,11 @@ function reducer(state: State, action: Action): State {
             f: Math.round(it.f * it.amount),
           })),
         ];
-        return { ...m, items: newItems, kcal: m.kcal + total.kcal };
+        return { ...m, items: newItems, kcal: newItems.reduce((s, it) => s + it.kcal, 0) };
       });
       return {
         ...state,
-        meals,
-        dailyMacros: {
-          kcal: { ...state.dailyMacros.kcal, value: state.dailyMacros.kcal.value + total.kcal },
-          p: { ...state.dailyMacros.p, value: state.dailyMacros.p.value + total.p },
-          c: { ...state.dailyMacros.c, value: state.dailyMacros.c.value + total.c },
-          f: { ...state.dailyMacros.f, value: state.dailyMacros.f.value + total.f },
-        },
+        mealsByDate: { ...state.mealsByDate, [state.selectedDateKey]: newMeals },
       };
     }
 
@@ -462,8 +496,14 @@ function reducer(state: State, action: Action): State {
     case 'REMOVE_SAVED_RECIPE':
       return { ...state, savedRecipes: state.savedRecipes.filter((r) => r.id !== action.id) };
 
-    case 'SET_SELECTED_DAY':
-      return { ...state, selectedDay: action.day };
+    case 'SET_SELECTED_DATE':
+      return { ...state, selectedDateKey: action.dateKey };
+
+    case 'SET_MEALS_FOR_DATE':
+      return {
+        ...state,
+        mealsByDate: { ...state.mealsByDate, [action.dateKey]: action.meals },
+      };
 
     case 'SET_SHOPPING_LIST':
       return { ...state, shoppingList: action.items };
@@ -502,15 +542,7 @@ function reducer(state: State, action: Action): State {
       return { ...state, weightGoalKg: action.kg };
 
     case 'SET_MACRO_TARGETS':
-      return {
-        ...state,
-        dailyMacros: {
-          kcal: { ...state.dailyMacros.kcal, target: action.targets.kcal },
-          p: { ...state.dailyMacros.p, target: action.targets.p },
-          c: { ...state.dailyMacros.c, target: action.targets.c },
-          f: { ...state.dailyMacros.f, target: action.targets.f },
-        },
-      };
+      return { ...state, macroTargets: action.targets };
 
     case 'SET_PROFILE_PHOTO':
       return { ...state, profilePhotoUri: action.uri };
@@ -670,78 +702,51 @@ function reducer(state: State, action: Action): State {
     case 'CLEAR_PANTRY':
       return { ...state, pantry: [] };
 
-    case 'SET_MEALS': {
-      // CRÍTICO: recomputar dailyMacros.value somando os items das meals.
-      // Sem isso, na hidratação (mealsConfig restaurado do AsyncStorage com items)
-      // os macros ficavam zerados, e o próximo ADD_TO_MEAL somava só o novo,
-      // perdendo o que já existia (bug reportado: dashboard 343 ≠ 652+470=1122).
-      const totals = action.meals.reduce(
-        (acc, m) => {
-          for (const it of m.items) {
-            acc.kcal += it.kcal;
-            acc.p += it.p;
-            acc.c += it.c;
-            acc.f += it.f;
-          }
-          return acc;
-        },
-        { kcal: 0, p: 0, c: 0, f: 0 },
-      );
+    case 'HYDRATE_MEALS': {
+      // Carrega snapshots por data + template do AsyncStorage no boot.
+      // Macros e meals visíveis ficam derivados em runtime via mealsForDate().
       return {
         ...state,
-        meals: action.meals,
-        dailyMacros: {
-          kcal: { ...state.dailyMacros.kcal, value: totals.kcal },
-          p: { ...state.dailyMacros.p, value: totals.p },
-          c: { ...state.dailyMacros.c, value: totals.c },
-          f: { ...state.dailyMacros.f, value: totals.f },
-        },
+        mealsByDate: action.byDate,
+        mealsTemplate: action.template,
       };
     }
 
     case 'ADD_MEAL':
-      // Adiciona ordenando por horário (HH:MM) pra manter ordem cronológica
+      // Adiciona ao template, ordenando por horário (HH:MM). Refeições
+      // pré-existentes em mealsByDate preservam sua config histórica.
       return {
         ...state,
-        meals: [...state.meals, action.meal].sort((a, b) => a.time.localeCompare(b.time)),
+        mealsTemplate: [...state.mealsTemplate, action.meal].sort((a, b) =>
+          a.time.localeCompare(b.time),
+        ),
       };
 
     case 'UPDATE_MEAL': {
-      const meals = state.meals.map((m, idx) => {
+      // Renomeia/muda horário no template. Dias com snapshot existente
+      // mantêm a config que tinham na época — preserva histórico fiel.
+      const template = state.mealsTemplate.map((m, idx) => {
         if (m.id !== action.id) return m;
         const nextName = action.name ?? m.name;
-        // Se nome mudou, recalcula a imagem temática
         const nextIcon = action.name && action.name !== m.name
           ? pickMealImageForName(nextName, idx)
           : m.iconSrc;
         return { ...m, name: nextName, time: action.time ?? m.time, iconSrc: nextIcon };
       });
-      return { ...state, meals: meals.sort((a, b) => a.time.localeCompare(b.time)) };
+      return {
+        ...state,
+        mealsTemplate: template.sort((a, b) => a.time.localeCompare(b.time)),
+      };
     }
 
     case 'REMOVE_MEAL': {
-      const removed = state.meals.find((m) => m.id === action.id);
-      if (!removed) return state;
-      // Subtrai macros da meal removida do total do dia
-      const macroDelta = removed.items.reduce(
-        (acc, it) => {
-          acc.kcal += it.kcal;
-          acc.p += it.p;
-          acc.c += it.c;
-          acc.f += it.f;
-          return acc;
-        },
-        { kcal: 0, p: 0, c: 0, f: 0 },
-      );
+      // Remove do template. Dias com snapshot preservam — mas item órfão fica
+      // (sem matching no template); displayedMeals usa o snapshot inteiro, então
+      // continua aparecendo no dia em que foi registrado. Decisão consciente:
+      // não corromper histórico ao mudar config futura.
       return {
         ...state,
-        meals: state.meals.filter((m) => m.id !== action.id),
-        dailyMacros: {
-          kcal: { ...state.dailyMacros.kcal, value: Math.max(0, state.dailyMacros.kcal.value - macroDelta.kcal) },
-          p: { ...state.dailyMacros.p, value: Math.max(0, state.dailyMacros.p.value - macroDelta.p) },
-          c: { ...state.dailyMacros.c, value: Math.max(0, state.dailyMacros.c.value - macroDelta.c) },
-          f: { ...state.dailyMacros.f, value: Math.max(0, state.dailyMacros.f.value - macroDelta.f) },
-        },
+        mealsTemplate: state.mealsTemplate.filter((m) => m.id !== action.id),
       };
     }
 
@@ -807,16 +812,25 @@ function reducer(state: State, action: Action): State {
 
 // ─── Context ─────────────────────────────────────────────────────
 type AppContextValue = State & {
+  /** Refeições do dia selecionado — alias retrocompatível de `displayedMeals`. */
+  meals: Meal[];
+  /** Macros do dia selecionado — alias retrocompatível de `displayedMacros`. */
+  dailyMacros: DailyMacros;
   addWater: () => void;
   removeWater: () => void;
-  /** Substitui completamente as refeições do dia. Usado pelo "Copiar dia anterior". */
+  /** Substitui completamente as refeições do dia selecionado. */
   replaceDay: (mealsItems: Record<string, NewMealItemInput[]>) => void;
   /** Restaura o dia a partir de um snapshot do backend (Copiar dia anterior). */
   restoreDayFromSnapshot: (payload: DaySnapshotPayload) => void;
-  addToMeal: (mealId: string, items: NewMealItemInput[], total: { kcal: number; p: number; c: number; f: number }) => void;
+  /**
+   * Adiciona items na meal do dia SELECIONADO. Se for dia passado, mostra
+   * Alert de confirmação. Retorna true se confirmou, false se cancelou.
+   */
+  addToMeal: (mealId: string, items: NewMealItemInput[], total: { kcal: number; p: number; c: number; f: number }) => Promise<boolean>;
   addSavedRecipe: (recipe: SavedRecipe) => Promise<void>;
   removeSavedRecipe: (id: string) => Promise<void>;
-  setSelectedDay: (day: number) => void;
+  /** Seleciona um dia por dateKey YYYY-MM-DD. */
+  setSelectedDate: (dateKey: string) => void;
   // Shopping list actions
   upsertShoppingItem: (item: ShoppingListItem) => void;
   removeShoppingItem: (id: string) => void;
@@ -904,7 +918,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         const [
           recipes, list, weights, favs, recents, readNotifs, completed,
-          favRecipes, recentRecipes, cols, pantry, mealsCfg, weightGoal,
+          favRecipes, recentRecipes, cols, pantry, mealsByDate, mealsTemplate, weightGoal,
           photos, habits, macroTargets, profilePhoto, mealReminders, silenceAll,
           // ─── Onboarding ──
           name, gender, birthDate, heightCm, activityLevel, goalType, weeklyRate,
@@ -921,7 +935,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           loadRecentRecipes(),
           loadCollections(),
           loadPantry(),
-          loadMealsConfig(),
+          loadMealsByDate(),
+          loadMealsTemplate(),
           loadWeightGoal(),
           loadProgressPhotos(),
           loadHabits(),
@@ -953,10 +968,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_RECENT_RECIPES', ids: recentRecipes });
         dispatch({ type: 'SET_COLLECTIONS', collections: cols });
         dispatch({ type: 'SET_PANTRY', items: pantry });
-        // Se já tem config customizada de meals, usa. Senão mantém INITIAL_MEALS.
-        if (mealsCfg && mealsCfg.length > 0) {
-          dispatch({ type: 'SET_MEALS', meals: mealsCfg });
-        }
+        // Hidrata snapshots por data + template. Se template salvo está vazio,
+        // mantém o INITIAL_MEALS do INITIAL_STATE.
+        dispatch({
+          type: 'HYDRATE_MEALS',
+          byDate: mealsByDate,
+          template: mealsTemplate && mealsTemplate.length > 0 ? mealsTemplate : INITIAL_MEALS,
+        });
         if (weightGoal != null) {
           dispatch({ type: 'SET_WEIGHT_GOAL', kg: weightGoal });
         }
@@ -1018,13 +1036,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Persistência: targets de macros (kcal/p/c/f)
   useEffect(() => {
     if (!state.hydrated) return;
-    saveMacroTargets({
-      kcal: state.dailyMacros.kcal.target,
-      p: state.dailyMacros.p.target,
-      c: state.dailyMacros.c.target,
-      f: state.dailyMacros.f.target,
-    }).catch((err) => console.warn('[app] falha ao persistir macro targets:', err));
-  }, [state.dailyMacros.kcal.target, state.dailyMacros.p.target, state.dailyMacros.c.target, state.dailyMacros.f.target, state.hydrated]);
+    saveMacroTargets(state.macroTargets).catch((err) =>
+      console.warn('[app] falha ao persistir macro targets:', err),
+    );
+  }, [state.macroTargets, state.hydrated]);
 
   // Persistência: fotos de progresso
   useEffect(() => {
@@ -1116,18 +1131,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   }, [state.pantry, state.hydrated]);
 
-  // Persiste a CONFIG das meals (id/name/time/color/etc). Items efêmeros em MVP.
+  // Persistência: template das refeições (config-only, sem items)
   useEffect(() => {
     if (!state.hydrated) return;
-    saveMealsConfig(state.meals).catch((err) =>
-      console.warn('[app] falha ao persistir config de refeições:', err),
+    saveMealsTemplate(state.mealsTemplate).catch((err) =>
+      console.warn('[app] falha ao persistir template de refeições:', err),
     );
-  }, [state.meals, state.hydrated]);
+  }, [state.mealsTemplate, state.hydrated]);
 
-  // Auto-save do snapshot do dia no backend (debounce 3s).
-  // Dispara em qualquer mudança de meals/water. Macros são derivados de meals
-  // (recalculados pelo reducer), então tracking de meals já cobre todos os
-  // cenários de alteração nutricional do dia.
+  // Persistência: snapshots por data
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveMealsByDate(state.mealsByDate).catch((err) =>
+      console.warn('[app] falha ao persistir meals por data:', err),
+    );
+  }, [state.mealsByDate, state.hydrated]);
+
+  // Auto-save do snapshot do dia ATUAL no backend (debounce 3s). Snapshot vai
+  // sempre pra todayKey() — dias passados editados pelo user não disparam upload
+  // nesse useEffect (são reflexivos: vieram do backend). Se um dia passado for
+  // editado, o próximo sync por-dia (se implementado) cuida; por enquanto fica
+  // só local.
   //
   // Falhas silenciosas (offline, backend down): logamos um warning mas não
   // mostramos toast — UX limpa, retry vai acontecer na próxima mudança.
@@ -1138,8 +1162,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveSnapshotTimerRef.current = setTimeout(async () => {
       try {
         const deviceId = await getDeviceId();
+        const today = todayKey();
+        const todayMeals = mealsForDate(state, today);
+        const todayMacros = sumMacros(todayMeals);
         const payload: DaySnapshotPayload = {
-          meals: state.meals.map((m) => ({
+          meals: todayMeals.map((m) => ({
             id: m.id,
             items: m.items.map((it) => ({
               id: String(it.id),
@@ -1151,15 +1178,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               f: it.f,
             })),
           })),
-          macros: {
-            kcal: state.dailyMacros.kcal.value,
-            p: state.dailyMacros.p.value,
-            c: state.dailyMacros.c.value,
-            f: state.dailyMacros.f.value,
-          },
+          macros: todayMacros,
           water: state.water,
         };
-        await saveDaySnapshot(deviceId, todayKey(), payload);
+        await saveDaySnapshot(deviceId, today, payload);
       } catch (err) {
         console.warn('[day-snapshot] falha no auto-save:', err);
       }
@@ -1167,7 +1189,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (saveSnapshotTimerRef.current) clearTimeout(saveSnapshotTimerRef.current);
     };
-  }, [state.meals, state.water, state.hydrated]);
+  }, [state.mealsByDate, state.water, state.hydrated]);
 
   useEffect(() => {
     if (!state.hydrated) return;
@@ -1175,6 +1197,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.warn('[app] falha ao persistir dias completos:', err),
     );
   }, [state.completedDays, state.hydrated]);
+
+  // Sync de dias passados: ao trocar pra um dia sem snapshot local, busca no
+  // backend. Se houver snapshot lá, hidrata mealsByDate[dateKey]. Caso contrário
+  // o dia continua vazio (empty state). Não fazemos isso pra todayKey() porque
+  // o auto-save já está mantendo o backend espelhado.
+  useEffect(() => {
+    if (!state.hydrated) return;
+    const dateKey = state.selectedDateKey;
+    if (dateKey === todayKey()) return;
+    if (state.mealsByDate[dateKey]) return; // já tem local — não busca de novo
+    let cancelled = false;
+    (async () => {
+      try {
+        const deviceId = await getDeviceId();
+        const snap = await getDaySnapshot(deviceId, dateKey);
+        if (cancelled || !snap) return;
+        // Reconstrói meals usando o template atual como esqueleto e populando
+        // items do snapshot (mesma lógica do RESTORE_DAY_FROM_SNAPSHOT, mas
+        // aplicado a dateKey arbitrário em vez de selectedDateKey).
+        const newMeals = state.mealsTemplate.map((meal) => {
+          const m = snap.meals.find((sm) => sm.id === meal.id);
+          if (!m) return { ...meal, items: [], kcal: 0 };
+          const items = m.items.map((it, idx) => ({
+            id: Date.now() + idx + Math.random(),
+            q: 'food',
+            name: it.name,
+            portion: it.portion,
+            kcal: it.kcal,
+            p: it.p,
+            c: it.c,
+            f: it.f,
+          }));
+          return { ...meal, items, kcal: items.reduce((s, x) => s + x.kcal, 0) };
+        });
+        dispatch({ type: 'SET_MEALS_FOR_DATE', dateKey, meals: newMeals });
+      } catch (err) {
+        console.warn('[day-sync] falha ao buscar snapshot:', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [state.selectedDateKey, state.hydrated, state.mealsByDate, state.mealsTemplate]);
 
   // ─── Persistência dos campos do onboarding ──
   useEffect(() => {
@@ -1227,17 +1292,51 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveOnboardedAt(state.onboardedAt).catch((err) => console.warn('[app] falha ao persistir onboardedAt:', err));
   }, [state.onboardedAt, state.hydrated]);
 
-  const isToday = state.selectedDay === TODAY;
+  // ─── Derived ─────────────────────────────────────────────────
+  // Meals/macros do dia selecionado: deriva de mealsByDate[selectedDateKey]
+  // (ou template vazio). `meals` e `dailyMacros` ficam expostos como aliases
+  // pra `displayedMeals`/`displayedMacros` — screens legacy que liam direto
+  // continuam funcionando.
+  const selectedMeals = mealsForDate(state, state.selectedDateKey);
+  const selectedMacros = macrosForDate(state, state.selectedDateKey);
+  const isToday = state.selectedDateKey === todayKey();
   const value: AppContextValue = {
     ...state,
+    meals: selectedMeals,
+    dailyMacros: selectedMacros,
     isToday,
-    displayedMacros: isToday ? state.dailyMacros : buildEmptyMacros(state),
-    displayedMeals: isToday ? state.meals : EMPTY_MEALS,
+    displayedMacros: selectedMacros,
+    displayedMeals: selectedMeals,
     addWater: () => dispatch({ type: 'ADD_WATER' }),
     removeWater: () => dispatch({ type: 'REMOVE_WATER' }),
     replaceDay: (mealsItems) => dispatch({ type: 'REPLACE_DAY', mealsItems }),
     restoreDayFromSnapshot: (payload) => dispatch({ type: 'RESTORE_DAY_FROM_SNAPSHOT', payload }),
-    addToMeal: (mealId, items, total) => dispatch({ type: 'ADD_TO_MEAL', mealId, items, total }),
+    addToMeal: (mealId, items, total) => {
+      // Em hoje: dispatch direto, sem fricção.
+      if (state.selectedDateKey === todayKey()) {
+        dispatch({ type: 'ADD_TO_MEAL', mealId, items, total });
+        return Promise.resolve(true);
+      }
+      // Dia passado: pede confirmação antes de adicionar retroativo.
+      const human = formatDateKeyBR(state.selectedDateKey);
+      return new Promise<boolean>((resolve) => {
+        Alert.alert(
+          `Adicionar em ${human}?`,
+          'Você está vendo outro dia, não o de hoje. Quer mesmo registrar essa refeição nessa data?',
+          [
+            { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
+            {
+              text: 'Adicionar mesmo assim',
+              onPress: () => {
+                dispatch({ type: 'ADD_TO_MEAL', mealId, items, total });
+                resolve(true);
+              },
+            },
+          ],
+          { cancelable: true, onDismiss: () => resolve(false) },
+        );
+      });
+    },
     addSavedRecipe: async (recipe) => {
       await saveRecipe(recipe);
       dispatch({ type: 'ADD_SAVED_RECIPE', recipe });
@@ -1246,7 +1345,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await deleteRecipeStorage(id);
       dispatch({ type: 'REMOVE_SAVED_RECIPE', id });
     },
-    setSelectedDay: (day) => dispatch({ type: 'SET_SELECTED_DAY', day }),
+    setSelectedDate: (dateKey) => dispatch({ type: 'SET_SELECTED_DATE', dateKey }),
     upsertShoppingItem: (item) => dispatch({ type: 'UPSERT_SHOPPING_ITEM', item }),
     removeShoppingItem: (id) => dispatch({ type: 'REMOVE_SHOPPING_ITEM', id }),
     toggleShoppingChecked: (id) => dispatch({ type: 'TOGGLE_SHOPPING_CHECKED', id }),
@@ -1294,7 +1393,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return state.pantry.some((it) => lower.includes(it.name.toLowerCase().trim()) || it.name.toLowerCase().trim().includes(lower));
     },
     addMeal: (input) => {
-      const idx = state.meals.length;
+      const idx = state.mealsTemplate.length;
       const id = newMealId();
       const meal: Meal = {
         id,

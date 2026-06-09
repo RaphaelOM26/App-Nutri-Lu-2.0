@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, FONT } from '../theme';
+import { Btn } from '../components/Btn';
 import { Card } from '../components/Card';
 import { ConcentricRings } from '../components/ConcentricRings';
 import { DateStrip } from '../components/DateStrip';
@@ -33,8 +34,8 @@ export const HomeScreen: React.FC = () => {
     water,
     addWater,
     removeWater,
-    selectedDay,
-    setSelectedDay,
+    selectedDateKey,
+    setSelectedDate,
     displayedMacros,
     displayedMeals,
     isToday,
@@ -168,7 +169,7 @@ export const HomeScreen: React.FC = () => {
           </View>
         </View>
 
-        <DateStrip selected={selectedDay} onSelect={setSelectedDay} />
+        <DateStrip selectedDateKey={selectedDateKey} onSelectDate={setSelectedDate} />
 
         {/* Card de macros */}
         <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
@@ -194,7 +195,7 @@ export const HomeScreen: React.FC = () => {
                 </View>
               </View>
               <ConcentricRings
-                key={`home-rings-${replayKey}-${selectedDay}`}
+                key={`home-rings-${replayKey}-${selectedDateKey}`}
                 size={140}
                 kcal={displayedMacros.kcal.value / displayedMacros.kcal.target}
                 p={displayedMacros.p.value / displayedMacros.p.target}
@@ -242,8 +243,15 @@ export const HomeScreen: React.FC = () => {
         </View>
 
         <View style={{ paddingHorizontal: 16, gap: 10 }}>
-          {displayedMeals.length === 0 || !isToday ? (
-            <EmptyDayState isToday={isToday} />
+          {displayedMeals.length === 0 || displayedMeals.every((m) => m.items.length === 0) ? (
+            <EmptyDayState
+              isToday={isToday}
+              onAdd={
+                !isToday && displayedMeals.length > 0
+                  ? () => nav.navigate('AddFood', { mealId: displayedMeals[0].id })
+                  : undefined
+              }
+            />
           ) : (
             displayedMeals.map((meal) => (
               <MealCard
@@ -355,7 +363,7 @@ export const HomeScreen: React.FC = () => {
   );
 };
 
-const EmptyDayState: React.FC<{ isToday: boolean }> = ({ isToday }) => {
+const EmptyDayState: React.FC<{ isToday: boolean; onAdd?: () => void }> = ({ isToday, onAdd }) => {
   const theme = useTheme();
   return (
     <Card pad={24} radius={22}>
@@ -367,8 +375,13 @@ const EmptyDayState: React.FC<{ isToday: boolean }> = ({ isToday }) => {
         <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center' }}>
           {isToday
             ? 'Comece tocando no "+" de uma refeição abaixo.'
-            : 'Nenhum dado registrado nesse dia.'}
+            : 'Você ainda não registrou nada neste dia.'}
         </Text>
+        {onAdd && (
+          <Btn variant="primary" icon={Icon.plus} onPress={onAdd}>
+            Adicionar refeição
+          </Btn>
+        )}
       </View>
     </Card>
   );
