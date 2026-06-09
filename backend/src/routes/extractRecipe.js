@@ -188,7 +188,15 @@ function extractMetaInfo(html) {
 function detectPlatform(url) {
   const u = url.toLowerCase();
   if (/instagram\.com\/(reel|p|tv)\//.test(u)) return 'Instagram (post/reel) — a receita geralmente está na caption do post';
-  if (/tiktok\.com\/@[^/]+\/(video|photo)\//.test(u)) return 'TikTok — a receita geralmente está na descrição do vídeo';
+  // TikTok: domínio canônico + encurtadores oficiais (vt./vm./vr.tiktok.com).
+  // Mesmo seguindo redirect no fetch, mantemos o fallback aqui pra robustez —
+  // se a URL chegar antes do redirect ser seguido, ainda detectamos.
+  if (
+    /tiktok\.com\/@[^/]+\/(video|photo)\//.test(u) ||
+    /^https?:\/\/(vt|vm|vr)\.tiktok\.com\//.test(u)
+  ) {
+    return 'TikTok — a receita geralmente está na descrição do vídeo';
+  }
   if (/(youtube\.com\/watch|youtu\.be\/|youtube\.com\/shorts\/)/.test(u)) return 'YouTube — a receita pode estar na descrição do vídeo ou nos comentários fixados';
   if (/facebook\.com\//.test(u)) return 'Facebook';
   if (/pinterest\./.test(u)) return 'Pinterest';
@@ -197,6 +205,10 @@ function detectPlatform(url) {
 
 async function extractFromUrl(url) {
   let html;
+  // URL efetiva após seguir redirects (ex: vt.tiktok.com/XYZ → tiktok.com/@user/video/123).
+  // Usada na detecção de plataforma e no prompt — sem isso, encurtadores ficam
+  // sem contexto e a IA não sabe que é TikTok/Instagram.
+  let effectiveUrl = url;
   try {
     const response = await fetch(url, {
       headers: {
@@ -214,6 +226,7 @@ async function extractFromUrl(url) {
         { status: 422, code: 'URL_FETCH_FAILED' }
       );
     }
+    effectiveUrl = response.url || url;
     html = await response.text();
   } catch (err) {
     if (err.code === 'URL_FETCH_FAILED') throw err;
@@ -221,6 +234,9 @@ async function extractFromUrl(url) {
       new Error('Não foi possível acessar essa URL.'),
       { status: 422, code: 'URL_FETCH_FAILED' }
     );
+  }
+  if (effectiveUrl !== url) {
+    console.log('[extract-recipe] redirect:', url, '→', effectiveUrl);
   }
 
   // 1) Extrai meta tags + JSON-LD ANTES de strippar (aqui mora a caption do post)
@@ -239,10 +255,11 @@ async function extractFromUrl(url) {
     .trim()
     .slice(0, 30000);
 
-  // 3) Monta payload estruturado pro modelo
-  const platform = detectPlatform(url);
+  // 3) Monta payload estruturado pro modelo. Usa a URL pós-redirect — é ela
+  // que carrega o domínio canônico (@user/video) que detectPlatform reconhece.
+  const platform = detectPlatform(effectiveUrl);
   const parts = [];
-  parts.push(`URL: ${url}`);
+  parts.push(`URL: ${effectiveUrl}`);
   if (platform) parts.push(`Plataforma: ${platform}`);
   if (meta.pageTitle) parts.push(`Título da página: ${meta.pageTitle}`);
   if (meta['og:title']) parts.push(`og:title: ${meta['og:title']}`);
