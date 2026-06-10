@@ -12,6 +12,7 @@ import insightRouter from './routes/insight.js';
 import dayReviewRouter from './routes/dayReview.js';
 import transcribeMealRouter from './routes/transcribeMeal.js';
 import daySnapshotRouter from './routes/daySnapshot.js';
+import debugYoutubeRouter from './routes/debugYoutube.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,6 +40,8 @@ app.use('/insight', insightRouter);
 app.use('/day-review', dayReviewRouter);
 app.use('/transcribe-meal', transcribeMealRouter);
 app.use('/day-snapshot', daySnapshotRouter);
+// TEMPORÁRIO: diagnóstico YouTube do ponto de vista do Railway (remover pós-fix)
+app.use('/debug-youtube', debugYoutubeRouter);
 
 // Handler de erro padrão (último na cadeia)
 app.use((err, req, res, next) => {
