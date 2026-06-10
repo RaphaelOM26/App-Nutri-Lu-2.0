@@ -184,6 +184,78 @@ function extractMetaInfo(html) {
   return meta;
 }
 
+// ─── Extractors dedicados por plataforma ─────────────────────────
+// TikTok e YouTube NÃO entregam a caption/descrição via HTML pra servidores:
+// TikTok serve shell JS sem meta tags; YouTube bloqueia/empobrece o HTML pra
+// IPs de datacenter (Railway). Caso real 2026-06-10: ambos retornavam
+// confidence 'low' em produção enquanto funcionavam de IP residencial.
+// Solução: APIs públicas oficiais, feitas pra consumo server-side.
+
+function isTikTokUrl(u) {
+  return /^https?:\/\/([a-z0-9-]+\.)?tiktok\.com\//i.test(String(u));
+}
+
+function youtubeVideoId(u) {
+  const m = String(u).match(
+    /(?:youtube\.com\/watch\?[^#\s]*\bv=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/i,
+  );
+  return m ? m[1] : null;
+}
+
+/**
+ * Caption do TikTok via oEmbed (API pública oficial). Aceita inclusive os
+ * links encurtados (vt./vm.tiktok.com) — a API resolve sozinha.
+ * No TikTok a receita vive na caption, então isso costuma bastar.
+ */
+async function fetchTikTokCaption(url) {
+  try {
+    const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) {
+      console.warn('[extract-recipe] TikTok oEmbed status', res.status);
+      return null;
+    }
+    const j = await res.json();
+    if (!j?.title) return null;
+    return { title: null, author: j.author_name || null, text: j.title };
+  } catch (err) {
+    console.warn('[extract-recipe] TikTok oEmbed falhou:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Descrição COMPLETA do vídeo do YouTube via InnerTube (API interna que os
+ * próprios clientes oficiais usam — sem API key, client WEB). A descrição é
+ * onde criadores de culinária publicam a lista de ingredientes.
+ */
+async function fetchYouTubeInfo(videoId) {
+  try {
+    const res = await fetch('https://www.youtube.com/youtubei/v1/player', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        context: { client: { clientName: 'WEB', clientVersion: '2.20240101.00.00', hl: 'pt', gl: 'BR' } },
+        videoId,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) {
+      console.warn('[extract-recipe] YouTube InnerTube status', res.status);
+      return null;
+    }
+    const j = await res.json();
+    const vd = j?.videoDetails;
+    if (!vd?.shortDescription) return null;
+    return { title: vd.title || null, author: vd.author || null, text: vd.shortDescription };
+  } catch (err) {
+    console.warn('[extract-recipe] YouTube InnerTube falhou:', err.message);
+    return null;
+  }
+}
+
 /** Detecta a rede/plataforma a partir da URL pra dar contexto ao modelo. */
 function detectPlatform(url) {
   const u = url.toLowerCase();
@@ -204,7 +276,11 @@ function detectPlatform(url) {
 }
 
 async function extractFromUrl(url) {
-  let html;
+  // TikTok/YouTube têm extractor dedicado via API oficial — pra eles o HTML
+  // é só sinal complementar e o fetch dele NÃO é fatal. Pra blogs/Instagram
+  // o HTML continua sendo a única fonte (fetch fatal como antes).
+  const hasDedicatedExtractor = isTikTokUrl(url) || !!youtubeVideoId(url);
+  let html = '';
   // URL efetiva após seguir redirects (ex: vt.tiktok.com/XYZ → tiktok.com/@user/video/123).
   // Usada na detecção de plataforma e no prompt — sem isso, encurtadores ficam
   // sem contexto e a IA não sabe que é TikTok/Instagram.
@@ -219,6 +295,7 @@ async function extractFromUrl(url) {
         'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
       },
       redirect: 'follow',
+      signal: AbortSignal.timeout(15000),
     });
     if (!response.ok) {
       throw Object.assign(
@@ -229,14 +306,31 @@ async function extractFromUrl(url) {
     effectiveUrl = response.url || url;
     html = await response.text();
   } catch (err) {
-    if (err.code === 'URL_FETCH_FAILED') throw err;
-    throw Object.assign(
-      new Error('Não foi possível acessar essa URL.'),
-      { status: 422, code: 'URL_FETCH_FAILED' }
-    );
+    if (!hasDedicatedExtractor) {
+      if (err.code === 'URL_FETCH_FAILED') throw err;
+      throw Object.assign(
+        new Error('Não foi possível acessar essa URL.'),
+        { status: 422, code: 'URL_FETCH_FAILED' }
+      );
+    }
+    console.warn('[extract-recipe] HTML fetch falhou, seguindo via API da plataforma:', err.message);
   }
   if (effectiveUrl !== url) {
     console.log('[extract-recipe] redirect:', url, '→', effectiveUrl);
+  }
+
+  // Extractor dedicado: caption/descrição direto da API da plataforma.
+  // É o sinal mais confiável — o HTML dessas redes é vazio/bloqueado server-side.
+  let social = null;
+  if (isTikTokUrl(url) || isTikTokUrl(effectiveUrl)) {
+    social = await fetchTikTokCaption(url);
+    if (social) console.log('[extract-recipe] caption via TikTok oEmbed ok');
+  } else {
+    const vid = youtubeVideoId(effectiveUrl) || youtubeVideoId(url);
+    if (vid) {
+      social = await fetchYouTubeInfo(vid);
+      if (social) console.log('[extract-recipe] descrição via YouTube InnerTube ok');
+    }
   }
 
   // 1) Extrai meta tags + JSON-LD ANTES de strippar (aqui mora a caption do post)
@@ -261,6 +355,11 @@ async function extractFromUrl(url) {
   const parts = [];
   parts.push(`URL: ${effectiveUrl}`);
   if (platform) parts.push(`Plataforma: ${platform}`);
+  if (social) {
+    if (social.title) parts.push(`Título do vídeo: ${social.title}`);
+    if (social.author) parts.push(`Autor do vídeo: ${social.author}`);
+    parts.push(`Caption/descrição oficial do vídeo (via API da plataforma — fonte mais confiável):\n${social.text}`);
+  }
   if (meta.pageTitle) parts.push(`Título da página: ${meta.pageTitle}`);
   if (meta['og:title']) parts.push(`og:title: ${meta['og:title']}`);
   if (meta['og:description']) parts.push(`og:description (caption do post):\n${meta['og:description']}`);
@@ -278,7 +377,7 @@ async function extractFromUrl(url) {
   }
 
   const userPrompt = [
-    'Extraia a receita do conteúdo abaixo. A página pode ser de uma rede social (Instagram, TikTok, YouTube) — nesses casos a receita está geralmente na CAPTION do post (og:description). Se for blog, está no corpo do texto.',
+    'Extraia a receita do conteúdo abaixo. A página pode ser de uma rede social (Instagram, TikTok, YouTube) — nesses casos a receita está geralmente na CAPTION/descrição do post. Se houver a seção "Caption/descrição oficial do vídeo", ela veio da API da plataforma e é a fonte MAIS confiável — priorize-a. Se for blog, a receita está no corpo do texto.',
     'Se identificar ingredientes e modo de preparo, retorne com confidence "high" ou "medium". Se NÃO conseguir identificar nenhuma receita real, retorne ingredients e steps como arrays vazios e confidence "low".',
     '',
     parts.join('\n\n'),
