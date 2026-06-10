@@ -36,6 +36,14 @@ router.post('/', async (req, res, next) => {
     if (payload === undefined || payload === null) {
       return res.status(400).json({ error: 'payload obrigatório', code: 'BAD_REQUEST' });
     }
+    // Cap de tamanho: um dia de refeições legítimo tem poucos KB. Sem o cap,
+    // um cliente bugado/malicioso podia gravar megabytes por snapshot e inflar
+    // o Postgres (express.json aceita até 15mb por causa das fotos base64 de
+    // OUTRAS rotas — aqui não há razão pra payload grande).
+    const payloadSize = JSON.stringify(payload).length;
+    if (payloadSize > 256 * 1024) {
+      return res.status(413).json({ error: 'payload grande demais (max 256KB)', code: 'PAYLOAD_TOO_LARGE' });
+    }
 
     const pool = getPool();
     await pool.query(
