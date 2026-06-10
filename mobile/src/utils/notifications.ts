@@ -14,6 +14,8 @@ LogBox.ignoreLogs([
 ]);
 
 // Identifier do canal Android. iOS ignora.
+// (id mantém 'weigh-reminders' por compat — mudar id criaria canal novo e o
+// user perderia a config de som/importância que já ajustou no sistema)
 const ANDROID_CHANNEL_ID = 'weigh-reminders';
 
 // Configura o handler padrão (como notificações se comportam quando o app
@@ -36,12 +38,23 @@ export function configureNotificationHandler() {
 async function ensureAndroidChannel(): Promise<void> {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
-    name: 'Lembretes de pesagem',
+    // Nome genérico: o canal cobre refeições, hábitos e pesagem.
+    name: 'Lembretes',
     importance: Notifications.AndroidImportance.DEFAULT,
     sound: 'default',
     vibrationPattern: [0, 250, 250, 250],
     lightColor: '#97AF8F',
   });
+}
+
+// Checa permissão SEM pedir (pra fluxos de boot — não queremos prompt surpresa).
+export async function hasNotificationPermission(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
+  try {
+    return (await Notifications.getPermissionsAsync()).granted;
+  } catch {
+    return false;
+  }
 }
 
 // Pede permissão pro user. Retorna true se concedida.
@@ -91,6 +104,7 @@ export async function scheduleDailyWeighReminder(time: string): Promise<string |
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: hh,
         minute: mm,
+        channelId: ANDROID_CHANNEL_ID,
       },
     });
     return id;
@@ -123,8 +137,10 @@ export async function scheduleNamedDailyReminder(
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: hh,
         minute: mm,
+        channelId: ANDROID_CHANNEL_ID,
       },
     });
+    console.log(`[notifications] agendado ${identifier} diário ${hh}:${String(mm).padStart(2, '0')}`);
     return id;
   } catch (err) {
     console.warn('[notifications] schedule named falhou:', err);
@@ -141,5 +157,79 @@ export async function cancelNamedReminder(identifier: string): Promise<void> {
   }
 }
 
-// Helper específico pra hábitos
+// ─── Identifiers gerenciados pelo app ──────────────────────────
 export const habitNotifId = (habitId: string) => `habit-${habitId}`;
+export const mealNotifId = (mealId: string) => `meal-${mealId}`;
+export const WEIGH_NOTIF_ID = 'weigh-daily';
+
+// Padrões de id que PERTENCEM ao app — o reconciler só mexe nesses
+// (nunca cancela um agendamento que não reconhece).
+const MANAGED_ID_PATTERNS = [/^meal-/, /^habit-/, /^weigh-daily$/];
+
+export type DailyReminderSpec = {
+  identifier: string;
+  title: string;
+  body: string;
+  /** HH:MM */
+  time: string;
+};
+
+// Extrai hour/minute de um trigger agendado, tolerando os shapes diferentes
+// que cada plataforma retorna (Android: {hour, minute}; iOS: calendar com
+// dateComponents). Retorna null se ilegível → tratamos como mismatch.
+function triggerHourMinute(trigger: unknown): { hour: number; minute: number } | null {
+  if (!trigger || typeof trigger !== 'object') return null;
+  const t = trigger as Record<string, any>;
+  if (typeof t.hour === 'number' && typeof t.minute === 'number') {
+    return { hour: t.hour, minute: t.minute };
+  }
+  const dc = t.dateComponents;
+  if (dc && typeof dc.hour === 'number' && typeof dc.minute === 'number') {
+    return { hour: dc.hour, minute: dc.minute };
+  }
+  return null;
+}
+
+/**
+ * Reconcilia os lembretes agendados no OS contra a config esperada.
+ * - Agenda o que falta; re-agenda o que está com horário errado.
+ * - Cancela ids gerenciados que não deveriam mais existir (órfãos).
+ * - NO-OP pra agendamentos já corretos — seguro de rodar em todo boot.
+ *
+ * Motivação: alarmes podem se perder/corromper sem o app saber (reinício
+ * automático do Samsung de madrugada, update de OS, bug do expo-notifications).
+ * Caso real 2026-06-10: 4 lembretes de refeição dispararam juntos às 00:45.
+ * Com o reconciler, qualquer estado quebrado se auto-corrige na próxima
+ * abertura do app.
+ */
+export async function reconcileDailyReminders(expected: DailyReminderSpec[]): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const byId = new Map(scheduled.map((s) => [s.identifier, s]));
+
+    for (const spec of expected) {
+      const [hh, mm] = spec.time.split(':').map((n) => parseInt(n, 10));
+      if (Number.isNaN(hh) || Number.isNaN(mm)) continue;
+      const cur = byId.get(spec.identifier);
+      const hm = cur ? triggerHourMinute(cur.trigger) : null;
+      if (cur && hm && hm.hour === hh && hm.minute === mm) continue; // intacto
+      console.log(
+        `[notifications] reconcile: corrigindo ${spec.identifier} → ${spec.time}`,
+        cur ? `(estava ${hm ? `${hm.hour}:${String(hm.minute).padStart(2, '0')}` : 'ilegível'})` : '(ausente)',
+      );
+      await scheduleNamedDailyReminder(spec.identifier, spec.title, spec.body, spec.time);
+    }
+
+    const expectedIds = new Set(expected.map((e) => e.identifier));
+    for (const s of scheduled) {
+      const managed = MANAGED_ID_PATTERNS.some((re) => re.test(s.identifier));
+      if (managed && !expectedIds.has(s.identifier)) {
+        console.log('[notifications] reconcile: cancelando órfão', s.identifier);
+        await cancelNamedReminder(s.identifier);
+      }
+    }
+  } catch (err) {
+    console.warn('[notifications] reconcile falhou:', err);
+  }
+}

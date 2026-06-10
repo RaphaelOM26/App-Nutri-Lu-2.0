@@ -49,6 +49,7 @@ import {
   saveProfilePhoto,
   loadMealReminders,
   saveMealReminders,
+  loadReminder,
   loadSilenceAll,
   saveSilenceAll,
   loadName,
@@ -131,6 +132,14 @@ import { type AppNotification } from '../data/notifications';
 import { loadCompletedDays, saveCompletedDays, todayKey } from '../storage/completedDays';
 import { getDeviceId } from '../storage/deviceId';
 import { saveDaySnapshot, getDaySnapshot, type DaySnapshotPayload } from '../api/client';
+import {
+  reconcileDailyReminders,
+  hasNotificationPermission,
+  habitNotifId,
+  mealNotifId,
+  WEIGH_NOTIF_ID,
+  type DailyReminderSpec,
+} from '../utils/notifications';
 
 // ─── Tipos ───────────────────────────────────────────────────────
 // "Hoje" usa a data REAL do dispositivo. Mock de macros/refeições continua o
@@ -1198,6 +1207,65 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   }, [state.completedDays, state.hydrated]);
 
+  // Reconciliação dos lembretes agendados no OS (boot + mudanças de config).
+  // Compara o que o sistema tem agendado com a config atual e corrige só as
+  // diferenças. Recupera: alarmes perdidos (reinício automático do Samsung,
+  // update de OS), horários desatualizados (mudar horário da refeição em
+  // Configurar refeições não re-agendava a notificação) e órfãos (refeição
+  // removida com lembrete ainda ativo). Debounce 2.5s evita churn durante a
+  // sequência de dispatches da hidratação.
+  const reconcileTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!state.hydrated) return;
+    if (reconcileTimerRef.current) clearTimeout(reconcileTimerRef.current);
+    reconcileTimerRef.current = setTimeout(async () => {
+      try {
+        // Sem permissão = nada a reconciliar (e NÃO pedimos prompt no boot).
+        if (!(await hasNotificationPermission())) return;
+        if (state.silenceAllNotifications) {
+          await reconcileDailyReminders([]);
+          return;
+        }
+        const weighCfg = await loadReminder();
+        const expected: DailyReminderSpec[] = [];
+        if (weighCfg.enabled) {
+          expected.push({
+            identifier: WEIGH_NOTIF_ID,
+            title: 'Hora da pesagem 🥗',
+            body: 'Suba na balança e registre seu peso.',
+            time: weighCfg.time,
+          });
+        }
+        for (const m of state.mealsTemplate) {
+          if (state.mealReminders[m.id]) {
+            expected.push({
+              identifier: mealNotifId(m.id),
+              title: `Hora de ${m.name} 🍽️`,
+              body: 'Registre sua refeição pra manter o ritmo dos macros.',
+              time: m.time,
+            });
+          }
+        }
+        for (const h of state.habits) {
+          if (h.reminderTime) {
+            expected.push({
+              identifier: habitNotifId(h.id),
+              title: `${h.name} 💪`,
+              body: 'Bata seu hábito de hoje.',
+              time: h.reminderTime,
+            });
+          }
+        }
+        await reconcileDailyReminders(expected);
+      } catch (err) {
+        console.warn('[notifications] reconcile no boot falhou:', err);
+      }
+    }, 2500);
+    return () => {
+      if (reconcileTimerRef.current) clearTimeout(reconcileTimerRef.current);
+    };
+  }, [state.hydrated, state.mealsTemplate, state.mealReminders, state.habits, state.silenceAllNotifications]);
+
   // Sync de dias passados: ao trocar pra um dia sem snapshot local, busca no
   // backend. Se houver snapshot lá, hidrata mealsByDate[dateKey]. Caso contrário
   // o dia continua vazio (empty state). Não fazemos isso pra todayKey() porque
@@ -1317,16 +1385,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'ADD_TO_MEAL', mealId, items, total });
         return Promise.resolve(true);
       }
-      // Dia passado: pede confirmação antes de adicionar retroativo.
+      // Fora de hoje: pede confirmação. Copy distinta pra passado (correção
+      // retroativa) vs futuro (planejamento de refeição).
       const human = formatDateKeyBR(state.selectedDateKey);
+      const isFuture = state.selectedDateKey > todayKey();
       return new Promise<boolean>((resolve) => {
         Alert.alert(
-          `Adicionar em ${human}?`,
-          'Você está vendo outro dia, não o de hoje. Quer mesmo registrar essa refeição nessa data?',
+          isFuture ? `Planejar pra ${human}?` : `Adicionar em ${human}?`,
+          isFuture
+            ? 'Essa refeição vai ser registrada numa data futura, como parte do seu plano alimentar.'
+            : 'Você está vendo outro dia, não o de hoje. Quer mesmo registrar essa refeição nessa data?',
           [
             { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
             {
-              text: 'Adicionar mesmo assim',
+              text: isFuture ? 'Planejar' : 'Adicionar mesmo assim',
               onPress: () => {
                 dispatch({ type: 'ADD_TO_MEAL', mealId, items, total });
                 resolve(true);

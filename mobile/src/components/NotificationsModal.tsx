@@ -27,20 +27,22 @@ import {
   cancelNamedReminder,
   cancelAllReminders,
   habitNotifId,
+  mealNotifId,
+  WEIGH_NOTIF_ID,
 } from '../utils/notifications';
 
 type Props = { visible: boolean; onClose: () => void };
 
 const SUGGESTED_TIMES = ['06:00', '07:00', '08:00', '12:00', '15:00', '18:00', '20:00', '22:00'];
 
-const mealNotifId = (mealId: string) => `meal-${mealId}`;
-const WEIGH_NOTIF_ID = 'weigh-daily';
-
 export const NotificationsModal: React.FC<Props> = ({ visible, onClose }) => {
   const theme = useTheme();
   const toast = useToast();
   const {
-    meals,
+    // Template = config canônica das refeições (nome/horário). NÃO usar `meals`
+    // aqui: ela reflete o DIA SELECIONADO no DateStrip, que pode ser um dia
+    // passado com config histórica — agendaria lembretes com horários velhos.
+    mealsTemplate,
     habits,
     mealReminders,
     silenceAllNotifications,
@@ -109,7 +111,7 @@ export const NotificationsModal: React.FC<Props> = ({ visible, onClose }) => {
             await cancelNamedReminder(WEIGH_NOTIF_ID);
           }
           // Refeições
-          for (const m of meals) {
+          for (const m of mealsTemplate) {
             const enabled = !!localMealReminders[m.id];
             if (enabled) {
               await scheduleNamedDailyReminder(
@@ -187,7 +189,7 @@ export const NotificationsModal: React.FC<Props> = ({ visible, onClose }) => {
 
             {/* ─── Refeições ─── */}
             <Section title="Refeições" disabled={silenceAll}>
-              {meals.map((m) => {
+              {mealsTemplate.map((m) => {
                 const enabled = !!localMealReminders[m.id];
                 const isPicker = pickerOpenFor === `meal-${m.id}`;
                 return (

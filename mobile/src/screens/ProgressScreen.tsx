@@ -3,7 +3,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, View, Text, ScrollView, Pressable, Alert, Modal, type DimensionValue } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Polyline, Polygon, Path, Circle as SCircle, Line as SLine, Rect as SRect } from 'react-native-svg';
@@ -1381,6 +1381,9 @@ const AnimatedBarHorizontal: React.FC<{
 // ─── PHOTOS TAB ──────────────────────────────────────────────────
 const PhotosTab: React.FC = () => {
   const theme = useTheme();
+  // Inset bottom pro sheet de origem não ficar coberto pela nav bar do sistema
+  // (Samsung 3-button, gesture indicator iOS) — mesmo padrão dos outros sheets.
+  const insets = useSafeAreaInsets();
   const { progressPhotos, addProgressPhoto, removeProgressPhoto, weightEntries } = useApp();
   const toast = useToast();
   const [sourceSheetOpen, setSourceSheetOpen] = useState(false);
@@ -1571,7 +1574,7 @@ const PhotosTab: React.FC = () => {
       {/* Bottom-sheet de origem (câmera / galeria) */}
       <Modal visible={sourceSheetOpen} transparent animationType="fade" onRequestClose={() => setSourceSheetOpen(false)}>
         <Pressable onPress={() => setSourceSheetOpen(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
-          <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 28, gap: 4 }}>
+          <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: Math.max(28, insets.bottom + 20), gap: 4 }}>
             <View style={{ alignItems: 'center', paddingBottom: 6 }}>
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
             </View>
