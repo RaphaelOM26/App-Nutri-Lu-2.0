@@ -18,6 +18,11 @@
         "simulator": false
       }
     },
+    "preview-ios": {
+      "extends": "preview",
+      "distribution": "store",
+      "autoIncrement": true
+    },
     "production": {
       "channel": "production",
       "autoIncrement": true
