@@ -227,11 +227,41 @@ async function fetchTikTokCaption(url) {
 }
 
 /**
- * Descrição COMPLETA do vídeo do YouTube via InnerTube (API interna que os
- * próprios clientes oficiais usam — sem API key, client WEB). A descrição é
- * onde criadores de culinária publicam a lista de ingredientes.
+ * Descrição COMPLETA do vídeo do YouTube (onde criadores de culinária publicam
+ * a lista de ingredientes). Estratégia em camadas:
+ *
+ * 1. Data API v3 oficial (requer YOUTUBE_API_KEY no env). Única fonte que
+ *    funciona de IP de datacenter — o Google bloqueia InnerTube e HTML do
+ *    Railway com "confirme que você não é um bot" (diagnosticado 2026-06-10
+ *    via /debug-youtube: LOGIN_REQUIRED no InnerTube, 429 google.com/sorry
+ *    no HTML). Cota free: 10k consultas/dia, 1 unidade cada.
+ * 2. InnerTube client WEB (sem key) — funciona de IP residencial (dev local).
  */
 async function fetchYouTubeInfo(videoId) {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (apiKey) {
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${encodeURIComponent(videoId)}&key=${apiKey}`,
+        { signal: AbortSignal.timeout(10000) },
+      );
+      if (res.ok) {
+        const j = await res.json();
+        const sn = j?.items?.[0]?.snippet;
+        if (sn?.description) {
+          console.log('[extract-recipe] descrição via YouTube Data API ok');
+          return { title: sn.title || null, author: sn.channelTitle || null, text: sn.description };
+        }
+        console.warn('[extract-recipe] YouTube Data API sem snippet pro vídeo', videoId);
+      } else {
+        console.warn('[extract-recipe] YouTube Data API status', res.status);
+      }
+    } catch (err) {
+      console.warn('[extract-recipe] YouTube Data API falhou:', err.message);
+    }
+  } else {
+    console.warn('[extract-recipe] YOUTUBE_API_KEY ausente — YouTube só funciona de IP residencial');
+  }
   try {
     const res = await fetch('https://www.youtube.com/youtubei/v1/player', {
       method: 'POST',
@@ -248,7 +278,10 @@ async function fetchYouTubeInfo(videoId) {
     }
     const j = await res.json();
     const vd = j?.videoDetails;
-    if (!vd?.shortDescription) return null;
+    if (!vd?.shortDescription) {
+      console.warn('[extract-recipe] InnerTube sem videoDetails:', j?.playabilityStatus?.status || 'desconhecido');
+      return null;
+    }
     return { title: vd.title || null, author: vd.author || null, text: vd.shortDescription };
   } catch (err) {
     console.warn('[extract-recipe] YouTube InnerTube falhou:', err.message);
