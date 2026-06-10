@@ -44,12 +44,14 @@ export const FoodDetailScreen: React.FC = () => {
   const c = Math.round(food.c * factor);
   const f = Math.round(food.f * factor);
 
-  const onAdd = () => {
+  const onAdd = async () => {
     if (qty <= 0) {
       Alert.alert('Porção inválida', 'Digite uma porção maior que zero.');
       return;
     }
-    addToMeal(
+    // addToMeal pode abrir Alert de confirmação (dia passado/futuro) — só
+    // mostra toast e navega se o user confirmou.
+    const ok = await addToMeal(
       mealId,
       [
         {
@@ -64,6 +66,7 @@ export const FoodDetailScreen: React.FC = () => {
       ],
       { kcal, p, c, f },
     );
+    if (!ok) return;
     toast(`Adicionado a ${mealLabel(mealId)} · ${kcal} kcal`);
     nav.navigate('Tabs', { screen: 'Diary' } as never);
   };

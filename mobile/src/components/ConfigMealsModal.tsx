@@ -18,7 +18,9 @@ type Editing = { id?: string; name: string; time: string };
 export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { meals, addMeal, updateMeal, removeMeal } = useApp();
+  // Template = config canônica (não `meals`, que reflete o dia SELECIONADO
+  // no DateStrip — podia ser um dia passado com config histórica diferente).
+  const { mealsTemplate, addMeal, updateMeal, removeMeal } = useApp();
   const toast = useToast();
   const [editing, setEditing] = useState<Editing | null>(null);
   const [removeConfirm, setRemoveConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -36,6 +38,13 @@ export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
     }
     if (!/^\d{1,2}:\d{2}$/.test(time)) {
       toast('Use o formato HH:MM (ex: 07:30)', 'error');
+      return;
+    }
+    // Range válido: 00-23h e 00-59min (regex só valida o formato; "25:99"
+    // passaria e quebraria o agendador de notificações silenciosamente)
+    const [hNum, mNum] = time.split(':').map((n) => parseInt(n, 10));
+    if (hNum > 23 || mNum > 59) {
+      toast('Horário inválido — use entre 00:00 e 23:59', 'error');
       return;
     }
     // Pad pra "07:30"
@@ -139,7 +148,7 @@ export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
                 <Pressable
                   onPress={() => {
                     if (!editing.id) return;
-                    const target = meals.find((m) => m.id === editing.id);
+                    const target = mealsTemplate.find((m) => m.id === editing.id);
                     if (!target) return;
                     setRemoveConfirm({ id: target.id, name: target.name });
                   }}
@@ -162,7 +171,7 @@ export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
           ) : (
             <>
               <ScrollView style={{ maxHeight: 340 }} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12, gap: 8 }}>
-                {meals.map((m) => (
+                {mealsTemplate.map((m) => (
                   <Pressable
                     key={m.id}
                     onPress={() => startEdit({ id: m.id, name: m.name, time: m.time })}
@@ -198,7 +207,7 @@ export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
                     <Icon.pen size={16} color={theme.textMuted} stroke={2} />
                   </Pressable>
                 ))}
-                {meals.length === 0 && (
+                {mealsTemplate.length === 0 && (
                   <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center', padding: 16 }}>
                     Nenhuma refeição configurada. Toque em "Adicionar" abaixo.
                   </Text>

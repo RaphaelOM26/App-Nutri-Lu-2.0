@@ -7,25 +7,19 @@ import { View, Text, Pressable, Modal } from 'react-native';
 import { useTheme, FONT } from '../theme';
 import { Icon } from './Icons';
 import { IconBtn } from './IconBtn';
-import { getMonthSummaries, adherenceBucket, type DailySummary } from '../data/mockHistory';
-import { TODAY_MONTH, TODAY_YEAR } from '../state/AppContext';
+import { adherenceBucket, type DailySummary } from '../data/mockHistory';
+import { TODAY_MONTH, TODAY_YEAR, useApp } from '../state/AppContext';
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  /** Dia atual. Pra destacar e usar dados reais. */
+  /** Dia atual (1-31). Pra destacar a célula e bloquear dias futuros. */
   today: number;
-  /** Macros consumidos HOJE (vem do state). Sobrescreve o mock pro dia atual. */
-  todayKcal: number;
-  todayP: number;
-  todayC: number;
-  todayF: number;
 };
 
 const MONTHS_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 // Semana começa na segunda (padrão BR). Dom no fim.
 const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
-const TARGETS = { kcal: 2200, p: 135, c: 240, f: 70 };
 
 type Metric = 'kcal' | 'p' | 'c' | 'f';
 
@@ -49,8 +43,10 @@ const HEATMAP_PALETTE: Record<Metric, { low: string; mid: string; good: string; 
   f:    { low: NEUTRAL_LOW, mid: '#E9D7A8', good: '#DEC57F', great: '#C8AE5E', over: RED_OVER },
 };
 
-export const MonthCalendar: React.FC<Props> = ({ visible, onClose, today, todayKcal, todayP, todayC, todayF }) => {
+export const MonthCalendar: React.FC<Props> = ({ visible, onClose, today }) => {
   const theme = useTheme();
+  // Dados reais por dia + targets do user — heatmap deixa de ser placeholder.
+  const { mealsByDate, macroTargets } = useApp();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [metric, setMetric] = useState<Metric>('kcal');
   // offset 0 = mês atual; -1 = mês anterior; etc. Não permite ir pro futuro.
@@ -91,23 +87,34 @@ export const MonthCalendar: React.FC<Props> = ({ visible, onClose, today, todayK
 
   // Monta uma matriz com offset do primeiro dia da semana (segunda=0..domingo=6)
   const firstWeekday = (new Date(YEAR, MONTH - 1, 1).getDay() + 6) % 7;
-  const monthSummaries = getMonthSummaries(MONTH, YEAR);
-  const daysInMonth = monthSummaries.length;
+  const daysInMonth = new Date(YEAR, MONTH, 0).getDate();
 
-  // Sobrescreve o dia "hoje" com os dados reais do state — só vale se está
-  // visualizando o mês corrente (em meses passados o "today" não se aplica).
-  const summaries = monthSummaries.map((s, i) => {
+  // Summaries REAIS a partir de mealsByDate. Dia sem registro → null (célula
+  // neutra, não-clicável). Targets vêm do perfil do user (macroTargets).
+  const summaries: Array<DailySummary | null> = Array.from({ length: daysInMonth }, (_, i) => {
     const day = i + 1;
-    if (isCurrentMonth && day === today) {
-      return {
-        day, month: MONTH, year: YEAR,
-        kcal: todayKcal, kcalTarget: TARGETS.kcal,
-        p: todayP, pTarget: TARGETS.p,
-        c: todayC, cTarget: TARGETS.c,
-        f: todayF, fTarget: TARGETS.f,
-      } as DailySummary;
-    }
-    return s;
+    const key = `${YEAR}-${String(MONTH).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const meals = mealsByDate[key];
+    if (!meals || !meals.some((m) => m.items.length > 0)) return null;
+    const sums = meals.reduce(
+      (acc, m) => {
+        for (const it of m.items) {
+          acc.kcal += it.kcal;
+          acc.p += it.p;
+          acc.c += it.c;
+          acc.f += it.f;
+        }
+        return acc;
+      },
+      { kcal: 0, p: 0, c: 0, f: 0 },
+    );
+    return {
+      day, month: MONTH, year: YEAR,
+      kcal: sums.kcal, kcalTarget: macroTargets.kcal,
+      p: sums.p, pTarget: macroTargets.p,
+      c: sums.c, cTarget: macroTargets.c,
+      f: sums.f, fTarget: macroTargets.f,
+    };
   });
 
   // Lista linear de células: vazias até o firstWeekday + dias do mês

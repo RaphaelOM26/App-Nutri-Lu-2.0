@@ -3,7 +3,7 @@
 // para a parte de telas (não precisamos mais de screen/history/params no state).
 
 import React, { createContext, useContext, useEffect, useReducer, useRef } from 'react';
-import { Alert } from 'react-native';
+import { Alert, AppState } from 'react-native';
 import {
   INITIAL_MACROS,
   INITIAL_MEALS,
@@ -130,6 +130,7 @@ import {
 import { loadReadIds, saveReadIds } from '../storage/notifications';
 import { type AppNotification } from '../data/notifications';
 import { loadCompletedDays, saveCompletedDays, todayKey } from '../storage/completedDays';
+import { loadWaterByDate, saveWaterByDate } from '../storage/water';
 import { getDeviceId } from '../storage/deviceId';
 import { saveDaySnapshot, getDaySnapshot, type DaySnapshotPayload } from '../api/client';
 import {
@@ -149,7 +150,8 @@ export const TODAY_MONTH = new Date().getMonth() + 1; // 1-12
 export const TODAY_YEAR = new Date().getFullYear();
 
 type State = {
-  water: number;
+  /** Copos de 250ml POR DIA (YYYY-MM-DD → contagem). Dia sem entry = 0. */
+  waterByDate: Record<string, number>;
   /**
    * Items registrados por dia (YYYY-MM-DD → Meal[]). Source of truth pro
    * histórico local. Dia sem entry no map = dia sem registro (mostra empty
@@ -274,9 +276,9 @@ type Action =
   | { type: 'ADD_PANTRY_ITEM'; item: PantryItem }
   | { type: 'REMOVE_PANTRY_ITEM'; id: string }
   | { type: 'CLEAR_PANTRY' }
-  | { type: 'HYDRATE_MEALS'; byDate: MealsByDate; template: Meal[] }
+  | { type: 'HYDRATE_MEALS'; byDate: MealsByDate; template: Meal[]; waterByDate: Record<string, number> }
   | { type: 'SET_SELECTED_DATE'; dateKey: string }
-  | { type: 'SET_MEALS_FOR_DATE'; dateKey: string; meals: Meal[] }
+  | { type: 'SET_MEALS_FOR_DATE'; dateKey: string; meals: Meal[]; water?: number }
   | { type: 'ADD_MEAL'; meal: Meal }
   | { type: 'UPDATE_MEAL'; id: string; name?: string; time?: string }
   | { type: 'REMOVE_MEAL'; id: string }
@@ -309,7 +311,7 @@ type NewMealItemInput = {
 };
 
 const INITIAL_STATE: State = {
-  water: INITIAL_WATER,
+  waterByDate: {},
   mealsByDate: {},
   mealsTemplate: INITIAL_MEALS,
   selectedDateKey: todayKey(),
@@ -405,13 +407,24 @@ function formatDateKeyBR(dateKey: string): string {
 // ─── Reducer ─────────────────────────────────────────────────────
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case 'ADD_WATER':
+    case 'ADD_WATER': {
       // Sem limite — 8 copos (2000ml) é só a meta diária; o usuário pode beber mais.
-      return { ...state, water: state.water + 1 };
+      // Keyed pelo dia selecionado: registrar água vendo outro dia conta NAQUELE dia.
+      const cur = state.waterByDate[state.selectedDateKey] ?? 0;
+      return {
+        ...state,
+        waterByDate: { ...state.waterByDate, [state.selectedDateKey]: cur + 1 },
+      };
+    }
 
-    case 'REMOVE_WATER':
+    case 'REMOVE_WATER': {
       // Pra desfazer cliques acidentais. Nunca vai abaixo de 0.
-      return { ...state, water: Math.max(0, state.water - 1) };
+      const cur = state.waterByDate[state.selectedDateKey] ?? 0;
+      return {
+        ...state,
+        waterByDate: { ...state.waterByDate, [state.selectedDateKey]: Math.max(0, cur - 1) },
+      };
+    }
 
     case 'REPLACE_DAY': {
       // Substitui completamente os items de cada refeição NO DIA SELECIONADO.
@@ -460,7 +473,7 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         mealsByDate: { ...state.mealsByDate, [state.selectedDateKey]: newMeals },
-        water: action.payload.water,
+        waterByDate: { ...state.waterByDate, [state.selectedDateKey]: action.payload.water },
       };
     }
 
@@ -512,6 +525,10 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         mealsByDate: { ...state.mealsByDate, [action.dateKey]: action.meals },
+        waterByDate:
+          action.water != null
+            ? { ...state.waterByDate, [action.dateKey]: action.water }
+            : state.waterByDate,
       };
 
     case 'SET_SHOPPING_LIST':
@@ -712,12 +729,13 @@ function reducer(state: State, action: Action): State {
       return { ...state, pantry: [] };
 
     case 'HYDRATE_MEALS': {
-      // Carrega snapshots por data + template do AsyncStorage no boot.
+      // Carrega snapshots por data + template + água do AsyncStorage no boot.
       // Macros e meals visíveis ficam derivados em runtime via mealsForDate().
       return {
         ...state,
         mealsByDate: action.byDate,
         mealsTemplate: action.template,
+        waterByDate: action.waterByDate,
       };
     }
 
@@ -825,6 +843,8 @@ type AppContextValue = State & {
   meals: Meal[];
   /** Macros do dia selecionado — alias retrocompatível de `displayedMacros`. */
   dailyMacros: DailyMacros;
+  /** Copos de água do dia SELECIONADO (derivado de waterByDate). */
+  water: number;
   addWater: () => void;
   removeWater: () => void;
   /** Substitui completamente as refeições do dia selecionado. */
@@ -925,9 +945,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
+        // Template precisa ler DEPOIS do by-date: a migração legacy (dentro de
+        // loadMealsByDate) é quem grava o template derivado da config antiga.
+        const mealsByDatePromise = loadMealsByDate();
         const [
           recipes, list, weights, favs, recents, readNotifs, completed,
-          favRecipes, recentRecipes, cols, pantry, mealsByDate, mealsTemplate, weightGoal,
+          favRecipes, recentRecipes, cols, pantry, mealsByDate, mealsTemplate, waterByDate, weightGoal,
           photos, habits, macroTargets, profilePhoto, mealReminders, silenceAll,
           // ─── Onboarding ──
           name, gender, birthDate, heightCm, activityLevel, goalType, weeklyRate,
@@ -944,8 +967,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           loadRecentRecipes(),
           loadCollections(),
           loadPantry(),
-          loadMealsByDate(),
-          loadMealsTemplate(),
+          mealsByDatePromise,
+          mealsByDatePromise.then(() => loadMealsTemplate()),
+          loadWaterByDate(),
           loadWeightGoal(),
           loadProgressPhotos(),
           loadHabits(),
@@ -983,6 +1007,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           type: 'HYDRATE_MEALS',
           byDate: mealsByDate,
           template: mealsTemplate && mealsTemplate.length > 0 ? mealsTemplate : INITIAL_MEALS,
+          waterByDate,
         });
         if (weightGoal != null) {
           dispatch({ type: 'SET_WEIGHT_GOAL', kg: weightGoal });
@@ -1156,6 +1181,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   }, [state.mealsByDate, state.hydrated]);
 
+  // Persistência: água por data
+  useEffect(() => {
+    if (!state.hydrated) return;
+    saveWaterByDate(state.waterByDate).catch((err) =>
+      console.warn('[app] falha ao persistir água por data:', err),
+    );
+  }, [state.waterByDate, state.hydrated]);
+
   // Auto-save do snapshot do dia ATUAL no backend (debounce 3s). Snapshot vai
   // sempre pra todayKey() — dias passados editados pelo user não disparam upload
   // nesse useEffect (são reflexivos: vieram do backend). Se um dia passado for
@@ -1168,10 +1201,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!state.hydrated) return;
     if (saveSnapshotTimerRef.current) clearTimeout(saveSnapshotTimerRef.current);
+    // Captura "hoje" NO TRIGGER, não no callback — se o debounce cruzar a
+    // meia-noite, o snapshot continua indo pro dia em que a mudança ocorreu
+    // (evita gravar dia novo vazio por cima de nada / perder o dia velho).
+    const today = todayKey();
     saveSnapshotTimerRef.current = setTimeout(async () => {
       try {
         const deviceId = await getDeviceId();
-        const today = todayKey();
         const todayMeals = mealsForDate(state, today);
         const todayMacros = sumMacros(todayMeals);
         const payload: DaySnapshotPayload = {
@@ -1188,7 +1224,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             })),
           })),
           macros: todayMacros,
-          water: state.water,
+          water: state.waterByDate[today] ?? 0,
         };
         await saveDaySnapshot(deviceId, today, payload);
       } catch (err) {
@@ -1198,7 +1234,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (saveSnapshotTimerRef.current) clearTimeout(saveSnapshotTimerRef.current);
     };
-  }, [state.mealsByDate, state.water, state.hydrated]);
+  }, [state.mealsByDate, state.waterByDate, state.hydrated]);
 
   useEffect(() => {
     if (!state.hydrated) return;
@@ -1266,6 +1302,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [state.hydrated, state.mealsTemplate, state.mealReminders, state.habits, state.silenceAllNotifications]);
 
+  // Ref espelho do state pro listener de AppState (evita stale closure sem
+  // precisar re-subscrever a cada render).
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  // Virada de dia com app aberto/em background: quando o app volta pro
+  // foreground, se "hoje" mudou desde a última checagem E o user estava
+  // vendo o hoje-antigo, move a seleção pro hoje-novo. Se ele tinha navegado
+  // deliberadamente pra outro dia, respeita a escolha.
+  const lastKnownTodayRef = useRef(todayKey());
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (status) => {
+      if (status !== 'active') return;
+      const freshToday = todayKey();
+      if (freshToday === lastKnownTodayRef.current) return;
+      const wasViewingToday = stateRef.current.selectedDateKey === lastKnownTodayRef.current;
+      lastKnownTodayRef.current = freshToday;
+      if (wasViewingToday) {
+        dispatch({ type: 'SET_SELECTED_DATE', dateKey: freshToday });
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
   // Sync de dias passados: ao trocar pra um dia sem snapshot local, busca no
   // backend. Se houver snapshot lá, hidrata mealsByDate[dateKey]. Caso contrário
   // o dia continua vazio (empty state). Não fazemos isso pra todayKey() porque
@@ -1299,7 +1359,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }));
           return { ...meal, items, kcal: items.reduce((s, x) => s + x.kcal, 0) };
         });
-        dispatch({ type: 'SET_MEALS_FOR_DATE', dateKey, meals: newMeals });
+        dispatch({ type: 'SET_MEALS_FOR_DATE', dateKey, meals: newMeals, water: snap.water });
       } catch (err) {
         console.warn('[day-sync] falha ao buscar snapshot:', err);
       }
@@ -1372,6 +1432,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ...state,
     meals: selectedMeals,
     dailyMacros: selectedMacros,
+    water: state.waterByDate[state.selectedDateKey] ?? 0,
     isToday,
     displayedMacros: selectedMacros,
     displayedMeals: selectedMeals,

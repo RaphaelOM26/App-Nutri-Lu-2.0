@@ -73,6 +73,15 @@ export async function loadMealsByDate(): Promise<MealsByDate> {
       ? { [today]: legacy }
       : {};
     await AsyncStorage.setItem(BY_DATE_KEY, JSON.stringify(migrated));
+    // A config legacy (refeições renomeadas/adicionadas/horários) também vira
+    // o TEMPLATE — sem isso, user com refeições customizadas voltaria pro
+    // default em todos os outros dias. Só escreve se o template novo ainda
+    // não existir (não sobrescreve config pós-migração).
+    const existingTemplate = await AsyncStorage.getItem(TEMPLATE_KEY);
+    if (!existingTemplate && legacy.length > 0) {
+      const template = legacy.map((m) => ({ ...m, items: [], kcal: 0 }));
+      await AsyncStorage.setItem(TEMPLATE_KEY, JSON.stringify(template));
+    }
     await AsyncStorage.removeItem(LEGACY_KEY);
     return migrated;
   } catch (err) {

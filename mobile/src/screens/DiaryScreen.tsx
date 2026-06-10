@@ -44,10 +44,12 @@ import type { RootStackParamList } from '../navigation/types';
 // deviceId anônimo (sem auth). Se 404, toast "nada registrado". Se hoje já
 // tem dados, abre modal de confirmação antes de sobrescrever.
 
-// Retorna o dayKey de ontem no mesmo formato YYYY-MM-DD do todayKey.
-function yesterdayKey(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
+// Retorna o dayKey do dia ANTERIOR ao dateKey dado (YYYY-MM-DD).
+// Relativo ao dia SELECIONADO, não a hoje: se o user está vendo sábado e pede
+// "copiar dia anterior", copia sexta — não o ontem do calendário real.
+function previousDayKey(dateKey: string): string {
+  const [y, m, dd] = dateKey.split('-').map((n) => parseInt(n, 10));
+  const d = new Date(y, m - 1, dd - 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
@@ -129,14 +131,14 @@ export const DiaryScreen: React.FC = () => {
     setCopyLoading(true);
     try {
       const deviceId = await getDeviceId();
-      const snapshot = await getDaySnapshot(deviceId, yesterdayKey());
+      const snapshot = await getDaySnapshot(deviceId, previousDayKey(selectedDateKey));
       if (!snapshot) {
-        toast('Você não registrou nada ontem.', 'info');
+        toast('Nada registrado no dia anterior.', 'info');
         return;
       }
       const hasItemsInSnapshot = snapshot.meals.some((m) => m.items.length > 0);
       if (!hasItemsInSnapshot) {
-        toast('Você não registrou refeições ontem.', 'info');
+        toast('Nenhuma refeição registrada no dia anterior.', 'info');
         return;
       }
       setPendingSnapshot(snapshot);
@@ -147,10 +149,10 @@ export const DiaryScreen: React.FC = () => {
         // Hoje está vazio — copia direto, sem fricção.
         restoreDayFromSnapshot(snapshot);
         setPendingSnapshot(null);
-        toast('Refeições de ontem copiadas.', 'success');
+        toast('Refeições do dia anterior copiadas.', 'success');
       }
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : 'Não consegui buscar o histórico de ontem.';
+      const msg = err instanceof ApiError ? err.message : 'Não consegui buscar o histórico do dia anterior.';
       toast(`⚠️ ${msg}`, 'error');
     } finally {
       setCopyLoading(false);
@@ -165,7 +167,7 @@ export const DiaryScreen: React.FC = () => {
     }
     restoreDayFromSnapshot(pendingSnapshot);
     setPendingSnapshot(null);
-    toast('Refeições de ontem copiadas.', 'success');
+    toast('Refeições do dia anterior copiadas.', 'success');
   };
 
   const openConfig = () => { setMenuOpen(false); setConfigMealsOpen(true); };
@@ -312,16 +314,8 @@ export const DiaryScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Calendário mensal — heatmap de aderência */}
-      <MonthCalendar
-        visible={calendarOpen}
-        onClose={() => setCalendarOpen(false)}
-        today={TODAY}
-        todayKcal={displayedMacros.kcal.value}
-        todayP={displayedMacros.p.value}
-        todayC={displayedMacros.c.value}
-        todayF={displayedMacros.f.value}
-      />
+      {/* Calendário mensal — heatmap de aderência (dados reais de mealsByDate) */}
+      <MonthCalendar visible={calendarOpen} onClose={() => setCalendarOpen(false)} today={TODAY} />
 
       {/* Bottom sheet: escolha a refeição antes de Buscar/Foto/Código/Voz */}
       <Modal
@@ -399,7 +393,7 @@ export const DiaryScreen: React.FC = () => {
             <View style={{ alignItems: 'center', paddingBottom: 6 }}>
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
             </View>
-            <DiaryMenuItem icon={Icon.calendar} title="Copiar dia anterior" subtitle="Replica as 4 refeições de ontem" onPress={requestCopyYesterday} />
+            <DiaryMenuItem icon={Icon.calendar} title="Copiar dia anterior" subtitle="Replica as refeições do dia anterior" onPress={requestCopyYesterday} />
             <DiaryMenuItem icon={Icon.settings} title="Configurar refeições" subtitle="Adicionar, editar ou remover refeições" onPress={openConfig} />
             <DiaryMenuItem icon={Icon.send} title="Compartilhar progresso" subtitle="Cartão estilizado pra rede social" onPress={openShare} />
           </Pressable>
@@ -415,7 +409,7 @@ export const DiaryScreen: React.FC = () => {
             </Text>
             <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, lineHeight: 18 }}>
               Você já tem refeições registradas hoje. Copiar o dia anterior vai{' '}
-              <Text style={{ color: theme.text, fontWeight: '700' }}>apagar os registros atuais</Text> e substituir pelos de ontem. Essa ação não pode ser desfeita.
+              <Text style={{ color: theme.text, fontWeight: '700' }}>apagar os registros atuais</Text> e substituir pelos do dia anterior. Essa ação não pode ser desfeita.
             </Text>
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
               <Pressable

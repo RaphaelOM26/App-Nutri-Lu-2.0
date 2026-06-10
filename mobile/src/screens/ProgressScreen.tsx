@@ -138,10 +138,6 @@ export const ProgressScreen: React.FC = () => {
           visible={calendarOpen}
           onClose={() => setCalendarOpen(false)}
           today={new Date().getDate()}
-          todayKcal={displayedMacros.kcal.value}
-          todayP={displayedMacros.p.value}
-          todayC={displayedMacros.c.value}
-          todayF={displayedMacros.f.value}
         />
       )}
     </SafeAreaView>
@@ -1017,7 +1013,7 @@ function formatDate(ts: number): string {
 // ─── MACROS TAB ──────────────────────────────────────────────────
 const MacrosTab: React.FC = () => {
   const theme = useTheme();
-  const { displayedMacros, isToday } = useApp();
+  const { displayedMacros, mealsByDate } = useApp();
   // Targets vêm do state (mesma fonte que Home e Diário).
   // No futuro virão do perfil real do user; por ora seguem o seed de demo.
   const targets = {
@@ -1025,24 +1021,30 @@ const MacrosTab: React.FC = () => {
     c: displayedMacros.c.target,
     f: displayedMacros.f.target,
   };
-  // Dias passados começam zerados — vão preencher conforme user registrar refeições.
-  // (Histórico real virá do backend quando subir. No MVP, só HOJE tem dado real.)
-  const todayWeekdayLetter = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][new Date().getDay()];
-  const emptyDay = (letter: string) => ({ d: letter, p: 0, c: 0, f: 0 });
-  const days = [
-    emptyDay('S'),
-    emptyDay('T'),
-    emptyDay('Q'),
-    emptyDay('Q'),
-    emptyDay('S'),
-    emptyDay('S'),
-    {
-      d: todayWeekdayLetter,
-      p: isToday ? displayedMacros.p.value : 0,
-      c: isToday ? displayedMacros.c.value : 0,
-      f: isToday ? displayedMacros.f.value : 0,
-    },
-  ];
+  // Semana corrente Seg→Dom (padrão BR do app) com dados REAIS de mealsByDate.
+  // Dias sem registro ficam zerados.
+  const days = useMemo(() => {
+    const today = new Date();
+    const offsetFromMonday = (today.getDay() + 6) % 7;
+    const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - offsetFromMonday);
+    const letters = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const sums = (mealsByDate[key] ?? []).reduce(
+        (acc, m) => {
+          for (const it of m.items) {
+            acc.p += it.p;
+            acc.c += it.c;
+            acc.f += it.f;
+          }
+          return acc;
+        },
+        { p: 0, c: 0, f: 0 },
+      );
+      return { d: letters[i], ...sums };
+    });
+  }, [mealsByDate]);
 
   // % avg real (apenas dias com registro contribuem — não dilui com zeros)
   const safeAvg = (key: 'p' | 'c' | 'f', target: number) => {

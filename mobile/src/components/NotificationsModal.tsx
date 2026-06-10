@@ -64,6 +64,9 @@ export const NotificationsModal: React.FC<Props> = ({ visible, onClose }) => {
   const [pickerOpenFor, setPickerOpenFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Hidrata o state local SÓ quando o modal ABRE. Deps de contexto ficam de
+  // fora de propósito: se habits/mealReminders mudarem por fora enquanto o
+  // user edita aqui dentro, não podemos resetar a edição dele no meio.
   useEffect(() => {
     if (!visible) return;
     loadReminder().then(setWeighCfg);
@@ -71,7 +74,8 @@ export const NotificationsModal: React.FC<Props> = ({ visible, onClose }) => {
     setLocalMealReminders(mealReminders);
     setLocalHabitsTimes(Object.fromEntries(habits.map((h) => [h.id, h.reminderTime])));
     setPickerOpenFor(null);
-  }, [visible, silenceAllNotifications, mealReminders, habits]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
   const save = async () => {
     if (saving) return;

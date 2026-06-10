@@ -93,12 +93,14 @@ export const CameraResultScreen: React.FC = () => {
     { kcal: 0, p: 0, c: 0, f: 0 },
   );
 
-  const saveToDiary = () => {
+  const saveToDiary = async () => {
     if (items.length === 0) {
       Alert.alert('Nenhum item', 'Adicione pelo menos um item antes de salvar.');
       return;
     }
-    addToMeal(
+    // addToMeal pode abrir Alert de confirmação (dia passado/futuro) — só
+    // mostra toast e navega se o user confirmou.
+    const ok = await addToMeal(
       selectedMeal,
       items.map((it) => ({
         name: it.name,
@@ -111,6 +113,7 @@ export const CameraResultScreen: React.FC = () => {
       })),
       total,
     );
+    if (!ok) return;
     toast(`Adicionado a ${mealLabel(selectedMeal)} · ${total.kcal} kcal`);
     nav.navigate('Tabs', { screen: 'Diary' } as never);
   };

@@ -850,7 +850,7 @@ export const RecipeDetailScreen: React.FC = () => {
             {displayedMeals.map((meal) => (
               <Pressable
                 key={meal.id}
-                onPress={() => {
+                onPress={async () => {
                   // Calcula portion em gramas somando ingredientes (×scale).
                   // Fallback 100g se a soma der 0.
                   const totalGrams = Math.max(
@@ -858,12 +858,16 @@ export const RecipeDetailScreen: React.FC = () => {
                     Math.round(view.ingredients.reduce((s, ing) => s + parseToGrams(ing.quantity, ing.unit), 0) * scale),
                   );
                   const itemName = `${view.title}${servings > 1 ? ` · ${servings} porç.` : ''}`;
-                  addToMeal(
+                  // Fecha o sheet ANTES do addToMeal: em dia passado/futuro ele
+                  // abre Alert de confirmação, que não pode disputar foco com o
+                  // Modal. Toast só depois do user confirmar.
+                  setMealPickerOpen(false);
+                  const ok = await addToMeal(
                     meal.id,
                     [{ name: itemName, portion: `${totalGrams}g`, amount: 1, kcal: scaledKcal, p: scaledP, c: scaledC, f: scaledF }],
                     { kcal: scaledKcal, p: scaledP, c: scaledC, f: scaledF },
                   );
-                  setMealPickerOpen(false);
+                  if (!ok) return;
                   toast(`Adicionada a ${meal.name} · ${scaledKcal} kcal`);
                 }}
                 style={{

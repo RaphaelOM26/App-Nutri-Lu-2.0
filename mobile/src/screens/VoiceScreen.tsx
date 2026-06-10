@@ -118,7 +118,7 @@ export const VoiceScreen: React.FC = () => {
     setElapsedMs(0);
   };
 
-  const addToDiary = (mealId: string) => {
+  const addToDiary = async (mealId: string) => {
     if (!result) return;
     const items = result.items.map((it) => ({
       name: it.name,
@@ -135,7 +135,10 @@ export const VoiceScreen: React.FC = () => {
       c: Math.round(result.total.carbs_g),
       f: Math.round(result.total.fat_g),
     };
-    addToMeal(mealId, items, total);
+    // addToMeal pode abrir Alert de confirmação (dia passado/futuro) — só
+    // mostra toast e sai da tela se o user confirmou.
+    const ok = await addToMeal(mealId, items, total);
+    if (!ok) return;
     const mealName = displayedMeals.find((m) => m.id === mealId)?.name || 'refeição';
     toast(`Adicionado a ${mealName} · ${total.kcal} kcal`);
     nav.goBack();
