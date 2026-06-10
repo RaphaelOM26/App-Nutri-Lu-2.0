@@ -35,7 +35,7 @@ import { SEED_RECIPES } from '../data/seedRecipes';
 import type { Recipe, Food } from '../data/mockData';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-type TabKey = 'mine' | 'discover' | 'collections' | 'pantry';
+type TabKey = 'mine' | 'discover' | 'plan' | 'pantry';
 type FilterKey = 'all' | 'favorites' | 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'dessert';
 type SortMode = 'recent' | 'alpha';
 
@@ -64,7 +64,10 @@ export const RecipesScreen: React.FC = () => {
   const tabs: { id: TabKey; label: string }[] = [
     { id: 'mine', label: 'Minhas' },
     { id: 'discover', label: 'Descobrir' },
-    { id: 'collections', label: 'Coleções' },
+    // Plano alimentar: teaser locked no beta — funcionalidade da v1.0
+    // (importar PDF da nutricionista → agenda semanal de refeições).
+    // Substituiu a aba Coleções (CollectionsView fica dormente no código).
+    { id: 'plan', label: 'Plano 🔒' },
     { id: 'pantry', label: 'Despensa' },
   ];
 
@@ -197,7 +200,7 @@ export const RecipesScreen: React.FC = () => {
             onOpenLuRecipes={(collectionId) => nav.navigate('LuRecipes', collectionId ? { collectionId } : {})}
           />
         )}
-        {tab === 'collections' && <CollectionsView onOpen={openRecipe} />}
+        {tab === 'plan' && <MealPlanTeaser />}
         {tab === 'pantry' && <PantryView nav={nav} />}
       </ScrollView>
 
@@ -1146,6 +1149,55 @@ function previewQueryFor(col: RecipeCollection, recipes: Recipe[]): string {
   const firstSeed = recipes.find((r) => col.recipeIds.includes(r.id));
   return firstSeed?.q || 'food,plate';
 }
+
+// ─── Plano alimentar (teaser locked — v1.0) ──────────────────────
+// No beta a aba mostra só o teaser. Na v1.0: importar PDF do plano montado
+// pela nutricionista → agenda da semana com as refeições recomendadas.
+const MealPlanTeaser: React.FC = () => {
+  const theme = useTheme();
+  return (
+    <View style={{ paddingTop: 8 }}>
+      <Card pad={28} radius={22}>
+        <View style={{ alignItems: 'center', gap: 14 }}>
+          <View
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 20,
+              backgroundColor: theme.primarySoft,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Icon.lock size={28} color={theme.primaryDeep} stroke={2} />
+          </View>
+          <View
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 4,
+              borderRadius: 100,
+              backgroundColor: theme.bgSubtle,
+            }}
+          >
+            <Text style={{ fontFamily: FONT.body, fontSize: 10, fontWeight: '800', color: theme.textMuted, letterSpacing: 1 }}>
+              EM BREVE
+            </Text>
+          </View>
+          <Text style={{ fontFamily: FONT.headExtra, fontSize: 20, fontWeight: '800', color: theme.text, textAlign: 'center' }}>
+            Plano alimentar
+          </Text>
+          <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, textAlign: 'center', lineHeight: 19 }}>
+            Importe o plano alimentar montado pela sua nutricionista e veja aqui a agenda da
+            semana, com as refeições recomendadas pra cada dia.
+          </Text>
+          <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textFaint, textAlign: 'center' }}>
+            Disponível na versão 1.0 do Nutri Lu.
+          </Text>
+        </View>
+      </Card>
+    </View>
+  );
+};
 
 type CollectionsViewProps = {
   onOpen: (id: string, navParam: { recipe?: Recipe; saved?: SavedRecipe }) => void;

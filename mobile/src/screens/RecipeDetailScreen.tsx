@@ -114,7 +114,11 @@ export const RecipeDetailScreen: React.FC = () => {
   }, [params]);
 
   const [tab, setTab] = useState<TabId>('ingredients');
-  const [servings, setServings] = useState<number>(view?.baseServings || 1);
+  // Porções que a PESSOA vai comer — sempre inicia em 1, independente de
+  // quantas pessoas a receita serve (view.baseServings é só o divisor dos
+  // macros). Semântica corrigida em 2026-06-10: antes o stepper iniciava em
+  // baseServings e MULTIPLICAVA o total, inflando os macros importados.
+  const [servings, setServings] = useState<number>(1);
   // Marca local "despensa" — não persiste globalmente.
   // (Pantry global por nome seria outra feature; aqui é só a UX da receita.)
   const [localPantry, setLocalPantry] = useState<Record<number, boolean>>({});
@@ -182,7 +186,13 @@ export const RecipeDetailScreen: React.FC = () => {
   };
   const ingredientStatus = view.ingredients.map((_, i) => getStatus(i));
 
-  const scale = servings / view.baseServings;
+  // Quantas pessoas a receita serve (divisor dos macros estimados). A IA
+  // extrai isso do post; o backend já aplica sanity check (reconcileServings).
+  const recipeServes = Math.max(1, view.baseServings);
+  // Macros exibidos = POR PORÇÃO × porções que o user vai comer.
+  // Seeds já têm kcal por porção no design (scale = servings direto);
+  // saved/extracted têm o TOTAL estimado dos ingredientes (÷ recipeServes).
+  const scale = view.kind === 'seed' ? servings : servings / recipeServes;
   // Pra seeds: usa kcal do recipe + macros placeholder fixos do design.
   // Pra saved/extracted: estima via foodDB.
   const estimated = useMemo(
@@ -445,14 +455,19 @@ export const RecipeDetailScreen: React.FC = () => {
               {isEstimate && (
                 <View style={{ marginBottom: 8 }}>
                   <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                    Estimativa por porção · {estimated?.matchedCount}/{estimated?.totalCount} ingr.
+                    Estimativa de {servings} {servings === 1 ? 'porção' : 'porções'} · {estimated?.matchedCount}/{estimated?.totalCount} ingr.
                   </Text>
                   <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textFaint, marginTop: 2 }}>
-                    Total da receita: ~{Math.round((estimated?.kcal ?? 0))} kcal em {view.baseServings} {view.baseServings === 1 ? 'porção' : 'porções'}
+                    Total da receita: ~{Math.round((estimated?.kcal ?? 0))} kcal
                   </Text>
+                  {recipeServes > 1 && (
+                    <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.warningDeep, marginTop: 4, lineHeight: 14 }}>
+                      🍽 Esta receita serve ~{recipeServes} pessoas — os macros mostrados são de {servings} {servings === 1 ? 'porção' : 'porções'}.
+                    </Text>
+                  )}
                   {scaledKcal > 1500 && (
                     <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.warningDeep, marginTop: 4, lineHeight: 14 }}>
-                      ⚠ Valor por porção parece alto. Se a receita serve mais pessoas, ajuste no botão + acima.
+                      ⚠ Valor por porção parece alto — confira os ingredientes antes de adicionar ao diário.
                     </Text>
                   )}
                 </View>
@@ -829,7 +844,7 @@ export const RecipeDetailScreen: React.FC = () => {
               Adicionar a qual refeição?
             </Text>
             <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, textAlign: 'center', marginBottom: 4 }}>
-              {servings === view.baseServings ? `${servings} porç. · ${scaledKcal} kcal` : `${servings} porç. (escalada) · ${scaledKcal} kcal`}
+              {`${servings} ${servings === 1 ? 'porção' : 'porções'} · ${scaledKcal} kcal`}
               {isEstimate ? ' · estimativa' : ''}
             </Text>
             {displayedMeals.map((meal) => (
@@ -842,7 +857,7 @@ export const RecipeDetailScreen: React.FC = () => {
                     1,
                     Math.round(view.ingredients.reduce((s, ing) => s + parseToGrams(ing.quantity, ing.unit), 0) * scale),
                   );
-                  const itemName = `${view.title}${servings !== view.baseServings ? ` · ${servings} porç.` : ''}`;
+                  const itemName = `${view.title}${servings > 1 ? ` · ${servings} porç.` : ''}`;
                   addToMeal(
                     meal.id,
                     [{ name: itemName, portion: `${totalGrams}g`, amount: 1, kcal: scaledKcal, p: scaledP, c: scaledC, f: scaledF }],
