@@ -13,6 +13,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, FONT } from '../theme';
 import { Card } from '../components/Card';
 import { Btn } from '../components/Btn';
+import { SheetModal } from '../components/motion';
 import { Chip } from '../components/Chip';
 import { Icon } from '../components/Icons';
 import { FoodImg } from '../components/FoodImg';
@@ -821,22 +822,18 @@ export const RecipeDetailScreen: React.FC = () => {
       </View>
 
       {/* Bottom-sheet: escolha da refeição pra adicionar a receita */}
-      <Modal visible={mealPickerOpen} transparent animationType="fade" onRequestClose={() => setMealPickerOpen(false)}>
-        <Pressable
-          onPress={() => setMealPickerOpen(false)}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
-        >
-          <Pressable
-            onPress={() => {}}
-            style={{
-              backgroundColor: theme.bg,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              padding: 20,
-              paddingBottom: 32,
-              gap: 12,
-            }}
-          >
+      <SheetModal
+        visible={mealPickerOpen}
+        onClose={() => setMealPickerOpen(false)}
+        sheetStyle={{
+          backgroundColor: theme.bg,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          padding: 20,
+          paddingBottom: 32,
+          gap: 12,
+        }}
+      >
             <View style={{ alignItems: 'center', paddingBottom: 4 }}>
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
             </View>
@@ -894,27 +891,21 @@ export const RecipeDetailScreen: React.FC = () => {
             <Pressable onPress={() => setMealPickerOpen(false)} style={{ padding: 12, alignItems: 'center', marginTop: 4 }}>
               <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '600', color: theme.textMuted }}>Cancelar</Text>
             </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      </SheetModal>
 
       {/* Picker de categorias — sempre abre ao Salvar. Multi-select. */}
-      <Modal visible={categoryPickerOpen} transparent animationType="fade" onRequestClose={() => setCategoryPickerOpen(false)}>
-        <Pressable
-          onPress={() => setCategoryPickerOpen(false)}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
-        >
-          <Pressable
-            onPress={() => {}}
-            style={{
-              backgroundColor: theme.bg,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              padding: 20,
-              paddingBottom: Math.max(24, insets.bottom + 16),
-              gap: 10,
-            }}
-          >
+      <SheetModal
+        visible={categoryPickerOpen}
+        onClose={() => setCategoryPickerOpen(false)}
+        sheetStyle={{
+          backgroundColor: theme.bg,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          padding: 20,
+          paddingBottom: Math.max(24, insets.bottom + 16),
+          gap: 10,
+        }}
+      >
             <View style={{ alignItems: 'center', paddingBottom: 6 }}>
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
             </View>
@@ -987,9 +978,7 @@ export const RecipeDetailScreen: React.FC = () => {
             <Pressable onPress={() => setCategoryPickerOpen(false)} style={{ padding: 8, alignItems: 'center' }}>
               <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '600', color: theme.textMuted }}>Cancelar</Text>
             </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      </SheetModal>
     </View>
   );
 };

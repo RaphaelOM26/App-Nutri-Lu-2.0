@@ -7,7 +7,7 @@
 //   - 'recipe' → OCR de receita (chamado pelo ImportRecipe)
 
 import React, { useRef, useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Alert, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, type RouteProp } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -45,8 +45,11 @@ export const CameraScreen: React.FC = () => {
     );
   }
 
-  // Permissão negada
+  // Permissão negada. Se o sistema não permite mais perguntar ("não perguntar
+  // de novo" no Android / negada no iOS), o botão de pedir seria inútil —
+  // nesse caso levamos o user direto pras Configurações do app.
   if (!permission.granted) {
+    const blocked = !permission.canAskAgain;
     return (
       <View style={{ flex: 1, backgroundColor: theme.bg, padding: 24, justifyContent: 'center', gap: 16 }}>
         <Icon.camera size={48} color={theme.primary} stroke={1.5} />
@@ -54,10 +57,12 @@ export const CameraScreen: React.FC = () => {
           Precisamos da câmera
         </Text>
         <Text style={{ fontFamily: FONT.body, fontSize: 14, color: theme.textMuted, lineHeight: 20 }}>
-          Permita o acesso para fotografar suas receitas e pratos. Você pode revogar nas configurações do app a qualquer momento.
+          {blocked
+            ? 'O acesso à câmera está bloqueado. Ative a permissão nas Configurações do aparelho pra fotografar pratos e receitas.'
+            : 'Permita o acesso para fotografar suas receitas e pratos. Você pode revogar nas configurações do app a qualquer momento.'}
         </Text>
-        <Btn variant="primary" full onPress={requestPermission}>
-          Permitir câmera
+        <Btn variant="primary" full onPress={blocked ? () => Linking.openSettings() : requestPermission}>
+          {blocked ? 'Abrir Configurações' : 'Permitir câmera'}
         </Btn>
         <Btn variant="outline" full onPress={() => nav.goBack()}>
           Cancelar

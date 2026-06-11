@@ -101,7 +101,12 @@ export const WeightCalendarModal: React.FC<Props> = ({ visible, onClose }) => {
             <Text style={{ fontFamily: FONT.head, fontSize: 15, fontWeight: '700', color: theme.text }}>
               {MONTHS_PT[viewMonth]} {viewYear}
             </Text>
-            <Pressable onPress={() => { if (offset < 0) { setOffset((o) => o + 1); setSelectedDay(null); } }} hitSlop={10} disabled={offset >= 0}>
+            <Pressable
+              onPress={() => { if (offset < 0) { setOffset((o) => o + 1); setSelectedDay(null); } }}
+              hitSlop={10}
+              disabled={offset >= 0}
+              style={{ opacity: offset >= 0 ? 0.35 : 1 }}
+            >
               <Icon.forward size={18} color={offset >= 0 ? theme.textFaint : theme.text} stroke={2} />
             </Pressable>
           </View>

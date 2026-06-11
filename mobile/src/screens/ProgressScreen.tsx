@@ -21,6 +21,7 @@ import { ProgressMenuSheet } from '../components/ProgressMenuSheet';
 import { EditWeightGoalModal } from '../components/EditWeightGoalModal';
 import { NotificationsModal } from '../components/NotificationsModal';
 import { ShareJourneyModal } from '../components/ShareJourneyModal';
+import { SheetModal } from '../components/motion';
 import { WeightCalendarModal } from '../components/WeightCalendarModal';
 import { MonthCalendar } from '../components/MonthCalendar';
 import { EditHabitModal } from '../components/EditHabitModal';
@@ -1574,31 +1575,31 @@ const PhotosTab: React.FC = () => {
       </View>
 
       {/* Bottom-sheet de origem (câmera / galeria) */}
-      <Modal visible={sourceSheetOpen} transparent animationType="fade" onRequestClose={() => setSourceSheetOpen(false)}>
-        <Pressable onPress={() => setSourceSheetOpen(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
-          <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: Math.max(28, insets.bottom + 20), gap: 4 }}>
-            <View style={{ alignItems: 'center', paddingBottom: 6 }}>
-              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
-            </View>
-            <SourceItem
-              icon={Icon.camera}
-              tint={theme.primaryDeep}
-              tintBg={theme.primarySoft}
-              title="Tirar foto agora"
-              subtitle="Abre a câmera"
-              onPress={pickFromCamera}
-            />
-            <SourceItem
-              icon={Icon.gallery}
-              tint="#B07A1E"
-              tintBg="#F8ECD7"
-              title="Escolher da galeria"
-              subtitle="Selecionar uma foto existente"
-              onPress={pickFromLibrary}
-            />
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <SheetModal
+        visible={sourceSheetOpen}
+        onClose={() => setSourceSheetOpen(false)}
+        sheetStyle={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: Math.max(28, insets.bottom + 20), gap: 4 }}
+      >
+        <View style={{ alignItems: 'center', paddingBottom: 6 }}>
+          <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
+        </View>
+        <SourceItem
+          icon={Icon.camera}
+          tint={theme.primaryDeep}
+          tintBg={theme.primarySoft}
+          title="Tirar foto agora"
+          subtitle="Abre a câmera"
+          onPress={pickFromCamera}
+        />
+        <SourceItem
+          icon={Icon.gallery}
+          tint="#B07A1E"
+          tintBg="#F8ECD7"
+          title="Escolher da galeria"
+          subtitle="Selecionar uma foto existente"
+          onPress={pickFromLibrary}
+        />
+      </SheetModal>
 
       {/* Modal de confirmação de remoção */}
       <Modal visible={!!pendingRemove} transparent animationType="fade" onRequestClose={() => setPendingRemove(null)}>

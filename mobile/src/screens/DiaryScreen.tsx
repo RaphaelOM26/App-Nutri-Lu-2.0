@@ -23,6 +23,7 @@ import { ShareProgressModal } from '../components/ShareProgressModal';
 import { useApp } from '../state/AppContext';
 import { useToast } from '../state/ToastContext';
 import { useFocusReplay } from '../utils/useFocusReplay';
+import { SheetModal, FadeInUp } from '../components/motion';
 import { TODAY, TODAY_MONTH, TODAY_YEAR } from '../state/AppContext';
 import { todayKey } from '../storage/completedDays';
 import { getDeviceId } from '../storage/deviceId';
@@ -273,14 +274,15 @@ export const DiaryScreen: React.FC = () => {
               </View>
             </Card>
           ) : (
-            displayedMeals.map((meal) => (
-              <MealCard
-                key={`${meal.id}-${replayKey}`}
-                meal={meal}
-                onAdd={() => nav.navigate('AddFood', { mealId: meal.id })}
-                collapsible
-                locked={isToday && todayCompleted}
-              />
+            displayedMeals.map((meal, i) => (
+              <FadeInUp key={`${meal.id}-${replayKey}`} delay={i * 45}>
+                <MealCard
+                  meal={meal}
+                  onAdd={() => nav.navigate('AddFood', { mealId: meal.id })}
+                  collapsible
+                  locked={isToday && todayCompleted}
+                />
+              </FadeInUp>
             ))
           )}
         </View>
@@ -318,27 +320,18 @@ export const DiaryScreen: React.FC = () => {
       <MonthCalendar visible={calendarOpen} onClose={() => setCalendarOpen(false)} today={TODAY} />
 
       {/* Bottom sheet: escolha a refeição antes de Buscar/Foto/Código/Voz */}
-      <Modal
+      <SheetModal
         visible={pendingAction !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setPendingAction(null)}
+        onClose={() => setPendingAction(null)}
+        sheetStyle={{
+          backgroundColor: theme.bg,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          padding: 20,
+          paddingBottom: Math.max(32, insets.bottom + 20),
+          gap: 12,
+        }}
       >
-        <Pressable
-          onPress={() => setPendingAction(null)}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
-        >
-          <Pressable
-            onPress={() => {}}
-            style={{
-              backgroundColor: theme.bg,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              padding: 20,
-              paddingBottom: Math.max(32, insets.bottom + 20),
-              gap: 12,
-            }}
-          >
             <View style={{ alignItems: 'center', paddingBottom: 4 }}>
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
             </View>
@@ -382,23 +375,21 @@ export const DiaryScreen: React.FC = () => {
             >
               <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '600', color: theme.textMuted }}>Cancelar</Text>
             </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      </SheetModal>
 
       {/* Menu ⋮ do Diário */}
-      <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
-        <Pressable onPress={() => setMenuOpen(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
-          <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: Math.max(28, insets.bottom + 16), gap: 6 }}>
-            <View style={{ alignItems: 'center', paddingBottom: 6 }}>
-              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
-            </View>
-            <DiaryMenuItem icon={Icon.calendar} title="Copiar dia anterior" subtitle="Replica as refeições do dia anterior" onPress={requestCopyYesterday} />
-            <DiaryMenuItem icon={Icon.settings} title="Configurar refeições" subtitle="Adicionar, editar ou remover refeições" onPress={openConfig} />
-            <DiaryMenuItem icon={Icon.send} title="Compartilhar progresso" subtitle="Cartão estilizado pra rede social" onPress={openShare} />
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <SheetModal
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        sheetStyle={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: Math.max(28, insets.bottom + 16), gap: 6 }}
+      >
+        <View style={{ alignItems: 'center', paddingBottom: 6 }}>
+          <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
+        </View>
+        <DiaryMenuItem icon={Icon.calendar} title="Copiar dia anterior" subtitle="Replica as refeições do dia anterior" onPress={requestCopyYesterday} />
+        <DiaryMenuItem icon={Icon.settings} title="Configurar refeições" subtitle="Adicionar, editar ou remover refeições" onPress={openConfig} />
+        <DiaryMenuItem icon={Icon.send} title="Compartilhar progresso" subtitle="Cartão estilizado pra rede social" onPress={openShare} />
+      </SheetModal>
 
       {/* Confirmação ao sobrescrever registros existentes com copiar dia anterior */}
       <Modal visible={copyConfirmOpen} transparent animationType="fade" onRequestClose={() => setCopyConfirmOpen(false)}>

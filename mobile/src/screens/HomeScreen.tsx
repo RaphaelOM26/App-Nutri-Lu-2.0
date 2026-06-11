@@ -9,6 +9,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, FONT } from '../theme';
 import { Btn } from '../components/Btn';
 import { Card } from '../components/Card';
+import { FadeInUp, AnimatedNumber } from '../components/motion';
 import { ConcentricRings } from '../components/ConcentricRings';
 import { DateStrip } from '../components/DateStrip';
 import { IconBtn } from '../components/IconBtn';
@@ -176,9 +177,10 @@ export const HomeScreen: React.FC = () => {
           <Card pad={22} radius={26}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: FONT.headExtra, fontSize: 38, fontWeight: '800', color: kcalOver ? OVER_RED : theme.text, letterSpacing: -1, lineHeight: 38 }}>
-                  {kcalOver ? displayedMacros.kcal.value - displayedMacros.kcal.target : kcalRemaining}
-                </Text>
+                <AnimatedNumber
+                  value={kcalOver ? displayedMacros.kcal.value - displayedMacros.kcal.target : kcalRemaining}
+                  style={{ fontFamily: FONT.headExtra, fontSize: 38, fontWeight: '800', color: kcalOver ? OVER_RED : theme.text, letterSpacing: -1, lineHeight: 38 }}
+                />
                 <Text style={{ fontFamily: FONT.body, fontSize: 13, color: kcalOver ? OVER_RED : theme.textMuted, marginTop: 4 }}>
                   {kcalOver ? 'kcal acima da meta' : 'kcal restantes'}
                 </Text>
@@ -253,13 +255,10 @@ export const HomeScreen: React.FC = () => {
               }
             />
           ) : (
-            displayedMeals.map((meal) => (
-              <MealCard
-                key={`${meal.id}-${replayKey}`}
-                meal={meal}
-                collapsible
-                defaultExpanded={false}
-              />
+            displayedMeals.map((meal, i) => (
+              <FadeInUp key={`${meal.id}-${replayKey}`} delay={i * 45}>
+                <MealCard meal={meal} collapsible defaultExpanded={false} />
+              </FadeInUp>
             ))
           )}
         </View>

@@ -10,6 +10,7 @@ import { Btn } from './Btn';
 import { Icon } from './Icons';
 import { useApp } from '../state/AppContext';
 import { useToast } from '../state/ToastContext';
+import { SheetModal } from './motion';
 
 type Props = { visible: boolean; onClose: () => void };
 
@@ -70,17 +71,16 @@ export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
-        <Pressable
-          onPress={() => {}}
-          style={{
-            backgroundColor: theme.bg,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            maxHeight: '85%',
-          }}
-        >
+    <SheetModal
+      visible={visible}
+      onClose={onClose}
+      sheetStyle={{
+        backgroundColor: theme.bg,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        maxHeight: '85%',
+      }}
+    >
           <View style={{ padding: 20, paddingBottom: 12 }}>
             <View style={{ alignItems: 'center', paddingBottom: 8 }}>
               <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
@@ -224,8 +224,6 @@ export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
               </View>
             </>
           )}
-        </Pressable>
-      </Pressable>
 
       {/* Confirmação custom de remover */}
       <Modal visible={!!removeConfirm} transparent animationType="fade" onRequestClose={() => setRemoveConfirm(null)}>
@@ -258,6 +256,6 @@ export const ConfigMealsModal: React.FC<Props> = ({ visible, onClose }) => {
           </Pressable>
         </Pressable>
       </Modal>
-    </Modal>
+    </SheetModal>
   );
 };

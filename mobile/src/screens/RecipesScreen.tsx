@@ -18,6 +18,7 @@ import { Icon } from '../components/Icons';
 import { useApp } from '../state/AppContext';
 import { useToast } from '../state/ToastContext';
 import { MarkdownText } from '../components/MarkdownText';
+import { SheetModal } from '../components/motion';
 import { chatWithLu, ApiError, type ChatMessage } from '../api/client';
 import { LU_COLLECTIONS, getCoverUrl, type LuCollection } from '../data/luCollections';
 import type { RootStackParamList } from '../navigation/types';
@@ -205,33 +206,33 @@ export const RecipesScreen: React.FC = () => {
       </ScrollView>
 
       {/* Menu ⋮ — opções rápidas da tela Receitas */}
-      <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
-        <Pressable onPress={() => setMenuOpen(false)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' }}>
-          <Pressable onPress={() => {}} style={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 28, gap: 4 }}>
-            <View style={{ alignItems: 'center', paddingBottom: 6 }}>
-              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
-            </View>
-            <MenuItem
-              icon={Icon.filter}
-              title={sortMode === 'alpha' ? 'Voltar a recentes primeiro' : 'Ordenar A-Z'}
-              subtitle={sortMode === 'alpha' ? 'Atual: alfabética' : 'Atual: ordem de adição'}
-              onPress={() => { setSortMode((m) => (m === 'alpha' ? 'recent' : 'alpha')); setMenuOpen(false); }}
-            />
-            <MenuItem
-              icon={Icon.heart}
-              title="Limpar favoritas"
-              subtitle={`${favoriteRecipeIds.length} ${favoriteRecipeIds.length === 1 ? 'receita' : 'receitas'} marcadas`}
-              onPress={() => { setMenuOpen(false); onClearFavorites(); }}
-            />
-            <MenuItem
-              icon={Icon.send}
-              title="Exportar receitas"
-              subtitle="PDF com as receitas salvas (em breve)"
-              onPress={() => { setMenuOpen(false); toast('Em breve'); }}
-            />
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <SheetModal
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        sheetStyle={{ backgroundColor: theme.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 28, gap: 4 }}
+      >
+        <View style={{ alignItems: 'center', paddingBottom: 6 }}>
+          <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
+        </View>
+        <MenuItem
+          icon={Icon.filter}
+          title={sortMode === 'alpha' ? 'Voltar a recentes primeiro' : 'Ordenar A-Z'}
+          subtitle={sortMode === 'alpha' ? 'Atual: alfabética' : 'Atual: ordem de adição'}
+          onPress={() => { setSortMode((m) => (m === 'alpha' ? 'recent' : 'alpha')); setMenuOpen(false); }}
+        />
+        <MenuItem
+          icon={Icon.heart}
+          title="Limpar favoritas"
+          subtitle={`${favoriteRecipeIds.length} ${favoriteRecipeIds.length === 1 ? 'receita' : 'receitas'} marcadas`}
+          onPress={() => { setMenuOpen(false); onClearFavorites(); }}
+        />
+        <MenuItem
+          icon={Icon.send}
+          title="Exportar receitas"
+          subtitle="PDF com as receitas salvas (em breve)"
+          onPress={() => { setMenuOpen(false); toast('Em breve'); }}
+        />
+      </SheetModal>
     </SafeAreaView>
   );
 };
@@ -699,7 +700,9 @@ const SavedCard: React.FC<SavedCardProps> = ({ recipe, foodDB, isFav, onPress, o
           <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, fontWeight: '600' }}>
             {hasMacros ? `~${macros.kcal} kcal · ${recipe.ingredients.length} ingr.` : `${recipe.ingredients.length} ingredientes`}
           </Text>
-          <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textFaint }}>{recipe.servings || '—'} porç.</Text>
+          <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textFaint }}>
+            {recipe.servings ? `serve ${recipe.servings}` : '—'}
+          </Text>
         </View>
       </View>
     </Pressable>
