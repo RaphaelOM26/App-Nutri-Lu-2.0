@@ -22,6 +22,22 @@ app.use(cors({ origin: CORS_ORIGIN }));
 // Limite alto pra acomodar imagens base64 (foto comum de celular ~2-4MB → base64 ~3-6MB)
 app.use(express.json({ limit: '15mb' }));
 
+// Logging leve de requisições — método, rota, status e latência de cada
+// chamada. Faz os logs do Railway virarem úteis pra monitorar o tráfego real
+// do beta dos 20. Pula /health pra não poluir com os healthchecks do Railway.
+// NÃO loga body: as rotas recebem foto/áudio em base64 — só metadados aqui.
+app.use((req, res, next) => {
+  if (req.path === '/health') return next();
+  const start = Date.now();
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    const cl = Number(req.headers['content-length']);
+    const size = cl ? `${(cl / 1024).toFixed(0)}KB` : '-';
+    console.log(`[req] ${req.method} ${req.path} → ${res.statusCode} ${ms}ms (in ${size})`);
+  });
+  next();
+});
+
 // Healthcheck — útil pra confirmar que o Expo Go consegue alcançar o backend
 app.get('/health', (req, res) => {
   res.json({
