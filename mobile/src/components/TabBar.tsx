@@ -7,13 +7,16 @@ import { Animated, Pressable, Text, View, Platform, type ViewStyle } from 'react
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTheme, FONT } from '../theme';
+import { PREMIUM } from '../theme/premium';
 import { Icon, type IconName } from './Icons';
 
-// Mapa de rota → label/icone (igual ao protótipo)
-const TAB_CONFIG: { name: string; label: string; icon: IconName }[] = [
+// Mapa de rota → label/icone. 6 abas: rótulo só na ATIVA (padrão B aprovado).
+// `premium` adiciona um ponto dourado discreto (sinaliza feature paga).
+const TAB_CONFIG: { name: string; label: string; icon: IconName; premium?: boolean }[] = [
   { name: 'Home', label: 'Início', icon: 'home' },
   { name: 'Diary', label: 'Diário', icon: 'diary' },
   { name: 'Recipes', label: 'Receitas', icon: 'recipe' },
+  { name: 'Plan', label: 'Plano', icon: 'calendar', premium: true },
   { name: 'Progress', label: 'Progresso', icon: 'chart' },
   { name: 'Profile', label: 'Eu', icon: 'user' },
 ];
@@ -86,19 +89,38 @@ export const TabBar: React.FC<Props> = ({ state, navigation, onFabPress }) => {
                 gap: 2,
               }}
             >
-              <TabPill active={isActive}>
-                <IconC size={20} color={isActive ? theme.primaryDeep : theme.textMuted} stroke={isActive ? 2 : 1.75} />
-              </TabPill>
+              <View style={{ position: 'relative' }}>
+                <TabPill active={isActive}>
+                  <IconC size={20} color={isActive ? theme.primaryDeep : theme.textMuted} stroke={isActive ? 2 : 1.75} />
+                </TabPill>
+                {tab.premium && (
+                  <View
+                    pointerEvents="none"
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 3,
+                      width: 7,
+                      height: 7,
+                      borderRadius: 4,
+                      backgroundColor: PREMIUM.gold,
+                      borderWidth: 1.5,
+                      borderColor: isActive ? theme.primarySoft : theme.bgElev,
+                    }}
+                  />
+                )}
+              </View>
+              {/* Rótulo só na aba ativa; string vazia reserva a altura (ícones alinhados). */}
               <Text
                 style={{
                   fontFamily: FONT.body,
                   fontSize: 10,
-                  fontWeight: isActive ? '700' : '500',
-                  color: isActive ? theme.text : theme.textMuted,
+                  fontWeight: '700',
+                  color: theme.text,
                   letterSpacing: 0.2,
                 }}
               >
-                {tab.label}
+                {isActive ? tab.label : ''}
               </Text>
             </Pressable>
           );

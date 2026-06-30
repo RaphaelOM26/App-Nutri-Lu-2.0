@@ -9,6 +9,8 @@ export type TabParamList = {
   Home: undefined;
   Diary: undefined;
   Recipes: undefined;
+  // Plano alimentar premium (feature paga) — aba própria no menu inferior.
+  Plan: undefined;
   Progress: undefined;
   Profile: undefined;
 };
@@ -61,4 +63,9 @@ export type RootStackParamList = {
   JourneySummary: undefined;
   // Convidar amigos
   InviteFriends: undefined;
+  // Plano alimentar premium (feature paga, v1.0) — fluxo Dark Luxe.
+  // PlanWeek é a ABA (TabParamList.Plan); estas são telas push por cima.
+  PlanMeal: { mealId: string };
+  PlanRecipe: { mealId: string };
+  PlanReminders: undefined;
 };

@@ -31,6 +31,10 @@ import {
   ShoppingListScreen,
   JourneySummaryScreen,
   InviteFriendsScreen,
+  PlanWeekScreen,
+  PlanMealScreen,
+  PlanRecipeScreen,
+  PlanRemindersScreen,
 } from '../screens';
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -49,6 +53,7 @@ function Tabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Diary" component={DiaryScreen} />
       <Tab.Screen name="Recipes" component={RecipesScreen} />
+      <Tab.Screen name="Plan" component={PlanWeekScreen} />
       <Tab.Screen name="Progress" component={ProgressScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
@@ -81,6 +86,11 @@ export function RootNavigator() {
       <Stack.Screen name="ShoppingList" component={ShoppingListScreen} />
       <Stack.Screen name="JourneySummary" component={JourneySummaryScreen} />
       <Stack.Screen name="InviteFriends" component={InviteFriendsScreen} />
+
+      {/* Plano alimentar premium — PlanWeek é a aba "Plan"; estas vêm por cima */}
+      <Stack.Screen name="PlanMeal" component={PlanMealScreen} />
+      <Stack.Screen name="PlanRecipe" component={PlanRecipeScreen} />
+      <Stack.Screen name="PlanReminders" component={PlanRemindersScreen} options={{ animation: 'slide_from_bottom' }} />
     </Stack.Navigator>
   );
 }
