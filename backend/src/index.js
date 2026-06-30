@@ -12,6 +12,7 @@ import insightRouter from './routes/insight.js';
 import dayReviewRouter from './routes/dayReview.js';
 import transcribeMealRouter from './routes/transcribeMeal.js';
 import daySnapshotRouter from './routes/daySnapshot.js';
+import generateRecipeImageRouter from './routes/generateRecipeImage.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -61,6 +62,7 @@ app.use('/insight', insightRouter);
 app.use('/day-review', dayReviewRouter);
 app.use('/transcribe-meal', transcribeMealRouter);
 app.use('/day-snapshot', daySnapshotRouter);
+app.use('/generate-recipe-image', generateRecipeImageRouter);
 
 // Handler de erro padrão (último na cadeia)
 app.use((err, req, res, next) => {
