@@ -6,7 +6,8 @@
 // (recém-extraída, ainda não salva).
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Image, Pressable, Alert, Modal, TextInput } from 'react-native';
+import { View, Text, ScrollView, Image, Pressable, Alert, Modal, TextInput, ActivityIndicator } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,7 +16,7 @@ import { Card } from '../components/Card';
 import { Btn } from '../components/Btn';
 import { SheetModal } from '../components/motion';
 import { Chip } from '../components/Chip';
-import { Icon } from '../components/Icons';
+import { Icon, type IconName } from '../components/Icons';
 import { FoodImg } from '../components/FoodImg';
 import { MacroRing } from '../components/MacroRing';
 import { useApp } from '../state/AppContext';
@@ -25,6 +26,7 @@ import { newRecipeId, type SavedRecipe } from '../storage/recipes';
 import { categorize } from '../storage/shoppingList';
 import { estimateRecipeMacros, parseToGrams } from '../utils/recipeMacros';
 import { SEED_RECIPES_BY_ID } from '../data/seedRecipes';
+import { generateRecipeImage } from '../api/client';
 import type { Ingredient, ExtractedRecipe, MealCategory } from '../api/client';
 import type { RootStackParamList } from '../navigation/types';
 
@@ -126,6 +128,15 @@ export const RecipeDetailScreen: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [savedJustNow, setSavedJustNow] = useState(false);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
+  // ─── Foto da receita (Feature #1) ──────────────────────────────
+  // photo.changed=false → usa a imagem original (view.imageDataUrl).
+  // true → usa photo.value (string = foto escolhida/gerada; null = removida,
+  // cai pro Unsplash). genMode/genPreview controlam o fluxo de geração por IA.
+  const [photo, setPhoto] = useState<{ changed: boolean; value: string | null }>({ changed: false, value: null });
+  const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
+  const [genMode, setGenMode] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [genPreview, setGenPreview] = useState<string | null>(null);
   // Aberta SEMPRE no Salvar de extracted. User decide em quais categorias
   // a receita vai (multi-select). Pode pular pra salvar sem categoria.
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
@@ -291,13 +302,15 @@ export const RecipeDetailScreen: React.FC = () => {
     setSaving(true);
     setCategoryPickerOpen(false);
     try {
+      // Foto final: a escolhida/gerada (se o usuário trocou) ou a original.
+      const finalImage = photo.changed ? photo.value ?? undefined : view.data.imageDataUrl;
       const saved: SavedRecipe = {
         ...view.data,
         mealCategories: categories,
         id: newRecipeId(),
         savedAt: Date.now(),
-        source: view.data.sourceUrl ? 'url' : view.data.imageDataUrl ? 'image' : 'manual',
-        imageDataUrl: view.data.imageDataUrl,
+        source: view.data.sourceUrl ? 'url' : finalImage ? 'image' : 'manual',
+        imageDataUrl: finalImage,
         sourceUrl: view.data.sourceUrl,
       };
       await addSavedRecipe(saved);
@@ -332,13 +345,77 @@ export const RecipeDetailScreen: React.FC = () => {
     ]);
   };
 
+  // ─── Foto: derivados + handlers (Feature #1) ────────────────────
+  // Só receitas saved/extracted podem trocar foto (seed é curada/read-only).
+  const canChangePhoto = view.kind === 'saved' || view.kind === 'extracted';
+  const imageQueryForGen = canChangePhoto ? view.data.imageQuery : undefined;
+  const heroImage = photo.changed ? photo.value : view.imageDataUrl;
+
+  // Aplica a foto escolhida/gerada/removida. Em receita já salva, persiste na
+  // hora (upsert pelo id); em extracted, fica no estado e entra no Salvar.
+  const applyPhoto = async (value: string | null) => {
+    setPhoto({ changed: true, value });
+    setPhotoSheetOpen(false);
+    setGenMode(false);
+    setGenPreview(null);
+    if (view.kind === 'saved') {
+      try {
+        await addSavedRecipe({ ...view.data, imageDataUrl: value ?? undefined });
+        toast(value ? 'Foto atualizada' : 'Foto removida');
+      } catch {
+        toast('Erro ao salvar foto', 'error');
+      }
+    }
+  };
+
+  const pickFromLibrary = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { toast('Permissão da galeria negada', 'error'); return; }
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'images', quality: 0.5, allowsEditing: true, aspect: [4, 3], base64: true,
+    });
+    if (res.canceled || !res.assets?.[0]?.base64) return;
+    await applyPhoto(`data:image/jpeg;base64,${res.assets[0].base64}`);
+  };
+
+  const pickFromCamera = async () => {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) { toast('Permissão da câmera negada', 'error'); return; }
+    const res = await ImagePicker.launchCameraAsync({
+      mediaTypes: 'images', quality: 0.5, allowsEditing: true, aspect: [4, 3], base64: true,
+    });
+    if (res.canceled || !res.assets?.[0]?.base64) return;
+    await applyPhoto(`data:image/jpeg;base64,${res.assets[0].base64}`);
+  };
+
+  // Chama o backend pra gerar a foto. Reusável pelo "Gerar novamente".
+  const runGenerate = async () => {
+    setGenerating(true);
+    setGenPreview(null);
+    try {
+      const { image } = await generateRecipeImage({
+        title: view.title,
+        imageQuery: imageQueryForGen,
+        ingredients: view.ingredients.map((i) => i.name).slice(0, 6),
+      });
+      setGenPreview(image);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Erro ao gerar imagem', 'error');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const openPhotoSheet = () => { setGenMode(false); setGenPreview(null); setPhotoSheetOpen(true); };
+  const startGenerate = () => { setGenMode(true); runGenerate(); };
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
         {/* Hero */}
         <View style={{ position: 'relative', height: 260 }}>
-          {view.imageDataUrl ? (
-            <Image source={{ uri: view.imageDataUrl }} style={{ width: '100%', height: 260 }} resizeMode="cover" />
+          {heroImage ? (
+            <Image source={{ uri: heroImage }} style={{ width: '100%', height: 260 }} resizeMode="cover" />
           ) : (
             <FoodImg q={view.q} w="100%" h={260} style={{ borderRadius: 0 }} />
           )}
@@ -381,6 +458,27 @@ export const RecipeDetailScreen: React.FC = () => {
               </Pressable>
             </View>
           </View>
+          {canChangePhoto && (
+            <Pressable
+              onPress={openPhotoSheet}
+              accessibilityLabel="Alterar foto da receita"
+              style={{
+                position: 'absolute',
+                bottom: 44,
+                right: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                backgroundColor: 'rgba(0,0,0,0.55)',
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                borderRadius: 100,
+              }}
+            >
+              <Icon.camera size={14} color="#fff" stroke={2} />
+              <Text style={{ fontFamily: FONT.bodyBold, fontSize: 12, fontWeight: '700', color: '#fff' }}>Alterar foto</Text>
+            </Pressable>
+          )}
         </View>
 
         {/* Title card */}
@@ -978,6 +1076,125 @@ export const RecipeDetailScreen: React.FC = () => {
             <Pressable onPress={() => setCategoryPickerOpen(false)} style={{ padding: 8, alignItems: 'center' }}>
               <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '600', color: theme.textMuted }}>Cancelar</Text>
             </Pressable>
+      </SheetModal>
+
+      {/* Bottom-sheet: trocar/gerar foto da receita (Feature #1) */}
+      <SheetModal
+        visible={photoSheetOpen}
+        onClose={() => { setPhotoSheetOpen(false); setGenMode(false); setGenPreview(null); }}
+        sheetStyle={{
+          backgroundColor: theme.bg,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          padding: 20,
+          paddingBottom: Math.max(24, insets.bottom + 16),
+          gap: 10,
+        }}
+      >
+        <View style={{ alignItems: 'center', paddingBottom: 6 }}>
+          <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
+        </View>
+
+        {genMode ? (
+          <>
+            <Text style={{ fontFamily: FONT.headExtra, fontSize: 17, fontWeight: '800', color: theme.text, textAlign: 'center' }}>
+              Foto gerada pela Lu
+            </Text>
+            <View
+              style={{
+                height: 220,
+                borderRadius: 18,
+                overflow: 'hidden',
+                backgroundColor: theme.bgSubtle,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 4,
+              }}
+            >
+              {generating ? (
+                <View style={{ alignItems: 'center', gap: 10 }}>
+                  <ActivityIndicator size="large" color={theme.primary} />
+                  <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted }}>Lu está pintando seu prato… 🎨</Text>
+                </View>
+              ) : genPreview ? (
+                <Image source={{ uri: genPreview }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+              ) : (
+                <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted }}>Sem imagem ainda</Text>
+              )}
+            </View>
+            {!generating && genPreview && (
+              <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textFaint, textAlign: 'center' }}>
+                Não ficou boa? Gere novamente até acertar.
+              </Text>
+            )}
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+              <View style={{ flex: 1 }}>
+                <Btn variant="secondary" size="md" icon={Icon.sparkle} onPress={runGenerate} disabled={generating} full>
+                  {generating ? 'Gerando…' : 'Gerar novamente'}
+                </Btn>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Btn
+                  variant="primary"
+                  size="md"
+                  icon={Icon.check}
+                  onPress={() => genPreview && applyPhoto(genPreview)}
+                  disabled={generating || !genPreview}
+                  full
+                >
+                  Usar esta
+                </Btn>
+              </View>
+            </View>
+            <Pressable onPress={() => { setGenMode(false); setGenPreview(null); }} style={{ padding: 10, alignItems: 'center' }}>
+              <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '600', color: theme.textMuted }}>Voltar</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Text style={{ fontFamily: FONT.headExtra, fontSize: 17, fontWeight: '800', color: theme.text }}>
+              Foto da receita
+            </Text>
+            <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, lineHeight: 18, marginBottom: 4 }}>
+              Use uma foto sua ou peça pra Lu gerar uma com IA.
+            </Text>
+            {([
+              { icon: 'gallery', label: 'Escolher da galeria', sub: 'Uma foto do seu celular', onPress: pickFromLibrary },
+              { icon: 'camera', label: 'Tirar foto', sub: 'Abrir a câmera agora', onPress: pickFromCamera },
+              { icon: 'sparkle', label: 'Gerar com a Lu (IA)', sub: 'A IA cria uma foto da receita', onPress: startGenerate },
+            ] as { icon: IconName; label: string; sub: string; onPress: () => void }[]).map((opt) => {
+              const IconC = Icon[opt.icon];
+              return (
+                <Pressable
+                  key={opt.label}
+                  onPress={opt.onPress}
+                  style={{
+                    backgroundColor: theme.bgElev,
+                    borderRadius: 14,
+                    padding: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                  }}
+                >
+                  <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: theme.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
+                    <IconC size={18} color={theme.primaryDeep} stroke={2} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '700', color: theme.text }}>{opt.label}</Text>
+                    <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, marginTop: 1 }}>{opt.sub}</Text>
+                  </View>
+                  <Icon.forward size={16} color={theme.textMuted} />
+                </Pressable>
+              );
+            })}
+            {heroImage && (
+              <Pressable onPress={() => applyPhoto(null)} style={{ padding: 12, alignItems: 'center', marginTop: 2 }}>
+                <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '600', color: theme.proteinPink }}>Remover foto (usar padrão)</Text>
+              </Pressable>
+            )}
+          </>
+        )}
       </SheetModal>
     </View>
   );

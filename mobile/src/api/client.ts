@@ -106,6 +106,20 @@ export function analyzeFood(imageBase64: string): Promise<FoodAnalysis> {
   return postJSON<FoodAnalysis>('/analyze-food', { image: imageBase64 });
 }
 
+/**
+ * Gera uma foto de "food photography" da receita via IA.
+ * Retorna a imagem como data URL (data:image/jpeg;base64,...) pronta pra
+ * exibir e persistir. Cada chamada (inclusive "gerar novamente") gera uma
+ * imagem nova — é uma chamada paga na OpenAI.
+ */
+export function generateRecipeImage(payload: {
+  title: string;
+  imageQuery?: string;
+  ingredients?: string[];
+}): Promise<{ image: string }> {
+  return postJSON<{ image: string }>('/generate-recipe-image', payload);
+}
+
 // ─── Chat com a Lu ──────────────────────────────────────────────
 
 export type ChatMessage = { role: 'lu' | 'user'; text: string };
