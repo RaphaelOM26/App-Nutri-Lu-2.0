@@ -24,19 +24,19 @@ export const OnboardingActivityScreen: React.FC = () => {
       id: 'sedentary',
       label: '0 – 2',
       sub: 'De vez em quando',
-      icon: <Icon.flag size={22} color={activityLevel === 'sedentary' ? '#fff' : theme.primaryDeep} stroke={2} />,
+      icon: <Icon.flag size={22} color={theme.primaryDeep} stroke={2} />,
     },
     {
       id: 'moderate',
       label: '3 – 5',
       sub: 'Algumas vezes por semana',
-      icon: <Icon.flame size={22} color={activityLevel === 'moderate' ? '#fff' : theme.primaryDeep} stroke={2} />,
+      icon: <Icon.flame size={22} color={theme.primaryDeep} stroke={2} />,
     },
     {
       id: 'athlete',
       label: '6+',
       sub: 'Atleta dedicado',
-      icon: <Icon.award size={22} color={activityLevel === 'athlete' ? '#fff' : theme.primaryDeep} stroke={2} />,
+      icon: <Icon.award size={22} color={theme.primaryDeep} stroke={2} />,
     },
   ];
 

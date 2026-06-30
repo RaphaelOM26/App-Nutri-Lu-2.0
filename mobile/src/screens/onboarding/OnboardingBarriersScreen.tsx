@@ -53,7 +53,9 @@ export const OnboardingBarriersScreen: React.FC = () => {
           <OptionCard
             key={o.id}
             label={o.label}
-            icon={<IconC size={22} color={selected ? '#fff' : theme.primaryDeep} stroke={2} />}
+            // Ícone sempre verde: o círculo de trás é branco nos dois estados,
+            // então branco-no-selecionado sumia (branco no branco).
+            icon={<IconC size={22} color={theme.primaryDeep} stroke={2} />}
             selected={selected}
             showRadio
             onPress={() => toggle(o.id)}
