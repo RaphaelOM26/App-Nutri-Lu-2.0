@@ -29,11 +29,17 @@ app.use(express.json({ limit: '15mb' }));
 app.use((req, res, next) => {
   if (req.path === '/health') return next();
   const start = Date.now();
+  // Captura método e path AGORA: quando o res 'finish' dispara, a requisição
+  // já está dentro do router montado e o Express reescreveu req.url pra '/'
+  // (perdíamos o endpoint, tudo logava como "POST /"). req.path aqui ainda é
+  // o caminho completo (ex: /analyze-food).
+  const method = req.method;
+  const path = req.path;
   res.on('finish', () => {
     const ms = Date.now() - start;
     const cl = Number(req.headers['content-length']);
     const size = cl ? `${(cl / 1024).toFixed(0)}KB` : '-';
-    console.log(`[req] ${req.method} ${req.path} → ${res.statusCode} ${ms}ms (in ${size})`);
+    console.log(`[req] ${method} ${path} → ${res.statusCode} ${ms}ms (in ${size})`);
   });
   next();
 });
