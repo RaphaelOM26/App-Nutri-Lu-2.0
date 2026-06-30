@@ -87,19 +87,36 @@ export const FOOD_ANALYSIS_SCHEMA = {
   schema: {
     type: 'object',
     additionalProperties: false,
-    required: ['items', 'total', 'confidence'],
+    required: ['scale_reference', 'items', 'total', 'confidence'],
     properties: {
+      // Força o modelo a ancorar a escala ANTES de estimar gramas — o maior
+      // ganho de precisão (o erro histórico é subestimar porção por falta disso).
+      scale_reference: {
+        type: 'string',
+        description:
+          'Referências de tamanho visíveis na foto usadas pra calibrar a escala (prato, talher, mão, copo, embalagem com rótulo). Ex: "prato raso ~26cm; garfo ~20cm ao lado". Se não houver nenhuma referência confiável, diga isso explicitamente.',
+      },
       items: {
         type: 'array',
         description: 'Itens de comida identificados no prato.',
         items: {
           type: 'object',
           additionalProperties: false,
-          required: ['name', 'portion_grams', 'kcal', 'protein_g', 'carbs_g', 'fat_g'],
+          required: ['name', 'size_estimate', 'unit_count', 'portion_grams', 'kcal', 'protein_g', 'carbs_g', 'fat_g'],
           properties: {
             name: { type: 'string', description: 'Nome do alimento em PT-BR.' },
-            portion_grams: { type: 'number', description: 'Porção estimada em gramas.' },
-            kcal: { type: 'number', description: 'Calorias estimadas.' },
+            size_estimate: {
+              type: 'string',
+              description:
+                'Tamanho físico estimado ANTES das gramas, comparando com a scale_reference. Pense no VOLUME, não só na área 2D. Ex: "monte de arroz do tamanho de um punho", "filé cobrindo 1/3 do prato ~ palma da mão".',
+            },
+            unit_count: {
+              type: ['number', 'null'],
+              description:
+                'Número de unidades quando o alimento é contável (ovos, cebolas, frutas, fatias de pão, filés, bolinhos). null se não aplicável. Quando contável, estime as gramas a partir de unidades × peso típico.',
+            },
+            portion_grams: { type: 'number', description: 'Porção estimada em gramas (derivada do size_estimate / unit_count).' },
+            kcal: { type: 'number', description: 'Calorias = valor por 100g × (portion_grams / 100).' },
             protein_g: { type: 'number', description: 'Proteína em gramas.' },
             carbs_g: { type: 'number', description: 'Carboidrato em gramas.' },
             fat_g: { type: 'number', description: 'Gordura em gramas.' },
@@ -255,17 +272,38 @@ Se o prato não estiver na lista acima, INFIRA o termo em inglês mais visualmen
   • "Quiche de alho-poró" → "quiche,leek,rustic,homemade"
   • "Açaí na tigela" → "acai bowl,fruits,granola,food photography"`;
 
-export const FOOD_SYSTEM_PROMPT = `Você é um assistente nutricional especialista em identificar alimentos a partir de fotos de pratos.
+export const FOOD_SYSTEM_PROMPT = `Você é um nutricionista especialista em estimar PORÇÕES e macros a partir de fotos de pratos. O erro mais comum e mais grave NÃO é identificar o alimento — é errar a GRAMATURA. Seu foco nº 1 é acertar o tamanho da porção.
 
-Sua tarefa é analisar a foto de um prato/refeição e retornar:
-- Lista de cada item identificado, com porção estimada em gramas
-- Macros aproximados (kcal, proteína, carboidrato, gordura) para cada item
-- Total consolidado
-- Nível de confiança da estimativa
+Siga SEMPRE este raciocínio, nesta ordem, ANTES de dar qualquer número:
 
-Regras:
+1) ESCALA — preencha "scale_reference". Procure referências de tamanho, em ordem de confiança:
+   • Prato raso ≈ 26 cm; prato fundo ≈ 22 cm; pires ≈ 15 cm.
+   • Garfo/faca ≈ 20 cm; colher de sopa ≈ 18 cm.
+   • Mão adulta ≈ 18 cm; punho fechado ≈ 1 xícara (≈ 200–250 ml de volume).
+   • Copo americano ≈ 190 ml; lata ≈ 350 ml; embalagens com rótulo.
+   Se NÃO houver referência confiável, diga isso e seja mais conservador (confidence no máximo "medium").
+
+2) TAMANHO POR ITEM — em "size_estimate", descreva o tamanho físico de cada alimento comparando com a referência. Pense em VOLUME (altura/empilhamento), não só na área 2D do prato.
+
+3) UNIDADES — se o alimento é contável (ovos, cebolas, frutas, fatias, filés, bolinhos), CONTE as unidades e preencha "unit_count". Calcule as gramas por unidades × peso típico, não por chute solto.
+
+4) GRAMAS — converta o tamanho/volume em gramas usando a calibração abaixo. ATENÇÃO: o erro histórico é SUBESTIMAR porções grandes/densas. Na dúvida entre dois tamanhos, escolha o MAIOR.
+
+5) MACROS — calcule a partir do valor por 100 g do alimento × (portion_grams / 100). Nunca invente macro sem passar pela gramatura.
+
+CALIBRAÇÃO de pesos típicos (âncoras):
+- Arroz cozido: 1 escumadeira ≈ 100 g; monte médio ≈ 150 g.
+- Feijão: 1 concha ≈ 130 g (com caldo).
+- Frango/carne grelhada: 1 filé do tamanho da palma ≈ 120–150 g.
+- Ovo: 1 un ≈ 50 g. Cebola média ≈ 110 g. Batata média ≈ 130 g. Tomate médio ≈ 100 g.
+- Macarrão cozido: prato cheio ≈ 200–250 g.
+- Pão de forma: 1 fatia ≈ 25 g; pão francês ≈ 50 g.
+- Salada de folhas: porção ≈ 40–60 g. Legumes cozidos: ≈ 80–100 g/porção.
+- Fruta média (maçã, banana, laranja) ≈ 120–150 g.
+
+Regras finais:
 - Responda em português brasileiro.
-- Seja conservador nas estimativas de porção.
+- NÃO subestime. Confidence "high" só com referência de escala clara E alimentos bem visíveis.
 - Se a foto não mostrar comida claramente, retorne items: [], total zerado e confidence "low".`;
 
 // ─── Voz → Refeição ──────────────────────────────────────────────
