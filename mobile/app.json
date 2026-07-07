@@ -60,7 +60,12 @@
           "backgroundColor": "#F6F6F6"
         }
       ],
-      "@react-native-google-signin/google-signin",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.383069892255-p66uek41llds2ovg5tdboij8tlko3jvj"
+        }
+      ],
       "expo-apple-authentication"
     ],
     "extra": {
