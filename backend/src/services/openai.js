@@ -8,6 +8,12 @@ export const openai = new OpenAI({
 
 export const MODEL = process.env.OPENAI_MODEL || 'gpt-5.4-mini';
 
+// Modelo dedicado da Foto IA (analyze-food). Medição de 2026-07-07 (12 fotos
+// pesadas dos testers): gpt-5.4 completo = 11-13% de erro médio ESTÁVEL;
+// gpt-5.4-mini = 15-24% (instável entre rodadas). A Foto IA é a feature nº 1
+// do app — vale o modelo mais forte só nela, sem encarecer os outros endpoints.
+export const FOOD_MODEL = process.env.OPENAI_FOOD_MODEL || MODEL;
+
 // ─── JSON Schema da receita extraída ─────────────────────────────
 // Usado tanto pra image extraction quanto pra link extraction.
 // `strict: true` força o modelo a respeitar o schema exatamente.
@@ -276,26 +282,44 @@ export const FOOD_SYSTEM_PROMPT = `Você é um nutricionista especialista em est
 
 Siga SEMPRE este raciocínio, nesta ordem, ANTES de dar qualquer número:
 
-1) ESCALA — preencha "scale_reference". Procure referências de tamanho, em ordem de confiança:
+1) ESCALA VISUAL — preencha "scale_reference". Procure referências de tamanho, em ordem de confiança:
    • Prato raso ≈ 26 cm; prato fundo ≈ 22 cm; pires ≈ 15 cm.
    • Garfo/faca ≈ 20 cm; colher de sopa ≈ 18 cm.
    • Mão adulta ≈ 18 cm; punho fechado ≈ 1 xícara (≈ 200–250 ml de volume).
    • Copo americano ≈ 190 ml; lata ≈ 350 ml; embalagens com rótulo.
    Se NÃO houver referência confiável, diga isso e seja mais conservador (confidence no máximo "medium").
 
-2) TAMANHO POR ITEM — em "size_estimate", descreva o tamanho físico de cada alimento comparando com a referência. Pense em VOLUME (altura/empilhamento), não só na área 2D do prato.
+2) TAMANHO POR ITEM — em "size_estimate", descreva o tamanho físico de cada alimento comparando com a referência. Pense em VOLUME (altura/empilhamento), não só na área 2D — mas lembre que comida caseira em prato raso costuma ter altura BAIXA (2–3 cm): área grande não significa porção pesada.
 
 3) UNIDADES — se o alimento é contável (ovos, cebolas, frutas, fatias, filés, bolinhos), CONTE as unidades e preencha "unit_count". Calcule as gramas por unidades × peso típico, não por chute solto.
 
-4) GRAMAS — converta o tamanho/volume em gramas usando a calibração abaixo. ATENÇÃO: o erro histórico é SUBESTIMAR porções grandes/densas. Na dúvida entre dois tamanhos, escolha o MAIOR.
+4) ESTIMATIVA VISUAL EM GRAMAS — converta tamanho/volume em gramas usando a calibração abaixo. CUIDADO COM O VIÉS: fotos de comida tiradas de perto e de cima fazem as porções parecerem MAIORES do que são — estimativas visuais erram sistematicamente PARA CIMA. Use o CENTRO-BAIXO das faixas de calibração; só use o topo da faixa se o alimento estiver visivelmente empilhado/alto. Teste de sanidade do prato inteiro:
+   • Refeição caseira típica (arroz + proteína + legume) pesa 250–450 g no total.
+   • Café da manhã / lanche típico pesa 100–250 g.
+   • Se a sua soma passar de 500 g, re-examine item por item — quase sempre há superestimação.
 
-5) MACROS — calcule a partir do valor por 100 g do alimento × (portion_grams / 100). Nunca invente macro sem passar pela gramatura.
+5) BALANÇA — se houver balança de cozinha com visor LEGÍVEL na foto, use-a — mas SEMPRE via o protocolo do campo "scale_reference" (abaixo), que te obriga a estimar ANTES de ler o visor. Regra de decisão, comparando o visor com a sua estimativa visual às cegas:
+   • Visor ≥ 70% da sua estimativa às cegas → o visor é o peso TOTAL do prato (louça tarada). Use-o como verdade: redistribua entre os itens na proporção dos volumes; a soma deve bater com o visor.
+   • Visor < 60% da sua estimativa às cegas → a balança foi RE-TARADA durante a montagem: o visor mostra só o ÚLTIMO ingrediente adicionado, NÃO o total. Atribua o valor do visor ao item que parece ter sido posto por último (geralmente o que está por cima) e MANTENHA sua estimativa visual pros demais. NUNCA force um prato de refeição completa a caber num visor pequeno: um almoço/jantar com 2-3 componentes raramente pesa menos de 220 g.
+   • Entre 60–70%: use o visor como total, mas confidence "medium".
+
+PROTOCOLO OBRIGATÓRIO do campo "scale_reference" (preencha nesta ordem, como um raciocínio):
+   a. "Às cegas: ~XXX g" — sua estimativa visual do prato TODO, feita ANTES de olhar qualquer visor, usando só as referências visuais e a calibração.
+   b. "Visor: XXX g" (ou "sem balança legível").
+   c. "Veredito: ..." — total tarado, ou tara re-zerada (visor = só último item), aplicando a regra de decisão acima.
+   Os portion_grams dos itens devem ser consistentes com o VEREDITO, não com o número que for mais cômodo.
+
+6) MACROS — calcule a partir do valor por 100 g do alimento × (portion_grams / 100). Nunca invente macro sem passar pela gramatura.
 
 CALIBRAÇÃO de pesos típicos (âncoras):
-- Arroz cozido: 1 escumadeira ≈ 100 g; monte médio ≈ 150 g.
+- Arroz cozido: 1 colher de servir ≈ 60–80 g; monte de 1/4 do prato raso ≈ 100–150 g; metade de prato bem cheio ≈ 200 g.
 - Feijão: 1 concha ≈ 130 g (com caldo).
-- Frango/carne grelhada: 1 filé do tamanho da palma ≈ 120–150 g.
-- Ovo: 1 un ≈ 50 g. Cebola média ≈ 110 g. Batata média ≈ 130 g. Tomate médio ≈ 100 g.
+- Frango/carne grelhada: 1 filé do tamanho da palma ≈ 100–140 g. Frango desfiado: 1 xícara solta ≈ 70–90 g (desfiado é AERADO — parece mais volume do que pesa).
+- Carne moída refogada: 1 xícara ≈ 110–130 g.
+- Ovo: 1 un ≈ 50 g. Ovos mexidos de 2 ovos ≈ 100–120 g. Cebola média ≈ 110 g. Batata média ≈ 130 g. Tomate médio ≈ 100 g (3–4 fatias ≈ 50 g).
+- Legumes assados (abóbora, batata-doce): 1 fatia/cunha média ≈ 30–50 g; porção típica ≈ 80–150 g. Assado PERDE água: parece grande mas pesa menos.
+- Purê de batata: 1 xícara rasa ≈ 150 g. Lentilha/grão cozido: 1/2 xícara ≈ 60–80 g.
+- Cuscuz nordestino: 1 porção média ≈ 80–120 g.
 - Macarrão cozido: prato cheio ≈ 200–250 g.
 - Pão de forma: 1 fatia ≈ 25 g; pão francês ≈ 50 g.
 - Salada de folhas: porção ≈ 40–60 g. Legumes cozidos: ≈ 80–100 g/porção.
@@ -303,7 +327,7 @@ CALIBRAÇÃO de pesos típicos (âncoras):
 
 Regras finais:
 - Responda em português brasileiro.
-- NÃO subestime. Confidence "high" só com referência de escala clara E alimentos bem visíveis.
+- Confidence "high" só com referência de escala clara (balança legível conta) E alimentos bem visíveis.
 - Se a foto não mostrar comida claramente, retorne items: [], total zerado e confidence "low".`;
 
 // ─── Voz → Refeição ──────────────────────────────────────────────

@@ -6,7 +6,7 @@
 // e a IA estima macros de cada item identificado.
 
 import { Router } from 'express';
-import { openai, MODEL, FOOD_ANALYSIS_SCHEMA, FOOD_SYSTEM_PROMPT } from '../services/openai.js';
+import { openai, FOOD_MODEL, FOOD_ANALYSIS_SCHEMA, FOOD_SYSTEM_PROMPT } from '../services/openai.js';
 
 const router = Router();
 
@@ -28,7 +28,7 @@ router.post('/', async (req, res, next) => {
     console.log(`[analyze-food] received image: ${(imgBytes / 1024).toFixed(0)}KB, prefix="${image.slice(0, 20)}..."`);
 
     const completion = await openai.chat.completions.create({
-      model: MODEL,
+      model: FOOD_MODEL,
       messages: [
         { role: 'system', content: FOOD_SYSTEM_PROMPT },
         {

@@ -18,7 +18,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, extname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
-import { openai, MODEL, FOOD_SYSTEM_PROMPT, FOOD_ANALYSIS_SCHEMA } from '../src/services/openai.js';
+import { openai, FOOD_MODEL as MODEL, FOOD_SYSTEM_PROMPT, FOOD_ANALYSIS_SCHEMA } from '../src/services/openai.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIR = process.argv[2] || join(__dirname, 'food-test');
