@@ -58,10 +58,13 @@ export type FoodAnalysis = {
 export type ExtractSource = 'image' | 'url' | 'video';
 
 // ─── Helpers ────────────────────────────────────────────────────
-async function postJSON<T>(path: string, body: unknown): Promise<T> {
+async function postJSON<T>(path: string, body: unknown, token?: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify(body),
   });
   const text = await res.text();
@@ -254,6 +257,110 @@ export async function getDaySnapshot(
   }
   const data = await res.json();
   return data.payload as DaySnapshotPayload;
+}
+
+// ─── Auth social + Comunidade (feature #3) ──────────────────────
+
+export type AuthUser = { id: string; displayName: string; email: string | null };
+
+export type SocialProvider = 'apple' | 'google';
+
+/**
+ * Troca o identity token do provedor (Apple/Google) por uma sessão nossa.
+ * displayName só é usado no PRIMEIRO login (a Apple manda o nome uma única vez).
+ */
+export function socialLogin(payload: {
+  provider: SocialProvider;
+  identityToken: string;
+  displayName?: string;
+  deviceId?: string;
+}): Promise<{ token: string; user: AuthUser }> {
+  return postJSON('/auth/social', {
+    provider: payload.provider,
+    identity_token: payload.identityToken,
+    display_name: payload.displayName,
+    device_id: payload.deviceId,
+  });
+}
+
+/** Valida a sessão guardada e devolve o perfil. 401 = sessão expirou. */
+export async function fetchMe(token: string): Promise<AuthUser> {
+  const res = await fetch(`${BASE_URL}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new ApiError('Sessão expirada', res.status, 'AUTH_EXPIRED');
+  const data = await res.json();
+  return data.user as AuthUser;
+}
+
+/** Receita publicada na comunidade (shape do GET /community/recipes). */
+export type CommunityRecipe = {
+  id: string;
+  title: string;
+  /** A receita em si — mesmo shape da ExtractedRecipe (ingredientes, passos...). */
+  payload: ExtractedRecipe & { sourceUrl?: string };
+  imageDataUrl: string | null;
+  sourceUrl: string | null;
+  createdAt: string;
+  authorName: string;
+  isMine: boolean;
+  avgStars: number | null;
+  ratingCount: number;
+  myStars: number | null;
+};
+
+/** Publica uma receita no feed da comunidade. Exige login. */
+export function publishCommunityRecipe(
+  token: string,
+  payload: { title: string; recipe: ExtractedRecipe; imageDataUrl?: string; sourceUrl?: string },
+): Promise<{ id: string }> {
+  return postJSON(
+    '/community/recipes',
+    {
+      title: payload.title,
+      payload: payload.recipe,
+      image_data_url: payload.imageDataUrl,
+      source_url: payload.sourceUrl,
+    },
+    token,
+  );
+}
+
+/** Feed paginado da comunidade. Token opcional (logado vê a própria avaliação). */
+export async function fetchCommunityRecipes(opts: {
+  limit?: number;
+  offset?: number;
+  sort?: 'recent' | 'top';
+  token?: string;
+}): Promise<{ items: CommunityRecipe[]; hasMore: boolean; nextOffset: number }> {
+  const params = new URLSearchParams({
+    limit: String(opts.limit ?? 20),
+    offset: String(opts.offset ?? 0),
+    sort: opts.sort ?? 'recent',
+  });
+  const res = await fetch(`${BASE_URL}/community/recipes?${params}`, {
+    headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : undefined,
+  });
+  if (!res.ok) throw new ApiError(`Erro ao carregar a comunidade`, res.status);
+  return res.json();
+}
+
+/** Avalia (ou re-avalia) uma receita da comunidade com 1-5 estrelas. */
+export function rateCommunityRecipe(
+  token: string,
+  recipeId: string,
+  stars: number,
+): Promise<{ avgStars: number; ratingCount: number; myStars: number }> {
+  return postJSON(`/community/recipes/${recipeId}/rate`, { stars }, token);
+}
+
+/** Despublica uma receita própria (some do feed; avaliações preservadas). */
+export async function unpublishCommunityRecipe(token: string, recipeId: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/community/recipes/${recipeId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new ApiError('Erro ao despublicar', res.status);
 }
 
 export { BASE_URL };

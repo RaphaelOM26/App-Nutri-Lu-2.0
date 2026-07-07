@@ -1,7 +1,7 @@
 // Tela "Receitas" (Tab 4) — porte do RecipesScreen em screens-recipes.jsx.
 // Tabs: Minhas (grid) | Descobrir | Coleções | Despensa.
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Image, TextInput, Modal, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -19,7 +19,14 @@ import { useApp } from '../state/AppContext';
 import { useToast } from '../state/ToastContext';
 import { MarkdownText } from '../components/MarkdownText';
 import { SheetModal } from '../components/motion';
-import { chatWithLu, ApiError, type ChatMessage } from '../api/client';
+import {
+  chatWithLu,
+  fetchCommunityRecipes,
+  ApiError,
+  type ChatMessage,
+  type CommunityRecipe,
+} from '../api/client';
+import { getAuthSession, useAuthSession } from '../state/authState';
 import { LU_COLLECTIONS, getCoverUrl, type LuCollection } from '../data/luCollections';
 import type { RootStackParamList } from '../navigation/types';
 import type { SavedRecipe } from '../storage/recipes';
@@ -196,6 +203,25 @@ export const RecipesScreen: React.FC = () => {
             onOpen={openRecipe}
             onOpenLuChat={() => nav.navigate('ChatLu')}
             onOpenLuRecipes={(collectionId) => nav.navigate('LuRecipes', collectionId ? { collectionId } : {})}
+            onOpenCommunity={(item) =>
+              nav.navigate('RecipeDetail', {
+                // payload da receita pública renderiza como "extracted" (mesma
+                // tela de sempre) + community habilita a UI de avaliação.
+                extracted: {
+                  ...item.payload,
+                  imageDataUrl: item.imageDataUrl || undefined,
+                  sourceUrl: item.sourceUrl || undefined,
+                },
+                community: {
+                  id: item.id,
+                  authorName: item.authorName,
+                  avgStars: item.avgStars,
+                  ratingCount: item.ratingCount,
+                  myStars: item.myStars,
+                  isMine: item.isMine,
+                },
+              })
+            }
           />
         )}
         {tab === 'pantry' && <PantryView nav={nav} />}
@@ -798,9 +824,11 @@ type DiscoverProps = {
   onOpenLuChat: () => void;
   /** Abre LuRecipesScreen — sem id = todas as curadas, com id = só daquela coleção */
   onOpenLuRecipes: (collectionId?: string) => void;
+  /** Abre uma receita publicada da comunidade na RecipeDetail (modo avaliação). */
+  onOpenCommunity: (item: CommunityRecipe) => void;
 };
 
-const DiscoverRecipes: React.FC<DiscoverProps> = ({ recipes, onOpen, onOpenLuChat, onOpenLuRecipes }) => {
+const DiscoverRecipes: React.FC<DiscoverProps> = ({ recipes, onOpen, onOpenLuChat, onOpenLuRecipes, onOpenCommunity }) => {
   const theme = useTheme();
   const { displayedMacros, water, foodDB } = useApp();
   const toast = useToast();
@@ -934,6 +962,9 @@ const DiscoverRecipes: React.FC<DiscoverProps> = ({ recipes, onOpen, onOpenLuCha
       </View>
       <LuCollectionsCarousel collections={LU_COLLECTIONS} onPickCollection={onOpenLuRecipes} />
 
+      {/* Da comunidade — receitas publicadas por outros usuários (feature #3) */}
+      <CommunityFeedSection onOpen={onOpenCommunity} />
+
       {/* Em alta esta semana — DESABILITADO no MVP (vira backend de tendências) */}
       <View style={{ paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12, marginTop: 8 }}>
         <Text style={{ fontFamily: FONT.headExtra, fontSize: 16, fontWeight: '800', color: theme.textMuted }}>
@@ -974,6 +1005,146 @@ const DiscoverRecipes: React.FC<DiscoverProps> = ({ recipes, onOpen, onOpenLuCha
           ))}
         </ScrollView>
       </View>
+    </View>
+  );
+};
+
+// ─── Feed da comunidade (feature #3) ─────────────────────────────
+// Lista as receitas publicadas por usuários. Anônimo pode VER tudo — login só
+// é pedido pra publicar/avaliar (na RecipeDetail). Recarrega quando a sessão
+// muda (pra refletir myStars) e pagina com "Ver mais".
+const CommunityFeedSection: React.FC<{ onOpen: (item: CommunityRecipe) => void }> = ({ onOpen }) => {
+  const theme = useTheme();
+  const session = useAuthSession();
+  const [items, setItems] = useState<CommunityRecipe[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const load = async (offset = 0) => {
+    try {
+      if (offset === 0) setState('loading');
+      else setLoadingMore(true);
+      const res = await fetchCommunityRecipes({ limit: 10, offset, token: getAuthSession()?.token });
+      setItems((prev) => (offset === 0 ? res.items : [...prev, ...res.items]));
+      setHasMore(res.hasMore);
+      setState('ready');
+    } catch {
+      if (offset === 0) setState('error');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    load(0);
+    // session?.token na dep: re-busca ao logar pra preencher myStars/isMine.
+  }, [session?.token]);
+
+  return (
+    <View style={{ marginTop: 8, marginBottom: 16 }}>
+      <View style={{ paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <Icon.globe size={16} color={theme.primaryDeep} stroke={2} />
+        <Text style={{ fontFamily: FONT.headExtra, fontSize: 16, fontWeight: '800', color: theme.text }}>
+          Da comunidade
+        </Text>
+      </View>
+
+      {state === 'loading' && (
+        <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+          <ActivityIndicator color={theme.primaryDeep} />
+        </View>
+      )}
+
+      {state === 'error' && (
+        <View style={{ paddingHorizontal: 16 }}>
+          <Card pad={16} radius={16}>
+            <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, textAlign: 'center' }}>
+              Não consegui carregar a comunidade agora.
+            </Text>
+            <Pressable onPress={() => load(0)} style={{ alignItems: 'center', paddingTop: 10 }}>
+              <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '700', color: theme.primaryDeep }}>
+                Tentar de novo
+              </Text>
+            </Pressable>
+          </Card>
+        </View>
+      )}
+
+      {state === 'ready' && items.length === 0 && (
+        <View style={{ paddingHorizontal: 16 }}>
+          <Card pad={18} radius={16}>
+            <Text style={{ fontFamily: FONT.bodyBold, fontSize: 14, fontWeight: '700', color: theme.text, textAlign: 'center' }}>
+              Ainda não tem receitas por aqui 🌱
+            </Text>
+            <Text style={{ fontFamily: FONT.body, fontSize: 12.5, color: theme.textMuted, textAlign: 'center', marginTop: 4, lineHeight: 18 }}>
+              Importe uma receita e seja a primeira pessoa a compartilhar com a comunidade!
+            </Text>
+          </Card>
+        </View>
+      )}
+
+      {state === 'ready' && items.length > 0 && (
+        <View style={{ paddingHorizontal: 16, gap: 10 }}>
+          {items.map((item) => (
+            <Pressable key={item.id} onPress={() => onOpen(item)}>
+              <Card pad={12} radius={18}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  {item.imageDataUrl ? (
+                    <Image
+                      source={{ uri: item.imageDataUrl }}
+                      style={{ width: 64, height: 64, borderRadius: 14 }}
+                    />
+                  ) : (
+                    <FoodImg q={item.payload.imageQuery || item.title} w={64} h={64} style={{ borderRadius: 14 }} />
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{ fontFamily: FONT.head, fontSize: 14, fontWeight: '700', color: theme.text, lineHeight: 18 }}
+                      numberOfLines={2}
+                    >
+                      {item.title}
+                    </Text>
+                    <Text style={{ fontFamily: FONT.body, fontSize: 11.5, color: theme.textMuted, marginTop: 3 }} numberOfLines={1}>
+                      por {item.authorName}
+                      {item.isMine ? ' (você)' : ''}
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                      {item.avgStars != null ? (
+                        <>
+                          <Icon.starFill size={12} color={theme.fatsGold} />
+                          <Text style={{ fontFamily: FONT.bodyBold, fontSize: 11.5, fontWeight: '700', color: theme.text }}>
+                            {item.avgStars.toFixed(1)}
+                          </Text>
+                          <Text style={{ fontFamily: FONT.body, fontSize: 10.5, color: theme.textMuted }}>
+                            ({item.ratingCount} {item.ratingCount === 1 ? 'avaliação' : 'avaliações'})
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={{ fontFamily: FONT.body, fontSize: 10.5, color: theme.textMuted }}>
+                          Sem avaliações ainda — seja o primeiro!
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <Icon.forward size={16} color={theme.textMuted} />
+                </View>
+              </Card>
+            </Pressable>
+          ))}
+          {hasMore && (
+            <Pressable onPress={() => load(items.length)} style={{ alignItems: 'center', paddingVertical: 8 }} disabled={loadingMore}>
+              {loadingMore ? (
+                <ActivityIndicator color={theme.primaryDeep} />
+              ) : (
+                <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '700', color: theme.primaryDeep }}>
+                  Ver mais receitas
+                </Text>
+              )}
+            </Pressable>
+          )}
+        </View>
+      )}
     </View>
   );
 };

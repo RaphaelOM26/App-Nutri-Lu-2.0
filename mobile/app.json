@@ -10,6 +10,7 @@
       "bundleIdentifier": "com.nutrilu.app",
       "buildNumber": "1",
       "supportsTablet": false,
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Precisamos da câmera para fotografar suas receitas e pratos.",
         "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para importar receitas e pratos.",
@@ -58,7 +59,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#F6F6F6"
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin",
+      "expo-apple-authentication"
     ],
     "extra": {
       "eas": {

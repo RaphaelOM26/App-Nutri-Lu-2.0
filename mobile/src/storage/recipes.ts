@@ -22,6 +22,12 @@ export type SavedRecipe = ExtractedRecipe & {
    * ExtractedRecipe) mas a decisão final é do usuário.
    */
   mealCategories?: MealCategory[];
+  /**
+   * ID da cópia publicada na comunidade (feature #3). Presente = esta receita
+   * está pública no feed. A publicação é uma CÓPIA no backend — editar a
+   * receita local depois não altera o que a comunidade vê.
+   */
+  communityId?: string;
 };
 
 export async function loadRecipes(): Promise<SavedRecipe[]> {

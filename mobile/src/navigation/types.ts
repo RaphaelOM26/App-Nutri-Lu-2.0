@@ -52,7 +52,24 @@ export type RootStackParamList = {
   Barcode: { mealId?: string };
   // Receitas
   ImportRecipe: undefined;
-  RecipeDetail: { recipe?: Recipe; saved?: SavedRecipe; extracted?: ExtractedRecipe & { sourceUrl?: string; imageDataUrl?: string } };
+  RecipeDetail: {
+    recipe?: Recipe;
+    saved?: SavedRecipe;
+    extracted?: ExtractedRecipe & { sourceUrl?: string; imageDataUrl?: string };
+    /**
+     * Contexto quando aberta do feed da comunidade (junto de `extracted` com o
+     * payload da receita pública): habilita a UI de avaliação por estrelas.
+     * Sem isso a tela se comporta como sempre.
+     */
+    community?: {
+      id: string;
+      authorName: string;
+      avgStars: number | null;
+      ratingCount: number;
+      myStars: number | null;
+      isMine: boolean;
+    };
+  };
   /** Tela de receitas curadas da Lu. collectionId opcional filtra por coleção. */
   LuRecipes: { collectionId?: string };
   // Chat + planner + lista

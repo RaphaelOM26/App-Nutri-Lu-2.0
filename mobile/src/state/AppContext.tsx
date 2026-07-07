@@ -111,6 +111,7 @@ import {
   newCollectionId,
   type RecipeCollection,
 } from '../storage/collections';
+import { hydrateAuth } from './authState';
 import {
   loadPantry,
   savePantry,
@@ -943,6 +944,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Hidratação inicial: carrega receitas + lista de compras + pesagens + prefs de alimento
   useEffect(() => {
+    // Sessão da comunidade (Apple/Google) — store próprio, fora deste reducer.
+    // Fire-and-forget: não bloqueia a hidratação do estado principal.
+    hydrateAuth().catch(() => {});
     (async () => {
       try {
         // Template precisa ler DEPOIS do by-date: a migração legacy (dentro de

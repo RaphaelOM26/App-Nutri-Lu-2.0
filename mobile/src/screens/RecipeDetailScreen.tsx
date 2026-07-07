@@ -26,9 +26,11 @@ import { newRecipeId, type SavedRecipe } from '../storage/recipes';
 import { categorize } from '../storage/shoppingList';
 import { estimateRecipeMacros, parseToGrams } from '../utils/recipeMacros';
 import { SEED_RECIPES_BY_ID } from '../data/seedRecipes';
-import { generateRecipeImage } from '../api/client';
+import { generateRecipeImage, publishCommunityRecipe, rateCommunityRecipe } from '../api/client';
 import type { Ingredient, ExtractedRecipe, MealCategory } from '../api/client';
 import type { RootStackParamList } from '../navigation/types';
+import { CommunityAuthSheet } from '../components/CommunityAuthSheet';
+import { getAuthSession, type AuthSession } from '../state/authState';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'RecipeDetail'>;
 type Rt = RouteProp<RootStackParamList, 'RecipeDetail'>;
@@ -143,6 +145,88 @@ export const RecipeDetailScreen: React.FC = () => {
   // Categorias marcadas no picker. Pré-marcadas com a sugestão da IA ou
   // do inferCategory(title) quando abre.
   const [pickerSelected, setPickerSelected] = useState<MealCategory[]>([]);
+
+  // ─── Comunidade (feature #3) ────────────────────────────────────
+  // authSheet: login é pedido na PRIMEIRA ação que exige conta (publicar ou
+  // avaliar) — a ação pendente fica no ref e retoma após o login.
+  const [authSheetOpen, setAuthSheetOpen] = useState(false);
+  const [authReason, setAuthReason] = useState<string | undefined>(undefined);
+  const pendingActionRef = useRef<((session: AuthSession) => void) | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  // Avaliação da receita aberta a partir do feed (params.community).
+  const [rating, setRating] = useState(() =>
+    params.community
+      ? { avg: params.community.avgStars, count: params.community.ratingCount, mine: params.community.myStars }
+      : null,
+  );
+
+  const requireAuthThen = (reason: string, action: (session: AuthSession) => void) => {
+    const session = getAuthSession();
+    if (session) {
+      action(session);
+    } else {
+      pendingActionRef.current = action;
+      setAuthReason(reason);
+      setAuthSheetOpen(true);
+    }
+  };
+
+  const doPublish = async (session: AuthSession, saved: SavedRecipe) => {
+    setPublishing(true);
+    try {
+      // O payload publicado é a receita "pura" (sem foto/campos locais) — a
+      // foto vai à parte (image_data_url) e o backend guarda uma CÓPIA.
+      const { id: _id, savedAt: _s, source: _src, imageDataUrl, communityId: _c, userNotes: _n, ...recipe } = saved;
+      const { id } = await publishCommunityRecipe(session.token, {
+        title: saved.title,
+        recipe,
+        imageDataUrl,
+        sourceUrl: saved.sourceUrl,
+      });
+      // Regrava a receita local com o vínculo (addSavedRecipe é upsert por id).
+      await addSavedRecipe({ ...saved, communityId: id });
+      toast('Receita publicada na comunidade! 🎉');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Erro ao publicar', 'error');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  // Pergunta de publicação — decisão de produto (2026-07-07): toda receita
+  // recém-importada pergunta se a pessoa quer compartilhar com a comunidade.
+  const askToPublish = (saved: SavedRecipe) => {
+    Alert.alert(
+      'Compartilhar com a comunidade? 🌎',
+      'Outros usuários do Nutri Lu vão poder ver e avaliar esta receita. Seu diário continua privado.',
+      [
+        { text: 'Agora não', style: 'cancel' },
+        {
+          text: 'Publicar',
+          onPress: () => requireAuthThen('publicar sua receita', (session) => doPublish(session, saved)),
+        },
+      ],
+    );
+  };
+
+  const doRate = async (session: AuthSession, stars: number) => {
+    if (!params.community) return;
+    try {
+      const res = await rateCommunityRecipe(session.token, params.community.id, stars);
+      setRating({ avg: res.avgStars, count: res.ratingCount, mine: res.myStars });
+      toast('Avaliação enviada — obrigado!');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Erro ao avaliar', 'error');
+    }
+  };
+
+  const onRatePress = (stars: number) => {
+    if (params.community?.isMine) {
+      toast('Essa receita é sua — quem avalia é a comunidade 😉');
+      return;
+    }
+    requireAuthThen('avaliar receitas', (session) => doRate(session, stars));
+  };
   // Notas livres do usuário — só editável em receitas saved (já persistidas).
   // Pra extracted: ainda sem id estável, então campo só ativa depois de salvar.
   const initialNotes = view?.kind === 'saved' ? (view.data.userNotes ?? '') : '';
@@ -322,6 +406,8 @@ export const RecipeDetailScreen: React.FC = () => {
             ? 'Receita salva'
             : `Receita salva em ${categories.length} categorias`,
       );
+      // Receita veio do FEED da comunidade? Então já é pública — não pergunta.
+      if (!params.community) askToPublish(saved);
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Erro ao salvar receita', 'error');
     } finally {
@@ -546,6 +632,57 @@ export const RecipeDetailScreen: React.FC = () => {
             </View>
           </Card>
         </View>
+
+        {/* Comunidade: autor + avaliação por estrelas (só quando aberta do feed) */}
+        {params.community && rating && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
+            <Card pad={16} radius={20}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Icon.globe size={14} color={theme.primaryDeep} />
+                <Text style={{ fontFamily: FONT.bodyBold, fontSize: 12.5, color: theme.text, flex: 1 }}>
+                  Receita de {params.community.authorName}
+                </Text>
+                {rating.avg != null && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Icon.starFill size={13} color={theme.fatsGold} />
+                    <Text style={{ fontFamily: FONT.bodyBold, fontSize: 12.5, color: theme.text }}>
+                      {rating.avg.toFixed(1)}
+                    </Text>
+                    <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted }}>
+                      ({rating.count})
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginTop: 12,
+                  paddingTop: 12,
+                  borderTopWidth: 1,
+                  borderTopColor: theme.border,
+                }}
+              >
+                <Text style={{ fontFamily: FONT.body, fontSize: 12, color: theme.textMuted, fontWeight: '600' }}>
+                  {rating.mine ? 'Sua avaliação' : 'Avalie esta receita'}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Pressable key={s} onPress={() => onRatePress(s)} hitSlop={6}>
+                      {rating.mine && s <= rating.mine ? (
+                        <Icon.starFill size={22} color={theme.fatsGold} />
+                      ) : (
+                        <Icon.star size={22} color={rating.mine ? theme.border : theme.textMuted} stroke={1.6} />
+                      )}
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            </Card>
+          </View>
+        )}
 
         {/* Macros card — seeds usam valores do design; saved/extracted usam estimativa via foodDB */}
         {showMacros && (
@@ -1196,6 +1333,18 @@ export const RecipeDetailScreen: React.FC = () => {
           </>
         )}
       </SheetModal>
+
+      {/* Login da comunidade — abre na 1ª ação que exige conta e retoma a ação pendente */}
+      <CommunityAuthSheet
+        visible={authSheetOpen}
+        onClose={() => setAuthSheetOpen(false)}
+        reason={authReason}
+        onSignedIn={(session) => {
+          const action = pendingActionRef.current;
+          pendingActionRef.current = null;
+          action?.(session);
+        }}
+      />
     </View>
   );
 };
