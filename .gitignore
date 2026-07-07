@@ -61,8 +61,8 @@ scripts/extract-pdf/dumps/
 expo-qr.html
 
 # ─── Fotos de teste da Foto IA (pessoais dos testers, só local) ─
-backend/scripts/food-test/*.jpeg
-backend/scripts/food-test/*.jpg
-backend/scripts/food-test/*.png
-backend/scripts/food-test/*.webp
-backend/scripts/food-test/expected.json
+backend/scripts/food-test*/*.jpeg
+backend/scripts/food-test*/*.jpg
+backend/scripts/food-test*/*.png
+backend/scripts/food-test*/*.webp
+backend/scripts/food-test*/expected.json
