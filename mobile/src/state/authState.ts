@@ -77,7 +77,12 @@ export async function hydrateAuth(): Promise<void> {
 
 // Web client ID do Google Cloud (OAuth 2.0). É o MESMO nos dois SOs — o token
 // é emitido com audience = web client, e é essa audience que o backend valida.
-const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '';
+// Fallback fixo (mesmo padrão do client.ts): não é segredo — vai embutido em
+// todo bundle — e garante que um `eas update` rodado sem env não quebre o login.
+const PRODUCTION_GOOGLE_WEB_CLIENT_ID =
+  '383069892255-ble4f72d3j6iia28at1uofu77acputpr.apps.googleusercontent.com';
+const GOOGLE_WEB_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || PRODUCTION_GOOGLE_WEB_CLIENT_ID;
 let googleConfigured = false;
 
 // Require PREGUIÇOSO do módulo nativo: @react-native-google-signin NÃO existe
