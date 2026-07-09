@@ -26,11 +26,11 @@ import { newRecipeId, type SavedRecipe } from '../storage/recipes';
 import { categorize } from '../storage/shoppingList';
 import { estimateRecipeMacros, parseToGrams } from '../utils/recipeMacros';
 import { SEED_RECIPES_BY_ID } from '../data/seedRecipes';
-import { generateRecipeImage, publishCommunityRecipe, rateCommunityRecipe } from '../api/client';
+import { generateRecipeImage, publishCommunityRecipe, rateCommunityRecipe, ApiError } from '../api/client';
 import type { Ingredient, ExtractedRecipe, MealCategory } from '../api/client';
 import type { RootStackParamList } from '../navigation/types';
 import { CommunityAuthSheet } from '../components/CommunityAuthSheet';
-import { getAuthSession, type AuthSession } from '../state/authState';
+import { getAuthSession, signOut, type AuthSession } from '../state/authState';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'RecipeDetail'>;
 type Rt = RouteProp<RootStackParamList, 'RecipeDetail'>;
@@ -177,16 +177,26 @@ export const RecipeDetailScreen: React.FC = () => {
       // O payload publicado é a receita "pura" (sem foto/campos locais) — a
       // foto vai à parte (image_data_url) e o backend guarda uma CÓPIA.
       const { id: _id, savedAt: _s, source: _src, imageDataUrl, communityId: _c, userNotes: _n, ...recipe } = saved;
+      // Foto acima do cap do backend (1.5M chars ≈ foto de galeria sem resize):
+      // publica SEM a foto em vez de falhar — receita no feed > dead-end 413.
+      const imageOk = imageDataUrl && imageDataUrl.length <= 1_400_000 ? imageDataUrl : undefined;
       const { id } = await publishCommunityRecipe(session.token, {
         title: saved.title,
         recipe,
-        imageDataUrl,
+        imageDataUrl: imageOk,
         sourceUrl: saved.sourceUrl,
       });
       // Regrava a receita local com o vínculo (addSavedRecipe é upsert por id).
       await addSavedRecipe({ ...saved, communityId: id });
-      toast('Receita publicada na comunidade! 🎉');
+      toast(
+        imageDataUrl && !imageOk
+          ? 'Receita publicada (foto grande demais ficou de fora)'
+          : 'Receita publicada na comunidade! 🎉',
+      );
     } catch (err) {
+      // 401 = sessão de 180d expirou (ou user removido): limpa a sessão zumbi
+      // pra próxima tentativa reabrir o sheet de login em vez de repetir o erro.
+      if (err instanceof ApiError && err.status === 401) signOut();
       toast(err instanceof Error ? err.message : 'Erro ao publicar', 'error');
     } finally {
       setPublishing(false);
@@ -216,6 +226,7 @@ export const RecipeDetailScreen: React.FC = () => {
       setRating({ avg: res.avgStars, count: res.ratingCount, mine: res.myStars });
       toast('Avaliação enviada — obrigado!');
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) signOut();
       toast(err instanceof Error ? err.message : 'Erro ao avaliar', 'error');
     }
   };
@@ -407,7 +418,10 @@ export const RecipeDetailScreen: React.FC = () => {
             : `Receita salva em ${categories.length} categorias`,
       );
       // Receita veio do FEED da comunidade? Então já é pública — não pergunta.
-      if (!params.community) askToPublish(saved);
+      // Delay: o Modal do category picker ainda está desmontando (spring de
+      // saída ~300-500ms) — no iOS, o dismiss do Modal derruba um Alert
+      // apresentado nesse intervalo (o convite sumia; Android não é afetado).
+      if (!params.community) setTimeout(() => askToPublish(saved), 600);
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Erro ao salvar receita', 'error');
     } finally {
