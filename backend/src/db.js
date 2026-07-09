@@ -88,6 +88,13 @@ export async function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_community_recipes_feed
       ON community_recipes(is_removed, created_at DESC);
   `);
+  // Anti-duplicata: o mesmo user não publica 2x a mesma receita (por título)
+  // enquanto a primeira estiver ativa. Parcial (WHERE) permite re-publicar
+  // depois de despublicar. Violação vira 409 na rota.
+  await p.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_community_recipes_user_title_active
+      ON community_recipes(user_id, title) WHERE is_removed = FALSE;
+  `);
 
   // recipe_ratings: 1 avaliação por (usuário, receita) — PK composto faz o
   // "avaliar de novo" virar UPDATE natural via ON CONFLICT.

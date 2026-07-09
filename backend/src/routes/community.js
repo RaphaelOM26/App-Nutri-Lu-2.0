@@ -19,15 +19,32 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // Foto base64: cap generoso (as geradas por IA em qualidade média ficam bem
 // abaixo disso). Evita alguém entupir o banco com fotos de 10MB.
 const MAX_IMAGE_CHARS = 1_500_000; // ~1.1MB de imagem real
+// Payload (receita em JSON): receita real fica em dezenas de KB; o cap folgado
+// cobre até uma imagem base64 embutida por engano, mas barra abuso de MBs
+// (o express.json aceita 15mb global — sem este cap, dava pra inflar o banco).
+const MAX_PAYLOAD_CHARS = 2_000_000;
+const MAX_SOURCE_URL_CHARS = 2048;
 
 router.post('/recipes', requireAuth, async (req, res, next) => {
   try {
     const { title, payload, image_data_url: imageDataUrl, source_url: sourceUrl } = req.body || {};
-    if (!title?.trim() || !payload || typeof payload !== 'object') {
+    if (!title?.trim() || !payload || typeof payload !== 'object' || Array.isArray(payload)) {
       return res.status(400).json({ error: 'title e payload são obrigatórios', code: 'BAD_REQUEST' });
+    }
+    // Shape mínimo da receita: o app renderiza payload.ingredients/.steps com
+    // .map() direto — payload sem esses arrays crasharia a tela de TODOS os
+    // leitores do feed. Valida na entrada, não na leitura.
+    if (!Array.isArray(payload.ingredients) || !Array.isArray(payload.steps)) {
+      return res.status(400).json({ error: 'payload precisa de ingredients e steps', code: 'BAD_REQUEST' });
     }
     if (imageDataUrl && imageDataUrl.length > MAX_IMAGE_CHARS) {
       return res.status(413).json({ error: 'Foto grande demais — reduza a qualidade', code: 'IMAGE_TOO_LARGE' });
+    }
+    if (JSON.stringify(payload).length > MAX_PAYLOAD_CHARS) {
+      return res.status(413).json({ error: 'Receita grande demais', code: 'PAYLOAD_TOO_LARGE' });
+    }
+    if (sourceUrl && sourceUrl.length > MAX_SOURCE_URL_CHARS) {
+      return res.status(400).json({ error: 'source_url inválida', code: 'BAD_REQUEST' });
     }
 
     const { rows } = await getPool().query(
@@ -38,6 +55,11 @@ router.post('/recipes', requireAuth, async (req, res, next) => {
     );
     res.status(201).json({ id: rows[0].id, created_at: rows[0].created_at });
   } catch (e) {
+    // 23505 = violação do índice único (user_id, title) ativo — mesma receita
+    // publicada 2x (duplo-toque ou re-import). Vira 409 amigável, não 500.
+    if (e?.code === '23505') {
+      return res.status(409).json({ error: 'Você já publicou esta receita', code: 'ALREADY_PUBLISHED' });
+    }
     next(e);
   }
 });

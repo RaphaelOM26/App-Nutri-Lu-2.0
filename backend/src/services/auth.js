@@ -44,7 +44,12 @@ export async function verifyProviderToken(provider, identityToken) {
     }
     if (provider === 'google') {
       if (GOOGLE_CLIENT_IDS.length === 0) {
-        throw new Error('GOOGLE_CLIENT_IDS não configurado no servidor');
+        // status 500 explícito: sem ele o catch abaixo mascararia erro de CONFIG
+        // como 401 "token inválido" (e vazaria o nome da env pro cliente).
+        throw Object.assign(new Error('Login Google indisponível no momento'), {
+          status: 500,
+          code: 'SERVER_MISCONFIGURED',
+        });
       }
       const { payload } = await jwtVerify(identityToken, GOOGLE_JWKS, {
         issuer: ['https://accounts.google.com', 'accounts.google.com'],
@@ -89,7 +94,7 @@ export async function issueSessionToken(user) {
 }
 
 async function verifySessionToken(token) {
-  const { payload } = await jwtVerify(token, jwtSecret());
+  const { payload } = await jwtVerify(token, jwtSecret(), { algorithms: ['HS256'] });
   return { userId: payload.sub, name: payload.name };
 }
 

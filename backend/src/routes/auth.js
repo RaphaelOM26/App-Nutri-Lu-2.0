@@ -70,7 +70,7 @@ router.get('/me', requireAuth, async (req, res, next) => {
 if (process.env.ALLOW_DEV_LOGIN === '1') {
   router.post('/dev', async (req, res, next) => {
     try {
-      const name = (req.body?.display_name || 'Dev Tester').trim();
+      const name = (req.body?.display_name || '').trim() || 'Dev Tester';
       const user = await upsertUser({
         provider: 'dev',
         sub: name.toLowerCase().replace(/\s+/g, '-'),

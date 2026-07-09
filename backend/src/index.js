@@ -68,12 +68,15 @@ app.use('/generate-recipe-image', generateRecipeImageRouter);
 app.use('/auth', authRouter);
 app.use('/community', communityRouter);
 
-// Handler de erro padrão (último na cadeia)
+// Handler de erro padrão (último na cadeia). Mensagem interna (pg, config,
+// libs) só vai pro log — cliente recebe genérica em 500; em 4xx a mensagem é
+// nossa (validação) e pode passar.
 app.use((err, req, res, next) => {
   console.error('[error]', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Erro interno do servidor',
-    code: err.code || 'INTERNAL_ERROR',
+  const status = err.status || 500;
+  res.status(status).json({
+    error: status >= 500 ? 'Erro interno do servidor' : err.message || 'Requisição inválida',
+    code: err.code || (status >= 500 ? 'INTERNAL_ERROR' : 'BAD_REQUEST'),
   });
 });
 
