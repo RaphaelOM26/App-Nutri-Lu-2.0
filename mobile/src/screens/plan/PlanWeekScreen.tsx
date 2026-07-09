@@ -1,23 +1,76 @@
 // Plano alimentar premium — VISÃO DA SEMANA (tela principal da feature paga).
-// Estilo Dark Luxe (theme/premium). Fase 1: alimentada por SAMPLE_PLAN.
+// Estilo Dark Luxe (theme/premium). Sem plano importado, mostra o estado
+// vazio com o convite pra anexar o PDF da nutricionista.
 
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, StatusBar } from 'react-native';
+import { View, Text, ScrollView, Pressable, StatusBar, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { FONT } from '../../theme';
 import { PREMIUM as P } from '../../theme/premium';
 import { Icon } from '../../components/Icons';
-import { SAMPLE_PLAN, WEEKDAY_SHORT, WEEKDAY_LONG, WEEK_RANGES, type PlanMeal, type PlanDay } from '../../storage/mealPlan';
+import { getActivePlan, WEEKDAY_SHORT, WEEKDAY_LONG, type MealPlan, type PlanMeal, type PlanDay } from '../../storage/mealPlan';
 import { usePlanStatuses, getMealStatus } from '../../storage/mealPlanState';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export const PlanWeekScreen: React.FC = () => {
+  const plan = getActivePlan();
+  if (!plan) return <PlanEmptyState />;
+  return <PlanWeekContent plan={plan} />;
+};
+
+// ─── Estado vazio: ainda não existe plano importado ─────────────────
+const PlanEmptyState: React.FC = () => {
+  const onAttach = () => {
+    Alert.alert(
+      'Em breve',
+      'A importação do plano em PDF está em desenvolvimento. Assim que estiver pronta, é só anexar o plano da sua nutricionista aqui.',
+    );
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: P.bg }} edges={['top']}>
+      <StatusBar barStyle="light-content" />
+      <View style={{ flex: 1, paddingHorizontal: 28, paddingBottom: 120, alignItems: 'center', justifyContent: 'center' }}>
+        {/* Emblema com moldura de ouro */}
+        <View style={{ width: 84, height: 84, borderRadius: 42, borderWidth: 1, borderColor: P.goldBorder, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ width: 68, height: 68, borderRadius: 34, backgroundColor: P.cardRaised, alignItems: 'center', justifyContent: 'center' }}>
+            <Icon.recipe size={30} color={P.gold} stroke={1.5} />
+          </View>
+        </View>
+
+        <Text style={{ fontFamily: FONT.head, fontSize: 10, letterSpacing: 3, color: P.gold, marginTop: 26 }}>
+          PLANO PREMIUM
+        </Text>
+        <Text style={{ fontFamily: FONT.headExtra, fontSize: 26, color: P.cream, letterSpacing: -0.5, marginTop: 8, textAlign: 'center' }}>
+          Seu plano alimentar
+        </Text>
+        <Text style={{ fontFamily: FONT.body, fontSize: 14, color: P.sage, lineHeight: 21, marginTop: 12, textAlign: 'center' }}>
+          Anexe o plano em PDF feito pela sua nutricionista e acompanhe aqui as
+          refeições da semana, com horários e lembretes.
+        </Text>
+
+        <Pressable
+          onPress={onAttach}
+          style={{ marginTop: 28, alignSelf: 'stretch', backgroundColor: P.gold, borderRadius: 16, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+        >
+          <Icon.plus size={18} color={P.onGold} stroke={2.5} />
+          <Text style={{ fontFamily: FONT.headExtra, fontSize: 15, color: P.onGold }}>Anexar plano em PDF</Text>
+        </Pressable>
+        <Text style={{ fontFamily: FONT.body, fontSize: 11, color: P.sageFaint, marginTop: 12, textAlign: 'center' }}>
+          Disponível em breve
+        </Text>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+// ─── Semana do plano (quando existir plano importado) ───────────────
+const PlanWeekContent: React.FC<{ plan: MealPlan }> = ({ plan }) => {
   const nav = useNavigation<Nav>();
-  const plan = SAMPLE_PLAN; // Fase 1: exemplo. Fase 3: vem do plano importado.
   usePlanStatuses(); // re-renderiza quando um "feito" muda em outra tela
   const [selected, setSelected] = useState(plan.todayWeekday);
   const [week, setWeek] = useState(plan.weekIndex);
@@ -67,7 +120,7 @@ export const PlanWeekScreen: React.FC = () => {
           <View style={{ alignItems: 'center' }}>
             <Text style={{ fontFamily: FONT.headExtra, fontSize: 17, color: P.cream }}>Semana {week}</Text>
             <Text style={{ fontFamily: FONT.body, fontSize: 10, letterSpacing: 1, color: P.sage, marginTop: 1 }}>
-              {(WEEK_RANGES[week - 1] ?? plan.weekRange).toUpperCase()}
+              {plan.weekRange.toUpperCase()}
             </Text>
           </View>
           <Pressable onPress={() => setWeek((w) => Math.min(plan.weekTotal, w + 1))} disabled={week >= plan.weekTotal} hitSlop={12} style={{ padding: 6, opacity: week >= plan.weekTotal ? 0.3 : 1 }}>

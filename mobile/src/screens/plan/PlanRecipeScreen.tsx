@@ -10,7 +10,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { FONT } from '../../theme';
 import { PREMIUM as P } from '../../theme/premium';
 import { Icon } from '../../components/Icons';
-import { SAMPLE_PLAN, findPlanMeal } from '../../storage/mealPlan';
+import { getActivePlan, findPlanMeal } from '../../storage/mealPlan';
 import { MacroRow } from './premiumParts';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -20,9 +20,10 @@ type Rt = RouteProp<RootStackParamList, 'PlanRecipe'>;
 export const PlanRecipeScreen: React.FC = () => {
   const nav = useNavigation<Nav>();
   const route = useRoute<Rt>();
-  const meal = findPlanMeal(SAMPLE_PLAN, route.params.mealId);
+  const plan = getActivePlan();
+  const meal = plan ? findPlanMeal(plan, route.params.mealId) : undefined;
 
-  if (!meal) {
+  if (!plan || !meal) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: P.bg, padding: 24 }}>
         <Text style={{ color: P.cream, fontFamily: FONT.body }}>Receita não encontrada.</Text>
@@ -45,7 +46,7 @@ export const PlanRecipeScreen: React.FC = () => {
             <Icon.back size={17} color={P.gold} stroke={2} />
           </Pressable>
           <Text style={{ position: 'absolute', bottom: 28, left: 22, fontFamily: FONT.head, fontSize: 9, letterSpacing: 2, color: P.creamSoft }}>
-            DO SEU PLANO · {SAMPLE_PLAN.monthLabel.toUpperCase()}
+            DO SEU PLANO · {plan.monthLabel.toUpperCase()}
           </Text>
         </View>
 

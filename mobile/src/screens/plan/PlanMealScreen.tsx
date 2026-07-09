@@ -10,7 +10,7 @@ import { FONT } from '../../theme';
 import { PREMIUM as P } from '../../theme/premium';
 import { Icon } from '../../components/Icons';
 import { useToast } from '../../state/ToastContext';
-import { SAMPLE_PLAN, findPlanMeal } from '../../storage/mealPlan';
+import { getActivePlan, findPlanMeal } from '../../storage/mealPlan';
 import { getMealStatus, toggleMealStatus, usePlanStatuses } from '../../storage/mealPlanState';
 import { MacroRow } from './premiumParts';
 import type { RootStackParamList } from '../../navigation/types';
@@ -23,9 +23,10 @@ export const PlanMealScreen: React.FC = () => {
   const route = useRoute<Rt>();
   const toast = useToast();
   usePlanStatuses(); // re-renderiza quando o status muda
-  const meal = findPlanMeal(SAMPLE_PLAN, route.params.mealId);
+  const plan = getActivePlan();
+  const meal = plan ? findPlanMeal(plan, route.params.mealId) : undefined;
 
-  if (!meal) {
+  if (!plan || !meal) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: P.bg, padding: 24 }}>
         <Text style={{ color: P.cream, fontFamily: FONT.body }}>Refeição não encontrada.</Text>
@@ -119,7 +120,7 @@ export const PlanMealScreen: React.FC = () => {
           </Pressable>
 
           <Text style={{ fontFamily: FONT.body, fontSize: 11, color: P.sageFaint, textAlign: 'center', marginTop: 4 }}>
-            Do seu plano de {SAMPLE_PLAN.monthLabel} · {SAMPLE_PLAN.nutritionist.name}
+            Do seu plano de {plan.monthLabel} · {plan.nutritionist.name}
           </Text>
         </View>
       </ScrollView>

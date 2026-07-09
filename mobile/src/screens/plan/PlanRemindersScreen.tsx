@@ -9,14 +9,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { FONT } from '../../theme';
 import { PREMIUM as P } from '../../theme/premium';
 import { Icon } from '../../components/Icons';
-import { SAMPLE_PLAN } from '../../storage/mealPlan';
+import { getActivePlan } from '../../storage/mealPlan';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export const PlanRemindersScreen: React.FC = () => {
   const nav = useNavigation<Nav>();
-  const meals = SAMPLE_PLAN.days[0].meals;
+  const meals = getActivePlan()?.days[0]?.meals ?? [];
 
   const [master, setMaster] = useState(true);
   const [on, setOn] = useState<Record<string, boolean>>(
