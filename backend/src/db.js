@@ -109,5 +109,38 @@ export async function initSchema() {
     );
   `);
 
-  console.log('[db] schema inicializado (day_snapshots + comunidade OK)');
+  // ── Moderação de conteúdo (exigência da App Store 1.2, apps com UGC) ──────
+  // A Apple exige, pra qualquer app com conteúdo gerado por usuário: (a) um
+  // jeito de DENUNCIAR conteúdo ofensivo, (b) um jeito de BLOQUEAR quem abusa,
+  // e (c) remoção do conteúdo denunciado. Sem isso a review reprova.
+  //
+  // recipe_reports: PK composto (receita, denunciante) = cada pessoa denuncia
+  // a mesma receita no máximo uma vez — impede inflar a contagem sozinho e faz
+  // o "denunciar de novo" ser inofensivo. CASCADE porque denúncia não faz
+  // sentido sem a receita nem sem quem denunciou.
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS recipe_reports (
+      recipe_id UUID NOT NULL REFERENCES community_recipes(id) ON DELETE CASCADE,
+      reporter_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      reason TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (recipe_id, reporter_user_id)
+    );
+  `);
+
+  // user_blocks: bloqueio de MÃO ÚNICA — quem bloqueia deixa de ver o outro no
+  // feed; o bloqueado não é avisado e continua enxergando o feed dele normal
+  // (avisar transformaria o bloqueio em confronto). O CHECK impede o caso
+  // degenerado de alguém bloquear a si mesmo e sumir do próprio feed.
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS user_blocks (
+      blocker_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      blocked_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (blocker_user_id, blocked_user_id),
+      CHECK (blocker_user_id <> blocked_user_id)
+    );
+  `);
+
+  console.log('[db] schema inicializado (day_snapshots + comunidade + moderação OK)');
 }
