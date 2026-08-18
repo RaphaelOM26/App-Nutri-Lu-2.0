@@ -25,6 +25,8 @@ import {
   ApiError,
   type ChatMessage,
   type CommunityRecipe,
+  fetchCommunityLeaderboard,
+  type LeaderboardEntry,
 } from '../api/client';
 import { getAuthSession, useAuthSession } from '../state/authState';
 import { LU_COLLECTIONS, getCoverUrl, type LuCollection } from '../data/luCollections';
@@ -198,7 +200,6 @@ export const RecipesScreen: React.FC = () => {
         )}
         {tab === 'discover' && (
           <DiscoverRecipes
-            recipes={recipes}
             favoriteIds={favoriteRecipeIds}
             onOpen={openRecipe}
             onOpenLuChat={() => nav.navigate('ChatLu')}
@@ -215,6 +216,7 @@ export const RecipesScreen: React.FC = () => {
                 community: {
                   id: item.id,
                   authorName: item.authorName,
+                  authorId: item.authorId,
                   avgStars: item.avgStars,
                   ratingCount: item.ratingCount,
                   myStars: item.myStars,
@@ -818,7 +820,6 @@ const FavBadge: React.FC<{ isFav: boolean; onPress: () => void }> = ({ isFav, on
 };
 
 type DiscoverProps = {
-  recipes: Recipe[];
   favoriteIds: string[];
   onOpen: (id: string, navParam: { recipe?: Recipe; saved?: SavedRecipe }) => void;
   onOpenLuChat: () => void;
@@ -828,7 +829,7 @@ type DiscoverProps = {
   onOpenCommunity: (item: CommunityRecipe) => void;
 };
 
-const DiscoverRecipes: React.FC<DiscoverProps> = ({ recipes, onOpen, onOpenLuChat, onOpenLuRecipes, onOpenCommunity }) => {
+const DiscoverRecipes: React.FC<DiscoverProps> = ({ onOpen, onOpenLuChat, onOpenLuRecipes, onOpenCommunity }) => {
   const theme = useTheme();
   const { displayedMacros, water, foodDB } = useApp();
   const toast = useToast();
@@ -965,45 +966,113 @@ const DiscoverRecipes: React.FC<DiscoverProps> = ({ recipes, onOpen, onOpenLuCha
       {/* Da comunidade — receitas publicadas por outros usuários (feature #3) */}
       <CommunityFeedSection onOpen={onOpenCommunity} />
 
-      {/* Em alta esta semana — DESABILITADO no MVP (vira backend de tendências) */}
-      <View style={{ paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12, marginTop: 8 }}>
-        <Text style={{ fontFamily: FONT.headExtra, fontSize: 16, fontWeight: '800', color: theme.textMuted }}>
+      {/* Em alta esta semana — rank por estrelas recebidas (fase 2 da #3) */}
+      <WeeklyRankSection />
+    </View>
+  );
+};
+
+// ─── Rank semanal (fase 2 da feature #3) ─────────────────────────
+// Pontos = estrelas que as receitas da pessoa receberam de segunda pra cá.
+// Some sozinho quando ninguém pontuou ainda: um pódio vazio na primeira tela
+// da aba passa a impressão de comunidade morta.
+const MEDALHAS = ['🥇', '🥈', '🥉'];
+
+const WeeklyRankSection: React.FC = () => {
+  const theme = useTheme();
+  const session = useAuthSession();
+  const [top, setTop] = useState<LeaderboardEntry[] | null>(null);
+  const [me, setMe] = useState<LeaderboardEntry | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchCommunityLeaderboard(session?.token)
+      .then((res) => {
+        if (!alive) return;
+        setTop(res.top);
+        setMe(res.me);
+      })
+      // Rank é acessório: falhou, a seção some em vez de mostrar erro.
+      .catch(() => alive && setTop([]));
+    return () => {
+      alive = false;
+    };
+  }, [session]);
+
+  if (!top?.length) return null;
+
+  // Fora do top 10, a linha da pessoa vai no rodapé com um separador.
+  const showMeApart = me && me.position > top.length;
+
+  return (
+    <View style={{ marginTop: 8, marginBottom: 4 }}>
+      <View style={{ paddingHorizontal: 20, marginBottom: 10 }}>
+        <Text style={{ fontFamily: FONT.headExtra, fontSize: 16, fontWeight: '800', color: theme.text }}>
           Em alta esta semana
         </Text>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 4,
-            backgroundColor: theme.bgSubtle,
-            paddingHorizontal: 8,
-            paddingVertical: 3,
-            borderRadius: 100,
-          }}
-        >
-          <Icon.lock size={10} color={theme.textMuted} stroke={2} />
-          <Text style={{ fontFamily: FONT.body, fontSize: 9, color: theme.textMuted, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-            Em breve
-          </Text>
-        </View>
+        <Text style={{ fontFamily: FONT.body, fontSize: 11.5, color: theme.textMuted, marginTop: 2 }}>
+          Quem mais recebeu estrelas de segunda pra cá
+        </Text>
       </View>
-      <View style={{ opacity: 0.45 }} pointerEvents="none">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
-          {recipes.slice(0, 5).map((r) => (
-            <View
-              key={r.id}
-              style={{ width: 150, backgroundColor: theme.bgElev, borderRadius: 16, overflow: 'hidden' }}
-            >
-              <FoodImg q={r.q} w={150} h={110} style={{ borderRadius: 0 }} />
-              <View style={{ padding: 10 }}>
-                <Text style={{ fontFamily: FONT.head, fontSize: 12, fontWeight: '700', color: theme.text, lineHeight: 16, height: 32 }} numberOfLines={2}>
-                  {r.name}
-                </Text>
-                <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textMuted, marginTop: 4 }}>{r.kcal} kcal</Text>
-              </View>
-            </View>
+
+      <View style={{ paddingHorizontal: 16 }}>
+        <Card pad={0} radius={20}>
+          {top.map((e, i) => (
+            <RankRow key={e.userId} entry={e} first={i === 0} />
           ))}
-        </ScrollView>
+          {showMeApart && me && (
+            <View style={{ borderTopWidth: 1, borderTopColor: theme.borderStrong }}>
+              <RankRow entry={me} first={false} />
+            </View>
+          )}
+        </Card>
+      </View>
+    </View>
+  );
+};
+
+const RankRow: React.FC<{ entry: LeaderboardEntry; first: boolean }> = ({ entry, first }) => {
+  const theme = useTheme();
+  const medalha = MEDALHAS[entry.position - 1];
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        paddingVertical: 11,
+        paddingHorizontal: 14,
+        borderTopWidth: first ? 0 : 1,
+        borderTopColor: theme.border,
+        backgroundColor: entry.isMe ? theme.primarySoft : undefined,
+      }}
+    >
+      <View style={{ width: 26, alignItems: 'center' }}>
+        {medalha ? (
+          <Text style={{ fontSize: 15 }}>{medalha}</Text>
+        ) : (
+          <Text style={{ fontFamily: FONT.headExtra, fontSize: 13, fontWeight: '800', color: theme.textMuted }}>
+            {entry.position}
+          </Text>
+        )}
+      </View>
+      <Text
+        numberOfLines={1}
+        style={{
+          flex: 1,
+          fontFamily: FONT.body,
+          fontSize: 13.5,
+          fontWeight: '600',
+          color: entry.isMe ? theme.primaryDeep : theme.text,
+        }}
+      >
+        {entry.isMe ? 'Você' : entry.displayName}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Icon.starFill size={12} color={theme.fatsGold} />
+        <Text style={{ fontFamily: FONT.headExtra, fontSize: 13, fontWeight: '800', color: theme.text }}>
+          {entry.points}
+        </Text>
       </View>
     </View>
   );

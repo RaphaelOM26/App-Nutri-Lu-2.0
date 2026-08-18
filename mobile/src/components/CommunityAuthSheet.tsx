@@ -8,12 +8,13 @@
 // há login de terceiros) + Google; no Android, só Google.
 
 import React, { useEffect, useState } from 'react';
-import { Platform, View, Text } from 'react-native';
+import { Platform, View, Text, Pressable } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { SheetModal } from './motion';
 import { Btn } from './Btn';
 import { Icon } from './Icons';
 import { useTheme, FONT } from '../theme';
+import { showCommunityRules } from './communityRules';
 import { useToast } from '../state/ToastContext';
 import {
   signInWithApple,
@@ -115,6 +116,25 @@ export const CommunityAuthSheet: React.FC<Props> = ({ visible, onClose, onSigned
           privados — a conta é só pra comunidade.
         </Text>
       </View>
+
+      {/* Aceite das regras — exigência da App Store 1.2: quem publica precisa
+          concordar com tolerância zero a conteúdo ofensivo. Fica ACIMA dos
+          botões, no caminho do olho, e não escondido num rodapé. */}
+      <Pressable onPress={showCommunityRules} style={{ paddingTop: 4 }}>
+        <Text
+          style={{
+            fontFamily: FONT.body,
+            fontSize: 11.5,
+            color: theme.textMuted,
+            textAlign: 'center',
+            lineHeight: 16,
+          }}
+        >
+          Ao entrar você concorda com as{' '}
+          <Text style={{ color: theme.primaryDeep, fontWeight: '700' }}>regras da comunidade</Text>
+          : tolerância zero a conteúdo ofensivo, perigoso ou ilegal.
+        </Text>
+      </Pressable>
 
       <View style={{ gap: 10, paddingTop: 6 }}>
         {appleAvailable && Platform.OS === 'ios' && (

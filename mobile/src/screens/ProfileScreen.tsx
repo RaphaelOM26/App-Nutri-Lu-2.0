@@ -1,8 +1,8 @@
 // Perfil "Eu" — porte funcional. Itens do menu agora navegam pra telas reais
 // ou abrem modais persistidos no AppContext.
 
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,10 +20,17 @@ import { NotificationsModal } from '../components/NotificationsModal';
 import { SettingsModal } from '../components/SettingsModal';
 import { useApp } from '../state/AppContext';
 import { useToast } from '../state/ToastContext';
+import { useAuthSession, signOut, deleteAccount } from '../state/authState';
+import { fetchBlockedUsers, unblockCommunityUser } from '../api/client';
+import { showCommunityRules } from '../components/communityRules';
 import { calcStreak } from '../storage/habits';
 import type { RootStackParamList } from '../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+// Vermelho das ações destrutivas — mesmo tom já usado no "Remover foto".
+// Não vive no tema porque funciona igual no claro e no escuro.
+const DESTRUCTIVE = '#D67373';
 
 type MenuItem = {
   icon: IconName;
@@ -308,6 +315,11 @@ export const ProfileScreen: React.FC = () => {
           </Card>
         </View>
 
+        {/* Conta da comunidade — só aparece pra quem entrou com Apple/Google.
+            "Excluir minha conta" é EXIGÊNCIA da App Store (5.1.1(v)): o app não
+            passa na review se a única forma de apagar a conta for fora dele. */}
+        <CommunityAccountCard />
+
         {/* AI Chat shortcut */}
         <View style={{ padding: 16 }}>
           <Pressable onPress={() => nav.navigate('ChatLu')}>
@@ -362,6 +374,287 @@ export const ProfileScreen: React.FC = () => {
         </Pressable>
       </Modal>
     </SafeAreaView>
+  );
+};
+
+
+// Card "Conta da comunidade" do perfil.
+//
+// Aparece só pra quem tem sessão (entrou com Apple/Google pra publicar receita).
+// Duas ações: sair (reversível, é só a sessão) e excluir (irreversível, apaga
+// usuário + receitas publicadas + avaliações no servidor).
+//
+// A exclusão pede DUAS confirmações de propósito: é destrutiva, imediata e não
+// tem lixeira. O primeiro alerta explica o que some; o segundo é o ponto de
+// não-retorno. Padrão que a própria Apple usa nas contas dela.
+const CommunityAccountCard: React.FC = () => {
+  const theme = useTheme();
+  const toast = useToast();
+  const session = useAuthSession();
+  const [busy, setBusy] = useState(false);
+  const [blocksOpen, setBlocksOpen] = useState(false);
+
+  if (!session) return null;
+
+  const confirmDelete = () => {
+    Alert.alert(
+      'Excluir minha conta?',
+      'Sua conta da comunidade, as receitas que você publicou e suas avaliações serão apagadas para sempre.\n\nSeu diário de refeições continua no aparelho — ele não faz parte da conta.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Excluir', style: 'destructive', onPress: askFinalConfirm },
+      ],
+    );
+  };
+
+  // Segundo passo — separado do primeiro pra que um toque errado no botão
+  // vermelho não apague nada sozinho.
+  function askFinalConfirm() {
+    Alert.alert('Tem certeza?', 'Não dá para desfazer.', [
+      { text: 'Manter minha conta', style: 'cancel' },
+      { text: 'Excluir para sempre', style: 'destructive', onPress: runDelete },
+    ]);
+  }
+
+  async function runDelete() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await deleteAccount();
+      toast('Conta excluída');
+    } catch {
+      toast('Não consegui excluir agora — tente de novo em instantes', 'error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const onSignOut = () => {
+    Alert.alert('Sair da conta?', 'Você pode entrar de novo quando quiser.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Sair',
+        onPress: async () => {
+          await signOut();
+          toast('Você saiu da conta');
+        },
+      },
+    ]);
+  };
+
+  return (
+    <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+      <Card pad={0} radius={20}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 12,
+              backgroundColor: theme.primarySoft,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Icon.globe size={18} color={theme.primaryDeep} stroke={2} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: FONT.body, fontSize: 14, fontWeight: '600', color: theme.text }}>
+              Conta da comunidade
+            </Text>
+            <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, marginTop: 1 }}>
+              {session.user.displayName}
+              {session.user.email ? ` · ${session.user.email}` : ''}
+            </Text>
+          </View>
+        </View>
+
+        <Pressable
+          onPress={showCommunityRules}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderTopWidth: 1,
+            borderTopColor: theme.border,
+          }}
+        >
+          <Text style={{ flex: 1, fontFamily: FONT.body, fontSize: 14, fontWeight: '600', color: theme.text }}>
+            Regras da comunidade
+          </Text>
+          <Icon.forward size={16} color={theme.textFaint} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => setBlocksOpen(true)}
+          disabled={busy}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderTopWidth: 1,
+            borderTopColor: theme.border,
+          }}
+        >
+          <Text style={{ flex: 1, fontFamily: FONT.body, fontSize: 14, fontWeight: '600', color: theme.text }}>
+            Contas bloqueadas
+          </Text>
+          <Icon.forward size={16} color={theme.textFaint} />
+        </Pressable>
+
+        <Pressable
+          onPress={onSignOut}
+          disabled={busy}
+          style={{
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderTopWidth: 1,
+            borderTopColor: theme.border,
+          }}
+        >
+          <Text style={{ fontFamily: FONT.body, fontSize: 14, fontWeight: '600', color: theme.text }}>
+            Sair da conta
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={confirmDelete}
+          disabled={busy}
+          style={{
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderTopWidth: 1,
+            borderTopColor: theme.border,
+            opacity: busy ? 0.5 : 1,
+          }}
+        >
+          <Text style={{ fontFamily: FONT.body, fontSize: 14, fontWeight: '600', color: DESTRUCTIVE }}>
+            {busy ? 'Excluindo…' : 'Excluir minha conta'}
+          </Text>
+          <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, marginTop: 2 }}>
+            Apaga conta, receitas publicadas e avaliações
+          </Text>
+        </Pressable>
+      </Card>
+
+      <BlockedAccountsModal visible={blocksOpen} onClose={() => setBlocksOpen(false)} />
+    </View>
+  );
+};
+
+// Lista de contas bloqueadas, com desbloqueio.
+//
+// Existe pra que bloquear não seja irreversível: a App Store exige o bloqueio
+// (1.2), e uma decisão tomada com raiva sem como desfazer é UX ruim. Carrega
+// sob demanda — a maioria das pessoas nunca vai abrir esta tela.
+const BlockedAccountsModal: React.FC<{ visible: boolean; onClose: () => void }> = ({
+  visible,
+  onClose,
+}) => {
+  const theme = useTheme();
+  const toast = useToast();
+  const session = useAuthSession();
+  const [items, setItems] = useState<{ id: string; displayName: string }[] | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!visible || !session) return;
+    let alive = true;
+    setItems(null);
+    setError(false);
+    fetchBlockedUsers(session.token)
+      .then((list) => alive && setItems(list))
+      .catch(() => alive && setError(true));
+    // Recarrega a cada abertura: a pessoa pode ter bloqueado alguém no feed
+    // depois da última vez que abriu esta tela.
+    return () => {
+      alive = false;
+    };
+  }, [visible, session]);
+
+  const unblock = async (id: string, name: string) => {
+    if (!session) return;
+    // Otimista: some da lista na hora. Se o servidor recusar, volta.
+    const before = items;
+    setItems((cur) => (cur ? cur.filter((u) => u.id !== id) : cur));
+    try {
+      await unblockCommunityUser(session.token, id);
+      toast(`${name} desbloqueado`);
+    } catch {
+      setItems(before);
+      toast('Não consegui desbloquear agora', 'error');
+    }
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable
+        onPress={onClose}
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 16 }}
+      >
+        <Pressable
+          onPress={() => {}}
+          style={{ backgroundColor: theme.bg, borderRadius: 24, padding: 22, gap: 14, maxHeight: '80%' }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ flex: 1, fontFamily: FONT.headExtra, fontSize: 18, fontWeight: '800', color: theme.text }}>
+              Contas bloqueadas
+            </Text>
+            <IconBtn icon={Icon.close} size={32} onPress={onClose} />
+          </View>
+
+          {items === null && !error && (
+            <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted }}>Carregando…</Text>
+          )}
+          {error && (
+            <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted }}>
+              Não consegui carregar agora. Tente de novo em instantes.
+            </Text>
+          )}
+          {items?.length === 0 && (
+            <Text style={{ fontFamily: FONT.body, fontSize: 13, color: theme.textMuted, lineHeight: 19 }}>
+              Você não bloqueou ninguém. Pra bloquear alguém, abra uma receita da comunidade e toque em “Bloquear autor”.
+            </Text>
+          )}
+
+          {!!items?.length && (
+            <ScrollView contentContainerStyle={{ gap: 4 }}>
+              {items.map((u) => (
+                <View
+                  key={u.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    paddingVertical: 12,
+                  }}
+                >
+                  <Text style={{ flex: 1, fontFamily: FONT.body, fontSize: 14, fontWeight: '600', color: theme.text }}>
+                    {u.displayName}
+                  </Text>
+                  <Pressable
+                    onPress={() => unblock(u.id, u.displayName)}
+                    hitSlop={8}
+                    style={{
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      borderRadius: 100,
+                      backgroundColor: theme.bgSubtle,
+                    }}
+                  >
+                    <Text style={{ fontFamily: FONT.body, fontSize: 12, fontWeight: '700', color: theme.primaryDeep }}>
+                      Desbloquear
+                    </Text>
+                  </Pressable>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 };
 

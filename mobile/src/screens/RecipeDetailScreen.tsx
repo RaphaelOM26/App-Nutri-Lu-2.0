@@ -26,7 +26,15 @@ import { newRecipeId, type SavedRecipe } from '../storage/recipes';
 import { categorize } from '../storage/shoppingList';
 import { estimateRecipeMacros, parseToGrams } from '../utils/recipeMacros';
 import { SEED_RECIPES_BY_ID } from '../data/seedRecipes';
-import { generateRecipeImage, publishCommunityRecipe, rateCommunityRecipe, ApiError } from '../api/client';
+import {
+  generateRecipeImage,
+  publishCommunityRecipe,
+  rateCommunityRecipe,
+  reportCommunityRecipe,
+  blockCommunityUser,
+  ApiError,
+  type ReportReason,
+} from '../api/client';
 import type { Ingredient, ExtractedRecipe, MealCategory } from '../api/client';
 import type { RootStackParamList } from '../navigation/types';
 import { CommunityAuthSheet } from '../components/CommunityAuthSheet';
@@ -237,6 +245,73 @@ export const RecipeDetailScreen: React.FC = () => {
       return;
     }
     requireAuthThen('avaliar receitas', (session) => doRate(session, stars));
+  };
+
+  // ── Moderação (App Store 1.2) ───────────────────────────────────────────
+  // Denunciar e bloquear são exigências da review pra qualquer app com
+  // conteúdo publicado por usuários. Nos dois casos voltamos pra tela
+  // anterior: o conteúdo já não deveria mais estar na frente da pessoa.
+
+  const doReport = async (session: AuthSession, reason: ReportReason) => {
+    if (!params.community) return;
+    try {
+      const res = await reportCommunityRecipe(session.token, params.community.id, reason);
+      toast(
+        res.hidden
+          ? 'Denúncia recebida — a receita foi retirada do ar.'
+          : 'Denúncia enviada. Esta receita não aparece mais pra você.',
+      );
+      nav.goBack();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) signOut();
+      toast(err instanceof Error ? err.message : 'Erro ao denunciar', 'error');
+    }
+  };
+
+  // Motivos como botões de Alert em vez de campo livre: é um toque só, não
+  // vira caixa de texto pra desabafo, e casa com a lista fechada do backend.
+  const onReportPress = () => {
+    const pick = (reason: ReportReason) => () =>
+      requireAuthThen('denunciar uma receita', (session) => doReport(session, reason));
+    Alert.alert(
+      'Denunciar esta receita?',
+      'Conte o que há de errado. Recebendo denúncias suficientes, a receita sai do ar.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Conteúdo ofensivo', onPress: pick('ofensivo') },
+        { text: 'Spam ou propaganda', onPress: pick('spam') },
+        { text: 'Informação perigosa', onPress: pick('perigoso') },
+        { text: 'Cópia de outro autor', onPress: pick('plagio') },
+      ],
+    );
+  };
+
+  const doBlock = async (session: AuthSession) => {
+    if (!params.community) return;
+    try {
+      await blockCommunityUser(session.token, params.community.authorId);
+      toast(`Você não verá mais receitas de ${params.community.authorName}.`);
+      nav.goBack();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) signOut();
+      toast(err instanceof Error ? err.message : 'Erro ao bloquear', 'error');
+    }
+  };
+
+  const onBlockPress = () => {
+    if (!params.community) return;
+    Alert.alert(
+      `Bloquear ${params.community.authorName}?`,
+      'As receitas dessa pessoa somem do seu feed. Ela não é avisada, e você pode desbloquear depois em Eu › Conta da comunidade.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Bloquear',
+          style: 'destructive',
+          onPress: () => requireAuthThen('bloquear alguém', doBlock),
+        },
+      ],
+    );
   };
   // Notas livres do usuário — só editável em receitas saved (já persistidas).
   // Pra extracted: ainda sem id estável, então campo só ativa depois de salvar.
@@ -694,6 +769,40 @@ export const RecipeDetailScreen: React.FC = () => {
                   ))}
                 </View>
               </View>
+
+              {/* Denunciar / bloquear — exigência da App Store 1.2 pra
+                  conteúdo de usuário. Escondido na própria receita: não faz
+                  sentido a pessoa se denunciar (pra tirar do ar existe
+                  "despublicar" na receita salva). */}
+              {!params.community.isMine && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    gap: 18,
+                    marginTop: 12,
+                    paddingTop: 12,
+                    borderTopWidth: 1,
+                    borderTopColor: theme.border,
+                  }}
+                >
+                  <Pressable onPress={onReportPress} hitSlop={8}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Icon.flag size={12} color={theme.textMuted} stroke={2} />
+                      <Text style={{ fontFamily: FONT.body, fontSize: 11.5, color: theme.textMuted, fontWeight: '600' }}>
+                        Denunciar
+                      </Text>
+                    </View>
+                  </Pressable>
+                  <Pressable onPress={onBlockPress} hitSlop={8}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Icon.lock size={12} color={theme.textMuted} stroke={2} />
+                      <Text style={{ fontFamily: FONT.body, fontSize: 11.5, color: theme.textMuted, fontWeight: '600' }}>
+                        Bloquear autor
+                      </Text>
+                    </View>
+                  </Pressable>
+                </View>
+              )}
             </Card>
           </View>
         )}

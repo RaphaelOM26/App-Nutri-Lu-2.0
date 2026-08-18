@@ -64,6 +64,8 @@ export type RootStackParamList = {
     community?: {
       id: string;
       authorName: string;
+      /** Id do autor — habilita bloquear quem publicou. */
+      authorId: string;
       avgStars: number | null;
       ratingCount: number;
       myStars: number | null;

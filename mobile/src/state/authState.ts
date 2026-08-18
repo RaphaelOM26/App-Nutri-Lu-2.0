@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { useSyncExternalStore } from 'react';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import { socialLogin, fetchMe, type AuthUser } from '../api/client';
+import { socialLogin, fetchMe, deleteAccount as apiDeleteAccount, type AuthUser } from '../api/client';
 import { getDeviceId } from '../storage/deviceId';
 
 const STORAGE_KEY = '@nutri-lu/auth-session';
@@ -174,6 +174,20 @@ export async function appleSignInAvailable(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Exclui a conta da comunidade no servidor e limpa a sessão local.
+ *
+ * Ordem importa: primeiro o servidor, depois o local. Se limpássemos a sessão
+ * antes, um erro de rede deixaria a conta VIVA no banco sem o app ter token
+ * pra tentar de novo — órfã e impossível de apagar pelo app.
+ */
+export async function deleteAccount(): Promise<void> {
+  const current = session;
+  if (!current) return;
+  await apiDeleteAccount(current.token);
+  await signOut();
 }
 
 export async function signOut(): Promise<void> {

@@ -293,6 +293,21 @@ export async function fetchMe(token: string): Promise<AuthUser> {
   return data.user as AuthUser;
 }
 
+/**
+ * Apaga a conta da comunidade de vez: usuário, receitas publicadas e avaliações.
+ * Irreversível. Exigido pela App Store (5.1.1(v)) em todo app com login.
+ * O diário local/day_snapshots não é afetado — vive no device_id anônimo.
+ */
+export async function deleteAccount(token: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/auth/me`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  // 401 = a sessão já morreu; a conta some do mesmo jeito na prática (o app
+  // desloga em seguida). Só erro real de servidor merece bloquear a UI.
+  if (!res.ok && res.status !== 401) throw new ApiError('Erro ao excluir a conta', res.status);
+}
+
 /** Receita publicada na comunidade (shape do GET /community/recipes). */
 export type CommunityRecipe = {
   id: string;
@@ -303,6 +318,8 @@ export type CommunityRecipe = {
   sourceUrl: string | null;
   createdAt: string;
   authorName: string;
+  /** Id do autor — necessário pra bloquear quem publicou. */
+  authorId: string;
   isMine: boolean;
   avgStars: number | null;
   ratingCount: number;
@@ -361,6 +378,74 @@ export async function unpublishCommunityRecipe(token: string, recipeId: string):
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new ApiError('Erro ao despublicar', res.status);
+}
+
+/** Motivos aceitos pelo backend na denúncia (lista fechada). */
+export type ReportReason = 'ofensivo' | 'spam' | 'perigoso' | 'plagio' | 'outro';
+
+/**
+ * Denuncia uma receita da comunidade. Idempotente: denunciar de novo só troca
+ * o motivo. `hidden` volta true quando a denúncia atingiu o corte automático
+ * e a receita saiu do ar pra todo mundo.
+ */
+export function reportCommunityRecipe(
+  token: string,
+  recipeId: string,
+  reason: ReportReason,
+): Promise<{ ok: true; hidden: boolean }> {
+  return postJSON(`/community/recipes/${recipeId}/report`, { reason }, token);
+}
+
+/** Bloqueia um autor: as receitas dele somem do MEU feed. Ele não é avisado. */
+export function blockCommunityUser(token: string, userId: string): Promise<{ ok: true }> {
+  return postJSON(`/community/users/${userId}/block`, {}, token);
+}
+
+/** Desfaz o bloqueio de um autor. */
+export async function unblockCommunityUser(token: string, userId: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/community/users/${userId}/block`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new ApiError('Erro ao desbloquear', res.status);
+}
+
+/** Lista quem eu bloqueei — alimenta a tela de gerenciar bloqueios. */
+export async function fetchBlockedUsers(
+  token: string,
+): Promise<{ id: string; displayName: string }[]> {
+  const res = await fetch(`${BASE_URL}/community/blocks`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new ApiError('Erro ao carregar bloqueios', res.status);
+  const data = await res.json();
+  return data.items as { id: string; displayName: string }[];
+}
+
+/** Uma linha do rank semanal da comunidade. */
+export type LeaderboardEntry = {
+  userId: string;
+  displayName: string;
+  /** Soma das estrelas recebidas na semana. */
+  points: number;
+  /** Quantas avaliações compuseram os pontos. */
+  votes: number;
+  position: number;
+  isMe: boolean;
+};
+
+/**
+ * Rank da semana (segunda→domingo). `me` vem preenchido quando há sessão e a
+ * pessoa pontuou — inclusive se estiver fora do top 10.
+ */
+export async function fetchCommunityLeaderboard(
+  token?: string,
+): Promise<{ top: LeaderboardEntry[]; me: LeaderboardEntry | null }> {
+  const res = await fetch(`${BASE_URL}/community/leaderboard`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new ApiError('Erro ao carregar o rank', res.status);
+  return res.json();
 }
 
 export { BASE_URL };
