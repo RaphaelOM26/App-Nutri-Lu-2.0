@@ -33,6 +33,25 @@ export type ExtractedRecipe = {
   imageQuery?: string;
   /** Categoria de refeição inferida pela IA. 'unknown' = sem confiança. */
   mealCategory?: MealCategory;
+  /**
+   * Macros JÁ MEDIDOS, por porção. Quando presente, vence a estimativa por
+   * ingrediente — que é heurística ("1 xícara = 200 g" fixo, match por
+   * substring) e se declara placeholder no próprio arquivo.
+   *
+   * Só as receitas do livro da nutri têm isso: ela pesou e calculou. Receita
+   * que o usuário importa do Instagram continua caindo na estimativa, que é o
+   * melhor disponível quando não existe número nenhum.
+   */
+  macros?: DeclaredMacros;
+};
+
+/** Macros medidos de UMA porção. Todos em gramas, exceto kcal. */
+export type DeclaredMacros = {
+  kcal: number;
+  p: number;
+  c: number;
+  f: number;
+  fiber?: number;
 };
 
 export type FoodAnalysisItem = {

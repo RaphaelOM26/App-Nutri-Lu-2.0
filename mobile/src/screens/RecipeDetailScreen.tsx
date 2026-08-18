@@ -34,6 +34,7 @@ import {
   blockCommunityUser,
   ApiError,
   type ReportReason,
+  type DeclaredMacros,
 } from '../api/client';
 import type { Ingredient, ExtractedRecipe, MealCategory } from '../api/client';
 import type { RootStackParamList } from '../navigation/types';
@@ -86,6 +87,8 @@ export const RecipeDetailScreen: React.FC = () => {
         ingredients: detailed?.ingredients || FALLBACK_INGREDIENTS,
         steps: detailed?.steps || FALLBACK_STEPS,
         confidence: null,
+        // Seeds nunca tiveram macros medidos — os 38/45/12 abaixo são constantes.
+        macros: undefined as DeclaredMacros | undefined,
         imageDataUrl: null as string | null,
         sourceUrl: null as string | null,
       };
@@ -103,6 +106,7 @@ export const RecipeDetailScreen: React.FC = () => {
         ingredients: params.saved.ingredients,
         steps: params.saved.steps,
         confidence: params.saved.confidence,
+        macros: params.saved.macros,
         imageDataUrl: params.saved.imageDataUrl || null,
         sourceUrl: params.saved.sourceUrl || null,
       };
@@ -119,6 +123,7 @@ export const RecipeDetailScreen: React.FC = () => {
         ingredients: params.extracted.ingredients,
         steps: params.extracted.steps,
         confidence: params.extracted.confidence,
+        macros: params.extracted.macros,
         imageDataUrl: params.extracted.imageDataUrl || null,
         sourceUrl: params.extracted.sourceUrl || null,
       };
@@ -374,24 +379,33 @@ export const RecipeDetailScreen: React.FC = () => {
   // Macros exibidos = POR PORÇÃO × porções que o user vai comer.
   // Seeds já têm kcal por porção no design (scale = servings direto);
   // saved/extracted têm o TOTAL estimado dos ingredientes (÷ recipeServes).
-  const scale = view.kind === 'seed' ? servings : servings / recipeServes;
-  // Pra seeds: usa kcal do recipe + macros placeholder fixos do design.
-  // Pra saved/extracted: estima via foodDB.
+  // Macros MEDIDOS (receitas do livro da nutri) vencem qualquer cálculo. Eles
+  // já vêm POR PORÇÃO, então escalam só por `servings` — ao contrário da
+  // estimativa, que soma a receita inteira e por isso precisa dividir pelo
+  // rendimento. Errar esse detalhe multiplicaria os macros pelo nº de porções.
+  const medidos = view.macros;
+  const scale = view.kind === 'seed' || medidos ? servings : servings / recipeServes;
+  // Estimativa só roda quando não há número medido — é heurística assumida
+  // (ver o cabeçalho de utils/recipeMacros.ts) e custa um varrer do foodDB.
   const estimated = useMemo(
-    () => (view.kind === 'seed' ? null : estimateRecipeMacros(view.ingredients, foodDB)),
-    [view.kind, view.ingredients, foodDB],
+    () => (view.kind === 'seed' || medidos ? null : estimateRecipeMacros(view.ingredients, foodDB)),
+    [view.kind, view.ingredients, foodDB, medidos],
   );
-  const baseKcal = view.kind === 'seed' ? view.kcal : estimated?.kcal ?? 0;
-  const baseP = view.kind === 'seed' ? 38 : estimated?.p ?? 0;
-  const baseC = view.kind === 'seed' ? 45 : estimated?.c ?? 0;
-  const baseF = view.kind === 'seed' ? 12 : estimated?.f ?? 0;
+  const baseKcal = medidos ? medidos.kcal : view.kind === 'seed' ? view.kcal : estimated?.kcal ?? 0;
+  const baseP = medidos ? medidos.p : view.kind === 'seed' ? 38 : estimated?.p ?? 0;
+  const baseC = medidos ? medidos.c : view.kind === 'seed' ? 45 : estimated?.c ?? 0;
+  const baseF = medidos ? medidos.f : view.kind === 'seed' ? 12 : estimated?.f ?? 0;
   const scaledKcal = Math.round(baseKcal * scale);
   const scaledP = Math.round(baseP * scale);
   const scaledC = Math.round(baseC * scale);
   const scaledF = Math.round(baseF * scale);
   // Mostra card de macros se temos dados. Pra estimativa, exige match >= 30% pra não exibir lixo.
-  const showMacros = baseKcal > 0 && (view.kind === 'seed' || (estimated && estimated.matchRatio >= 0.3));
-  const isEstimate = view.kind !== 'seed' && showMacros;
+  const showMacros =
+    baseKcal > 0 && Boolean(medidos || view.kind === 'seed' || (estimated && estimated.matchRatio >= 0.3));
+  // Só rotula "Estimativa" o que de fato é estimado. Número medido não leva
+  // ressalva — e seed continua sem rótulo porque seus macros são constantes
+  // fixas, que é um problema separado (as 280 vão sair na importação).
+  const isEstimate = !medidos && view.kind !== 'seed' && showMacros;
 
   /**
    * Toggle de status. Comportamento:
@@ -1206,12 +1220,16 @@ export const RecipeDetailScreen: React.FC = () => {
               <Pressable
                 key={meal.id}
                 onPress={async () => {
-                  // Calcula portion em gramas somando ingredientes (×scale).
-                  // Fallback 100g se a soma der 0.
-                  const totalGrams = Math.max(
-                    1,
-                    Math.round(view.ingredients.reduce((s, ing) => s + parseToGrams(ing.quantity, ing.unit), 0) * scale),
+                  // Peso do que a pessoa vai comer = receita inteira ÷ rendimento
+                  // × porções. Escala PRÓPRIA, não a `scale` dos macros: quando
+                  // há macros medidos (por porção) aquela escala é só `servings`,
+                  // e reusá-la aqui registraria o peso da receita inteira ao lado
+                  // das calorias de uma porção.
+                  const gramasReceita = view.ingredients.reduce(
+                    (s, ing) => s + parseToGrams(ing.quantity, ing.unit),
+                    0,
                   );
+                  const totalGrams = Math.max(1, Math.round((gramasReceita / recipeServes) * servings));
                   const itemName = `${view.title}${servings > 1 ? ` · ${servings} porç.` : ''}`;
                   // Fecha o sheet ANTES do addToMeal: em dia passado/futuro ele
                   // abre Alert de confirmação, que não pode disputar foco com o
