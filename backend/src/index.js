@@ -15,6 +15,7 @@ import daySnapshotRouter from './routes/daySnapshot.js';
 import generateRecipeImageRouter from './routes/generateRecipeImage.js';
 import authRouter from './routes/auth.js';
 import communityRouter from './routes/community.js';
+import billingRouter from './routes/billing.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -67,6 +68,7 @@ app.use('/day-snapshot', daySnapshotRouter);
 app.use('/generate-recipe-image', generateRecipeImageRouter);
 app.use('/auth', authRouter);
 app.use('/community', communityRouter);
+app.use('/billing', billingRouter);
 
 // Handler de erro padrão (último na cadeia). Mensagem interna (pg, config,
 // libs) só vai pro log — cliente recebe genérica em 500; em 4xx a mensagem é

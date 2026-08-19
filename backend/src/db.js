@@ -142,5 +142,60 @@ export async function initSchema() {
     );
   `);
 
-  console.log('[db] schema inicializado (day_snapshots + comunidade + moderação OK)');
+  // ── Acesso pago (v1.0) ───────────────────────────────────────────────────
+  // O app é BÔNUS do acompanhamento da nutricionista, vendido fora das lojas.
+  // Por isso o direito de acesso não nasce de uma compra in-app: nasce de um
+  // registro aqui, alimentado pelo webhook da plataforma de venda (ou por
+  // cortesia manual).
+  //
+  // `purchases` guarda O QUE a plataforma nos contou. `source` deixa a porta
+  // aberta pra compra in-app no futuro sem reescrever nada — muda a origem,
+  // não a pergunta que o app faz.
+  //
+  // NUNCA existe um campo `premium` no usuário: o acesso é DERIVADO desta
+  // tabela a cada consulta. Guardar o direito em dois lugares garante que um
+  // deles fica desatualizado no dia do reembolso.
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS purchases (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      source TEXT NOT NULL CHECK (source IN ('hotmart', 'cortesia', 'apple_iap', 'google_play')),
+      external_id TEXT,
+      email TEXT,
+      status TEXT NOT NULL DEFAULT 'ativa'
+        CHECK (status IN ('ativa', 'reembolsada', 'cancelada', 'expirada')),
+      valido_ate TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+  // Idempotência do webhook: a plataforma reenvia o evento quando não recebe
+  // confirmação. Sem isto, o mesmo pagamento vira duas compras e dois códigos.
+  await p.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_purchases_origem
+      ON purchases(source, external_id) WHERE external_id IS NOT NULL;
+  `);
+  await p.query(`
+    CREATE INDEX IF NOT EXISTS idx_purchases_email
+      ON purchases(email) WHERE email IS NOT NULL;
+  `);
+
+  // access_codes: caminho de EXCEÇÃO. O normal é o e-mail verificado pelo
+  // provedor de login bater com o da compra e liberar sozinho. O código existe
+  // pra quem usou "Ocultar meu e-mail" da Apple, comprou com outro endereço ou
+  // ganhou de presente.
+  //
+  // ON DELETE SET NULL de propósito: se a pessoa excluir a conta e voltar
+  // depois, o código dela volta a valer. Fosse CASCADE, ela perderia o acesso
+  // comprado junto com a conta.
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS access_codes (
+      code TEXT PRIMARY KEY,
+      purchase_id UUID NOT NULL REFERENCES purchases(id) ON DELETE CASCADE,
+      redeemed_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      redeemed_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  console.log('[db] schema inicializado (day_snapshots + comunidade + moderação + acesso OK)');
 }

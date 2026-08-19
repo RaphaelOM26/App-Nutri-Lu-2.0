@@ -6,11 +6,12 @@
 // Resposta: { transcript, items, total, mealType, confidence }
 
 import { Router } from 'express';
+import { requirePremium } from '../services/billing.js';
 import { openai, MODEL, MEAL_VOICE_SCHEMA, MEAL_VOICE_PROMPT } from '../services/openai.js';
 
 const router = Router();
 
-router.post('/', async (req, res, next) => {
+router.post('/', requirePremium, async (req, res, next) => {
   try {
     const { audio, format } = req.body || {};
 
