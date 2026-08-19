@@ -121,7 +121,10 @@ if (process.env.ALLOW_DEV_LOGIN === '1') {
         provider: 'dev',
         sub: name.toLowerCase().replace(/\s+/g, '-'),
         displayName: name,
-        email: null,
+        // Aceita e-mail no dev pra dar pra exercitar o caminho principal do
+        // acesso (o que casa e-mail verificado com a compra, sem código).
+        // No login real quem fornece o e-mail é o provedor, nunca o cliente.
+        email: req.body?.email || null,
         deviceId: req.body?.device_id,
       });
       const token = await issueSessionToken(user);
