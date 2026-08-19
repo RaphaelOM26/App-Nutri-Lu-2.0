@@ -5,7 +5,8 @@
 
 import type { Food } from '../data/mockData';
 import type { Ingredient } from '../api/client';
-import type { SeedRecipe } from '../data/seedRecipes';
+import type { NutriRecipe } from '../data/nutriRecipes';
+import type { MealCategory } from '../api/client';
 
 export type EstimatedMacros = {
   kcal: number;
@@ -111,7 +112,7 @@ export function estimateRecipeMacros(ingredients: Ingredient[], foodDB: Food[]):
 // ─── Sugestão de receita por macros restantes ───────────────────
 
 export type RecipeFitCandidate = {
-  recipe: SeedRecipe;
+  recipe: NutriRecipe;
   perServing: { kcal: number; p: number; c: number; f: number };
   /** Score: quanto MENOR, melhor o encaixe. */
   score: number;
@@ -132,25 +133,40 @@ export function mealContextFromHour(hour: number): MealContext {
   return 'any';
 }
 
-// Mapeia contexto → tags aceitáveis. Tags ESTRITAS por contexto — "Lanche" só
-// passa em snack, senão a sugestão de almoço/jantar vira suco/iogurte (que era
-// o bug reportado pelo Raphael: "Suco Detox de 702 kcal" sugerido às 19h).
-const TAGS_BY_CONTEXT: Record<MealContext, string[]> = {
-  breakfast: ['Café', 'Café da manhã'],
-  lunch: ['Almoço', 'Refeição'],
-  snack: ['Lanche', 'Sobremesa'],
-  dinner: ['Jantar', 'Almoço', 'Refeição'],
-  any: [],
+// Mapeia contexto (horário) → categorias de refeição aceitáveis.
+// ESTRITO de propósito: café da manhã não é sugerido no almoço e vice-versa
+// (pedido do Raphael, 2026-08-19). O jantar aceita prato de almoço porque a
+// nutri marca a mesma receita nos dois, mas o contrário não vale pra lanche.
+//
+// Antes isso comparava um único `tag` em texto ("Almoço") vindo da extração
+// de PDF. As 153 do livro trazem `meals: MealCategory[]` atribuído pela
+// própria nutricionista, então virou teste de interseção.
+const CATEGORIAS_POR_CONTEXTO: Record<MealContext, MealCategory[]> = {
+  breakfast: ['breakfast'],
+  lunch: ['lunch'],
+  snack: ['snack', 'dessert'],
+  dinner: ['dinner', 'lunch'],
+  // 'any' não libera geral: receita SEM refeição (molho, acompanhamento) nunca
+  // pode ser sugerida como refeição, em nenhum horário.
+  any: ['breakfast', 'lunch', 'dinner', 'snack', 'dessert'],
 };
 
-// Limites de kcal por porção. Snack/lanche bem restrito (50-250 kcal — Suco Detox
-// 702kcal não passa) pra evitar sugerir refeição inteira como lanche.
+// Limites de kcal por porção — sanidade, não curadoria.
+//
+// A faixa antiga era bem mais apertada (lanche 50-250) porque servia de muleta
+// contra o `tag` extraído de PDF, que errava: um "Suco Detox de 702 kcal"
+// aparecia marcado como lanche. Nas 153 do livro quem atribui a refeição é a
+// nutricionista, então esse policiamento deixou de ser necessário — e estava
+// cobrando caro: os lanches dela têm MEDIANA de 285 kcal, e o teto de 250
+// deixava de fora 50 das 58 receitas de lanche.
+//
+// Quem faz o casamento fino com o que sobrou no dia é o score, não este corte.
 const KCAL_RANGE_BY_CONTEXT: Record<MealContext, [number, number]> = {
-  breakfast: [150, 550],
-  lunch: [300, 800],
-  snack: [50, 250],
-  dinner: [300, 800],
-  any: [80, 900],
+  breakfast: [100, 600],
+  lunch: [200, 900],
+  snack: [50, 400],
+  dinner: [200, 900],
+  any: [50, 900],
 };
 
 /**
@@ -170,31 +186,29 @@ const KCAL_RANGE_BY_CONTEXT: Record<MealContext, [number, number]> = {
  * mesma entrada → mesmos 6 candidatos sempre.
  */
 export function pickRecipesForRemainingMacros(
-  recipes: SeedRecipe[],
+  recipes: NutriRecipe[],
   remaining: { kcal: number; p: number; c: number; f: number },
-  foodDB: Food[],
   topN = 5,
   context: MealContext = 'any',
 ): RecipeFitCandidate[] {
   const [kMin, kMax] = KCAL_RANGE_BY_CONTEXT[context];
   const targetK = Math.max(kMin, Math.min(remaining.kcal, kMax));
   const targetP = Math.max(8, Math.min(remaining.p, 40));
-  const acceptedTags = TAGS_BY_CONTEXT[context];
-  const acceptedSet = new Set(acceptedTags.map((t) => t.toLowerCase()));
+  const aceitas = CATEGORIAS_POR_CONTEXTO[context];
 
   const scored: RecipeFitCandidate[] = [];
   for (const r of recipes) {
-    if (!r.ingredients || r.ingredients.length === 0) continue;
-    if (acceptedSet.size > 0 && !acceptedSet.has(r.tag.toLowerCase())) continue;
+    // Sem refeição = não é refeição (molho, acompanhamento). Fora, sempre.
+    if (r.meals.length === 0) continue;
+    if (!r.meals.some((m) => aceitas.includes(m))) continue;
 
-    const est = estimateRecipeMacros(r.ingredients, foodDB);
-    if (est.matchRatio < 0.5) continue; // threshold mais estrito (antes 0.3)
-    const servings = r.servings || 1;
+    // Macros MEDIDOS pela nutri, já por porção — não há o que estimar nem
+    // dividir pelo rendimento, que é de onde vinha metade do erro antes.
     const per = {
-      kcal: Math.round(est.kcal / servings),
-      p: Math.round(est.p / servings),
-      c: Math.round(est.c / servings),
-      f: Math.round(est.f / servings),
+      kcal: Math.round(r.macros.kcal),
+      p: Math.round(r.macros.p),
+      c: Math.round(r.macros.c),
+      f: Math.round(r.macros.f),
     };
     if (per.kcal < kMin || per.kcal > kMax) continue;
 
@@ -204,8 +218,7 @@ export function pickRecipesForRemainingMacros(
     const overP = Math.max(0, per.p - remaining.p);
     const overC = Math.max(0, per.c - remaining.c) * 0.5;
     const overF = Math.max(0, per.f - remaining.f) * 1.5;
-    const matchBonus = (1 - est.matchRatio) * 40;
-    const score = fitK + fitP + overK + overP + overC + overF + matchBonus;
+    const score = fitK + fitP + overK + overP + overC + overF;
     scored.push({ recipe: r, perServing: per, score });
   }
   scored.sort((a, b) => a.score - b.score);

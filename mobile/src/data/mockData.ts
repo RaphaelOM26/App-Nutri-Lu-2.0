@@ -119,18 +119,44 @@ export const INITIAL_MEALS: Meal[] = [
   },
 ];
 
-// 262 receitas curadas (anonimizadas dos PDFs originais — sem menções autorais).
-// Mapeadas em coleções da Lu via SEED_RECIPES.collectionId. Gerado por
-// scripts/extract-pdf/generate-seed-ts.mjs — não edite manualmente o arquivo.
-import { SEED_RECIPES } from './seedRecipes';
+// As 153 receitas do livro da nutricionista (Conteúdo/Receitas nutri Lu.xlsx).
+// Substituíram as 280 seeds extraídas de PDFs em 2026-08-19: aquelas tinham
+// macros constantes, kcal zerada em 25 e rendimento perdido em 279 de 280.
+// Geradas por scripts/fotos/importar-receitas.mjs — não edite à mão.
+import { NUTRI_RECIPES } from './nutriRecipes';
 
-export const INITIAL_RECIPES: Recipe[] = SEED_RECIPES.map((r) => ({
+// Rótulo do card ("257 kcal · Almoço e jantar"). Receita que não é refeição —
+// molho, acompanhamento — mostra o tipo de prato, que é o que ela é de fato.
+const ROTULO_REFEICAO: Record<string, string> = {
+  breakfast: 'Café da manhã',
+  lunch: 'Almoço',
+  dinner: 'Jantar',
+  snack: 'Lanche',
+  dessert: 'Sobremesa',
+};
+const ROTULO_TIPO: Record<string, string> = {
+  prato: 'Prato', salada: 'Salada', bebida: 'Bebida', molho: 'Molho', sopa: 'Sopa',
+  petisco: 'Petisco', mingau: 'Mingau', sobremesa: 'Sobremesa', bolo: 'Bolo',
+};
+
+function rotuloDaReceita(meals: string[], tipo: string): string {
+  const nomes = meals.map((m) => ROTULO_REFEICAO[m]).filter(Boolean);
+  if (nomes.length === 0) return ROTULO_TIPO[tipo] || 'Receita';
+  if (nomes.length === 1) return nomes[0];
+  if (nomes.length === 2) return `${nomes[0]} e ${nomes[1].toLowerCase()}`;
+  return `${nomes[0]} e mais ${nomes.length - 1}`;
+}
+
+export const INITIAL_RECIPES: Recipe[] = NUTRI_RECIPES.map((r) => ({
   id: r.id,
   name: r.name,
-  q: r.q,
+  // Fallback do Unsplash: hoje todas as 153 têm foto empacotada, então isso só
+  // vale se uma receita nova entrar na planilha antes de a foto ser gerada.
+  q: r.name,
   time: r.time,
-  kcal: r.kcal,
-  tag: r.tag,
+  // kcal MEDIDA pela nutri, por porção — a seed trazia o total da receita.
+  kcal: r.macros.kcal,
+  tag: rotuloDaReceita(r.meals, r.tipo),
   servings: r.servings,
 }));
 

@@ -317,6 +317,47 @@ export const NUTRI_RECIPES_BY_ID: Record<string, NutriRecipe> = Object.fromEntri
   fs.writeFileSync(DESTINO, conteudo);
   const kb = Math.round(fs.statSync(DESTINO).size / 1024);
   console.log(`\ngerado: mobile/src/data/nutriRecipes.ts (${kb} KB)`);
+
+  // ── Mapa de fotos ────────────────────────────────────────────────────────
+  // O Metro (bundler do React Native) resolve require() em tempo de build e só
+  // aceita caminho literal — não dá pra montar `require('...' + id + '.jpg')`.
+  // Por isso o mapa é gerado com as 153 chamadas escritas uma a uma.
+  const ASSETS = path.join(RAIZ, 'mobile', 'assets', 'receitas');
+  const MAPA = path.join(RAIZ, 'mobile', 'src', 'data', 'nutriPhotos.ts');
+  if (fs.existsSync(ASSETS)) {
+    const comFoto = receitas.filter((r) => fs.existsSync(path.join(ASSETS, `${r.id}.jpg`)));
+    const semFoto = receitas.length - comFoto.length;
+    const linhasMapa = comFoto
+      .map((r) => `  '${r.id}': require('../../assets/receitas/${r.id}.jpg'),`)
+      .join('\n');
+    fs.writeFileSync(
+      MAPA,
+      `// AUTO-GERADO por scripts/fotos/importar-receitas.mjs — NÃO EDITE À MÃO.
+// Fotos das receitas do livro, geradas por scripts/fotos/gerar-fotos.mjs
+// (estilo "mesa de casa") e reduzidas a 800px por scripts/fotos/redimensionar.ps1.
+//
+// Empacotadas com o app em vez de servidas por URL: o app é usado na hora da
+// refeição, às vezes sem sinal, e assim a foto não depende de rede nem do
+// backend estar de pé. São ~8 MB no bundle para as ${comFoto.length}.
+//
+// O Metro exige caminho literal no require(), então o mapa é escrito por
+// extenso — não dá pra interpolar o id.
+
+export const NUTRI_PHOTOS: Record<string, number> = {
+${linhasMapa}
+};
+
+/** Foto da receita, ou undefined se ela ainda não tiver imagem gerada. */
+export function fotoDaReceita(id: string): number | undefined {
+  return NUTRI_PHOTOS[id];
+}
+`,
+    );
+    console.log(`gerado: mobile/src/data/nutriPhotos.ts (${comFoto.length} fotos${semFoto ? `, ${semFoto} receita(s) sem foto` : ''})`);
+  } else {
+    console.log('mobile/assets/receitas não existe — mapa de fotos não gerado');
+  }
+
   console.log(`${avisos.length} avisos — rode com --relatorio pra ver`);
 }
 

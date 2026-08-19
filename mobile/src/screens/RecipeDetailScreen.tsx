@@ -25,7 +25,8 @@ import { useFocusReplay } from '../utils/useFocusReplay';
 import { newRecipeId, type SavedRecipe } from '../storage/recipes';
 import { categorize } from '../storage/shoppingList';
 import { estimateRecipeMacros, parseToGrams } from '../utils/recipeMacros';
-import { SEED_RECIPES_BY_ID } from '../data/seedRecipes';
+import { NUTRI_RECIPES_BY_ID } from '../data/nutriRecipes';
+import { fotoDaReceita } from '../data/nutriPhotos';
 import {
   generateRecipeImage,
   publishCommunityRecipe,
@@ -47,10 +48,6 @@ type Rt = RouteProp<RootStackParamList, 'RecipeDetail'>;
 type TabId = 'ingredients' | 'steps' | 'notes';
 type IngredientStatus = 'pantry' | 'list' | null;
 
-// Fallback pra receitas seed legadas que não estejam em SEED_RECIPES_BY_ID.
-// As 262 receitas curadas têm ingredientes/passos próprios (lookup em SEED_RECIPES_BY_ID).
-const FALLBACK_INGREDIENTS: Ingredient[] = [];
-const FALLBACK_STEPS: string[] = [];
 
 export const RecipeDetailScreen: React.FC = () => {
   const theme = useTheme();
@@ -73,22 +70,25 @@ export const RecipeDetailScreen: React.FC = () => {
 
   // Normaliza pra uma representação única
   const view = useMemo(() => {
-    if (params.recipe) {
-      // Tenta lookup nos dados curados (262 receitas dos PDFs).
-      // Se a receita seed não estiver lá, usa o fallback vazio.
-      const detailed = SEED_RECIPES_BY_ID[params.recipe.id];
+    // Receita do livro da nutri. Chega por dois caminhos — da lista de receitas
+    // (params.recipe, um Recipe leve) ou da sugestão da Lu (params.nutriId) —
+    // e nos dois o NL-### é a chave. O resto (macros medidos, ingredientes com
+    // peso, passos) vem do próprio livro, não do que a tela anterior carregava.
+    const nutriId = params.nutriId || params.recipe?.id;
+    const nutri = nutriId ? NUTRI_RECIPES_BY_ID[nutriId] : undefined;
+    if (nutri) {
       return {
-        kind: 'seed' as const,
-        title: params.recipe.name,
-        q: params.recipe.q,
-        time: params.recipe.time,
-        baseServings: params.recipe.servings || 2,
-        kcal: params.recipe.kcal,
-        ingredients: detailed?.ingredients || FALLBACK_INGREDIENTS,
-        steps: detailed?.steps || FALLBACK_STEPS,
+        kind: 'nutri' as const,
+        title: nutri.name,
+        q: nutri.name,
+        time: nutri.time,
+        baseServings: nutri.servings,
+        kcal: nutri.macros.kcal,
+        ingredients: nutri.ingredients,
+        steps: nutri.steps,
         confidence: null,
-        // Seeds nunca tiveram macros medidos — os 38/45/12 abaixo são constantes.
-        macros: undefined as DeclaredMacros | undefined,
+        macros: nutri.macros,
+        foto: fotoDaReceita(nutri.id),
         imageDataUrl: null as string | null,
         sourceUrl: null as string | null,
       };
@@ -106,6 +106,7 @@ export const RecipeDetailScreen: React.FC = () => {
         ingredients: params.saved.ingredients,
         steps: params.saved.steps,
         confidence: params.saved.confidence,
+        foto: undefined as number | undefined,
         macros: params.saved.macros,
         imageDataUrl: params.saved.imageDataUrl || null,
         sourceUrl: params.saved.sourceUrl || null,
@@ -123,6 +124,7 @@ export const RecipeDetailScreen: React.FC = () => {
         ingredients: params.extracted.ingredients,
         steps: params.extracted.steps,
         confidence: params.extracted.confidence,
+        foto: undefined as number | undefined,
         macros: params.extracted.macros,
         imageDataUrl: params.extracted.imageDataUrl || null,
         sourceUrl: params.extracted.sourceUrl || null,
@@ -354,8 +356,8 @@ export const RecipeDetailScreen: React.FC = () => {
   // ID estável pra ingrediente nesta receita — formato 'recipe-<recipeId>-<idx>'.
   // Usado pra rastrear o item no shoppingList global.
   const recipeId =
-    view.kind === 'seed'
-      ? params.recipe!.id
+    view.kind === 'nutri'
+      ? (params.nutriId || params.recipe!.id)
       : view.kind === 'saved'
       ? view.data.id
       : `extracted-${view.title.slice(0, 20)}`; // estável durante a sessão
@@ -384,28 +386,26 @@ export const RecipeDetailScreen: React.FC = () => {
   // estimativa, que soma a receita inteira e por isso precisa dividir pelo
   // rendimento. Errar esse detalhe multiplicaria os macros pelo nº de porções.
   const medidos = view.macros;
-  const scale = view.kind === 'seed' || medidos ? servings : servings / recipeServes;
+  const scale = medidos ? servings : servings / recipeServes;
   // Estimativa só roda quando não há número medido — é heurística assumida
   // (ver o cabeçalho de utils/recipeMacros.ts) e custa um varrer do foodDB.
   const estimated = useMemo(
-    () => (view.kind === 'seed' || medidos ? null : estimateRecipeMacros(view.ingredients, foodDB)),
-    [view.kind, view.ingredients, foodDB, medidos],
+    () => (medidos ? null : estimateRecipeMacros(view.ingredients, foodDB)),
+    [view.ingredients, foodDB, medidos],
   );
-  const baseKcal = medidos ? medidos.kcal : view.kind === 'seed' ? view.kcal : estimated?.kcal ?? 0;
-  const baseP = medidos ? medidos.p : view.kind === 'seed' ? 38 : estimated?.p ?? 0;
-  const baseC = medidos ? medidos.c : view.kind === 'seed' ? 45 : estimated?.c ?? 0;
-  const baseF = medidos ? medidos.f : view.kind === 'seed' ? 12 : estimated?.f ?? 0;
+  const baseKcal = medidos ? medidos.kcal : estimated?.kcal ?? 0;
+  const baseP = medidos ? medidos.p : estimated?.p ?? 0;
+  const baseC = medidos ? medidos.c : estimated?.c ?? 0;
+  const baseF = medidos ? medidos.f : estimated?.f ?? 0;
   const scaledKcal = Math.round(baseKcal * scale);
   const scaledP = Math.round(baseP * scale);
   const scaledC = Math.round(baseC * scale);
   const scaledF = Math.round(baseF * scale);
   // Mostra card de macros se temos dados. Pra estimativa, exige match >= 30% pra não exibir lixo.
-  const showMacros =
-    baseKcal > 0 && Boolean(medidos || view.kind === 'seed' || (estimated && estimated.matchRatio >= 0.3));
-  // Só rotula "Estimativa" o que de fato é estimado. Número medido não leva
-  // ressalva — e seed continua sem rótulo porque seus macros são constantes
-  // fixas, que é um problema separado (as 280 vão sair na importação).
-  const isEstimate = !medidos && view.kind !== 'seed' && showMacros;
+  const showMacros = baseKcal > 0 && Boolean(medidos || (estimated && estimated.matchRatio >= 0.3));
+  // "Estimativa" só rotula o que é estimado. Receita do livro tem número
+  // medido pela nutricionista — não leva ressalva.
+  const isEstimate = !medidos && showMacros;
 
   /**
    * Toggle de status. Comportamento:
@@ -606,7 +606,7 @@ export const RecipeDetailScreen: React.FC = () => {
           {heroImage ? (
             <Image source={{ uri: heroImage }} style={{ width: '100%', height: 260 }} resizeMode="cover" />
           ) : (
-            <FoodImg q={view.q} w="100%" h={260} style={{ borderRadius: 0 }} />
+            <FoodImg src={view.foto} q={view.q} w="100%" h={260} style={{ borderRadius: 0 }} />
           )}
           <View
             style={{

@@ -54,6 +54,9 @@ export type RootStackParamList = {
   ImportRecipe: undefined;
   RecipeDetail: {
     recipe?: Recipe;
+    /** Código NL-### do livro da nutri — usado pela sugestão da Lu, que só
+     *  carrega o id e deixa a tela buscar a receita completa. */
+    nutriId?: string;
     saved?: SavedRecipe;
     extracted?: ExtractedRecipe & { sourceUrl?: string; imageDataUrl?: string };
     /**

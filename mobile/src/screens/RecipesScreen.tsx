@@ -29,7 +29,7 @@ import {
   type LeaderboardEntry,
 } from '../api/client';
 import { getAuthSession, useAuthSession } from '../state/authState';
-import { LU_COLLECTIONS, getCoverUrl, type LuCollection } from '../data/luCollections';
+import { LU_COLLECTIONS, type LuCollection } from '../data/luCollections';
 import type { RootStackParamList } from '../navigation/types';
 import type { SavedRecipe } from '../storage/recipes';
 import type { RecipeCollection } from '../storage/collections';
@@ -41,7 +41,8 @@ import {
   mealContextFromHour,
   type RecipeFitCandidate,
 } from '../utils/recipeMacros';
-import { SEED_RECIPES } from '../data/seedRecipes';
+import { NUTRI_RECIPES } from '../data/nutriRecipes';
+import { fotoDaReceita } from '../data/nutriPhotos';
 import type { Recipe, Food } from '../data/mockData';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -307,7 +308,7 @@ const LuSuggestionModal: React.FC<LuModalProps> = ({
               <Pressable onPress={onOpenRecipe}>
                 <Card pad={0} radius={18} style={{ overflow: 'hidden' }}>
                   <View style={{ position: 'relative' }}>
-                    <FoodImg q={candidate.recipe.q} w="100%" h={150} style={{ borderRadius: 0 }} />
+                    <FoodImg src={fotoDaReceita(candidate.recipe.id)} q={candidate.recipe.name} w="100%" h={150} style={{ borderRadius: 0 }} />
                     <View
                       style={{
                         position: 'absolute',
@@ -360,7 +361,7 @@ const LuSuggestionModal: React.FC<LuModalProps> = ({
                       </View>
                     )}
                     <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textFaint }}>
-                      por porção · {candidate.recipe.tag}
+                      por porção · {rotuloRefeicoes(candidate.recipe.meals)}
                     </Text>
                   </View>
                 </Card>
@@ -471,7 +472,7 @@ type MyRecipesProps = {
   sortMode: SortMode;
   favoriteIds: string[];
   onToggleFavorite: (id: string, title: string) => void;
-  onOpen: (id: string, navParam: { recipe?: Recipe; saved?: SavedRecipe }) => void;
+  onOpen: (id: string, navParam: { recipe?: Recipe; saved?: SavedRecipe; nutriId?: string }) => void;
   onDeleteSaved: (r: SavedRecipe) => void;
   onImport: () => void;
 };
@@ -821,7 +822,7 @@ const FavBadge: React.FC<{ isFav: boolean; onPress: () => void }> = ({ isFav, on
 
 type DiscoverProps = {
   favoriteIds: string[];
-  onOpen: (id: string, navParam: { recipe?: Recipe; saved?: SavedRecipe }) => void;
+  onOpen: (id: string, navParam: { recipe?: Recipe; saved?: SavedRecipe; nutriId?: string }) => void;
   onOpenLuChat: () => void;
   /** Abre LuRecipesScreen — sem id = todas as curadas, com id = só daquela coleção */
   onOpenLuRecipes: (collectionId?: string) => void;
@@ -882,7 +883,7 @@ const DiscoverRecipes: React.FC<DiscoverProps> = ({ onOpen, onOpenLuChat, onOpen
     // Contexto da refeição baseado no horário atual — evita sugerir bife às 9h
     // ou suco de 700 kcal como "lanche da tarde". Recalcula sempre que abre.
     const context = mealContextFromHour(new Date().getHours());
-    const top = pickRecipesForRemainingMacros(SEED_RECIPES, remaining, foodDB, 6, context);
+    const top = pickRecipesForRemainingMacros(NUTRI_RECIPES, remaining, 6, context);
     setCandidates(top);
     setCursor(0);
     if (top.length > 0) {
@@ -905,7 +906,7 @@ const DiscoverRecipes: React.FC<DiscoverProps> = ({ onOpen, onOpenLuChat, onOpen
     if (!currentCandidate) return;
     setSuggestOpen(false);
     // SeedRecipe é compatível com Recipe (mesmos campos base) + extras ignorados pelo nav.
-    onOpen(currentCandidate.recipe.id, { recipe: currentCandidate.recipe as Recipe });
+    onOpen(currentCandidate.recipe.id, { nutriId: currentCandidate.recipe.id });
   };
 
   const remainingK = remaining.kcal;
@@ -971,6 +972,18 @@ const DiscoverRecipes: React.FC<DiscoverProps> = ({ onOpen, onOpenLuChat, onOpen
     </View>
   );
 };
+
+// Rótulo curto das refeições em que a receita cabe ("Almoço e jantar").
+const NOME_REFEICAO: Record<string, string> = {
+  breakfast: 'Café da manhã', lunch: 'Almoço', dinner: 'Jantar',
+  snack: 'Lanche', dessert: 'Sobremesa',
+};
+function rotuloRefeicoes(meals: string[]): string {
+  const nomes = meals.map((m) => NOME_REFEICAO[m]).filter(Boolean);
+  if (nomes.length === 0) return 'Receita';
+  if (nomes.length === 1) return nomes[0];
+  return `${nomes[0]} e ${nomes[1].toLowerCase()}`;
+}
 
 // ─── Rank semanal (fase 2 da feature #3) ─────────────────────────
 // Pontos = estrelas que as receitas da pessoa receberam de segunda pra cá.
@@ -1346,7 +1359,7 @@ const LuCollectionCard: React.FC<{ collection: LuCollection; onPress: () => void
       }}
     >
       <View style={{ position: 'relative' }}>
-        <Image source={{ uri: getCoverUrl(collection) }} style={{ width: '100%', height: 110 }} resizeMode="cover" />
+        <Image source={collection.cover} style={{ width: '100%', height: 110 }} resizeMode="cover" />
         <View
           style={{
             position: 'absolute',
@@ -1392,7 +1405,7 @@ function previewQueryFor(col: RecipeCollection, recipes: Recipe[]): string {
 // (Plano alimentar virou aba própria no menu inferior — antiga sub-aba removida.)
 
 type CollectionsViewProps = {
-  onOpen: (id: string, navParam: { recipe?: Recipe; saved?: SavedRecipe }) => void;
+  onOpen: (id: string, navParam: { recipe?: Recipe; saved?: SavedRecipe; nutriId?: string }) => void;
 };
 
 const CollectionsView: React.FC<CollectionsViewProps> = ({ onOpen }) => {

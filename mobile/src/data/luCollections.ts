@@ -1,8 +1,14 @@
-// Coleções curadas pela Nutri Lu (diferentes das coleções pessoais do user em /storage/collections.ts).
-// Aparecem no carrossel "Coleção da Nutri Lu" da tab Descobrir.
-// Os recipeIds vêm de seedRecipes.RECIPE_IDS_BY_COLLECTION (auto-gerado dos PDFs).
+// Coleções da aba Descobrir, derivadas das 153 receitas do livro da nutri.
+//
+// Antes eram 7 coleções herdadas da extração dos PDFs (lu-saudaveis, lu-bolos,
+// lu-detox…) com listas de ids fixas. Agora cada coleção é uma REGRA sobre as
+// receitas: quando a nutri adicionar a receita 154, ela entra sozinha na
+// coleção certa — ninguém precisa lembrar de atualizar uma lista.
+//
+// A capa é a foto de uma receita da própria coleção, não uma imagem de banco.
 
-import { RECIPE_IDS_BY_COLLECTION } from './seedRecipes';
+import { NUTRI_RECIPES, type NutriRecipe } from './nutriRecipes';
+import { fotoDaReceita } from './nutriPhotos';
 
 export type LuCollection = {
   id: string;
@@ -12,86 +18,121 @@ export type LuCollection = {
   bgColor: string;
   /** Cor do texto sobre bgColor */
   textColor: string;
-  /** Photo ID do Unsplash pra capa do card */
-  photoId: string;
-  /** IDs de receitas seed que pertencem a essa coleção */
+  /** Foto de capa — asset empacotado (require) de uma receita da coleção. */
+  cover?: number;
+  /** IDs das receitas que pertencem a essa coleção. */
   recipeIds: string[];
 };
 
-// Photo helper consistente com o resto do app
-const COVER = (id: string) =>
-  `https://images.unsplash.com/photo-${id}?w=400&h=400&fit=crop&crop=entropy&auto=format&q=75`;
+type Regra = {
+  id: string;
+  name: string;
+  description: string;
+  bgColor: string;
+  onde: (r: NutriRecipe) => boolean;
+};
 
-export const LU_COLLECTIONS: LuCollection[] = [
+// Ordem pensada pro carrossel: primeiro por momento do dia (que é como a pessoa
+// procura receita), depois por tipo de prato, e por último as restrições.
+const REGRAS: Regra[] = [
   {
-    id: 'lu-saudaveis',
-    name: '+100 Receitas saudáveis.',
-    description: 'Variedade pra todo dia da semana',
-    bgColor: '#DCE6D2', // verde da marca soft
-    textColor: '#1B1B1B',
-    photoId: '1490645935967-10de6ba17061', // bowl proteico colorido
-    recipeIds: RECIPE_IDS_BY_COLLECTION['lu-saudaveis'] || [],
+    id: 'lu-cafe',
+    name: 'Café da manhã',
+    description: 'Pra começar o dia',
+    bgColor: '#F0E2C8',
+    onde: (r) => r.meals.includes('breakfast'),
   },
   {
-    id: 'lu-detox',
-    name: 'Sucos detox',
-    description: 'Receitas refrescantes pra desintoxicar',
-    bgColor: '#C8DCC7', // verde mais saturado
-    textColor: '#1B1B1B',
-    photoId: '1622597467836-f3285f2131b8', // suco verde detox
-    recipeIds: RECIPE_IDS_BY_COLLECTION['lu-detox'] || [],
+    id: 'lu-principais',
+    name: 'Almoço e jantar',
+    description: 'Refeições completas do livro',
+    bgColor: '#DCE6D2',
+    onde: (r) => r.meals.includes('lunch') || r.meals.includes('dinner'),
   },
   {
-    id: 'lu-bolos',
-    name: 'Bolos e brownies',
-    description: 'Massas e doces fit',
-    bgColor: '#EACBD1', // rosa pastel
-    textColor: '#1B1B1B',
-    photoId: '1606313564200-e75d5e30476c', // brownie de chocolate
-    recipeIds: RECIPE_IDS_BY_COLLECTION['lu-bolos'] || [],
-  },
-  {
-    id: 'lu-vitaminas',
-    name: 'Vitaminas e sorvetes',
-    description: 'Geladinhos e refrescantes',
-    bgColor: '#D4E0EE', // azul gelo
-    textColor: '#1B1B1B',
-    photoId: '1579722821273-0f6c7d44362f', // smoothie rosa em copo
-    recipeIds: RECIPE_IDS_BY_COLLECTION['lu-vitaminas'] || [],
+    id: 'lu-lanches',
+    name: 'Lanches',
+    description: 'Entre uma refeição e outra',
+    bgColor: '#D4E0EE',
+    onde: (r) => r.meals.includes('snack'),
   },
   {
     id: 'lu-saladas',
-    name: 'Saladas e molhos',
-    description: 'Folhas, vegetais e dressings',
-    bgColor: '#D6E0CF', // verde claro
-    textColor: '#1B1B1B',
-    photoId: '1512621776951-a57141f2eefd', // salada colorida
-    recipeIds: RECIPE_IDS_BY_COLLECTION['lu-saladas'] || [],
+    name: 'Saladas',
+    description: 'Pra acompanhar ou fazer a refeição',
+    bgColor: '#CFE0CC',
+    onde: (r) => r.tipo === 'salada',
   },
   {
-    id: 'lu-petiscos',
-    name: 'Petiscos',
-    description: 'Snacks pra reuniões e lanches',
-    bgColor: '#F1E0CB', // areia/dourado
-    textColor: '#1B1B1B',
-    photoId: '1541544741938-0af808871cc0', // mix de petiscos
-    recipeIds: RECIPE_IDS_BY_COLLECTION['lu-petiscos'] || [],
+    id: 'lu-sopas',
+    name: 'Sopas e cremes',
+    description: 'Quentinhas e reconfortantes',
+    bgColor: '#E6D6C2',
+    onde: (r) => r.tipo === 'sopa',
   },
   {
-    id: 'lu-sobremesas',
-    name: 'Sobremesas',
-    description: 'Doces saudáveis',
-    bgColor: '#E2D1E8', // lilás suave
-    textColor: '#1B1B1B',
-    photoId: '1551024601-bec78aea704b', // sobremesa elegante
-    recipeIds: RECIPE_IDS_BY_COLLECTION['lu-sobremesas'] || [],
+    id: 'lu-molhos',
+    name: 'Molhos',
+    description: 'Pra transformar uma salada simples',
+    bgColor: '#EFDCC4',
+    onde: (r) => r.tipo === 'molho',
+  },
+  {
+    id: 'lu-bebidas',
+    name: 'Chás e bebidas',
+    description: 'Sem açúcar e sem cafeína',
+    bgColor: '#DCE4D6',
+    onde: (r) => r.tipo === 'bebida',
+  },
+  {
+    id: 'lu-doces',
+    name: 'Doces e sobremesas',
+    description: 'Sem sair da linha',
+    bgColor: '#EACBD1',
+    onde: (r) => r.tipo === 'sobremesa' || r.tipo === 'bolo' || r.tipo === 'mingau',
+  },
+  {
+    id: 'lu-proteina',
+    name: 'Ricas em proteína',
+    description: 'Pra saciedade e massa magra',
+    bgColor: '#E0D3E8',
+    onde: (r) => r.tags.includes('Rico em proteínas'),
+  },
+  {
+    id: 'lu-vegetarianas',
+    name: 'Vegetarianas',
+    description: 'Sem carne, sem perder proteína',
+    bgColor: '#D2E4D8',
+    onde: (r) => r.tags.includes('Vegetariana'),
+  },
+  {
+    id: 'lu-sem-gluten',
+    name: 'Sem glúten',
+    description: 'Receitas sem trigo na composição',
+    bgColor: '#E8DFD0',
+    // Só as ABSOLUTAS. A tag condicional depende do rótulo do produto, e uma
+    // coleção chamada "Sem glúten" não pode conter receita que talvez tenha.
+    onde: (r) => r.tags.includes('Sem glúten'),
   },
 ];
 
-export function getLuCollection(id: string): LuCollection | undefined {
-  return LU_COLLECTIONS.find((c) => c.id === id);
-}
+export const LU_COLLECTIONS: LuCollection[] = REGRAS.map((regra) => {
+  const receitas = NUTRI_RECIPES.filter(regra.onde);
+  return {
+    id: regra.id,
+    name: regra.name,
+    description: regra.description,
+    bgColor: regra.bgColor,
+    textColor: '#1B1B1B',
+    // Capa = primeira receita da coleção que tenha foto.
+    cover: receitas.map((r) => fotoDaReceita(r.id)).find((f) => f !== undefined),
+    recipeIds: receitas.map((r) => r.id),
+  };
+  // Coleção vazia não vira card — evita "Sopas e cremes (0)" no carrossel se
+  // um dia o filtro deixar de casar com os dados.
+}).filter((c) => c.recipeIds.length > 0);
 
-export function getCoverUrl(c: LuCollection): string {
-  return COVER(c.photoId);
+/** Busca uma coleção pelo id. Usada pela tela que lista uma coleção só. */
+export function getLuCollection(id: string): LuCollection | null {
+  return LU_COLLECTIONS.find((c) => c.id === id) ?? null;
 }

@@ -9,7 +9,12 @@ type Props = {
   q?: string;
   w?: number | string;
   h?: number | string;
-  src?: string;
+  /**
+   * URL/data: OU asset empacotado. O require() do Metro devolve um número, e é
+   * assim que as fotos das 153 receitas do livro chegam aqui — sem passar por
+   * rede, então elas aparecem mesmo offline.
+   */
+  src?: string | number;
   alt?: string;
   style?: StyleProp<ImageStyle>;
 };
@@ -17,7 +22,8 @@ type Props = {
 export const FoodImg: React.FC<Props> = ({ q, w = 200, h = 200, src, style }) => {
   const wPx = typeof w === 'number' ? w : 400;
   const hPx = typeof h === 'number' ? h : 400;
-  const url = src || unsplashUrl(q, wPx, hPx);
+  const source =
+    typeof src === 'number' ? src : { uri: (src as string) || unsplashUrl(q, wPx, hPx) };
 
   // Width/height pode ser número ou '100%'. Aplicamos no wrapper.
   return (
@@ -30,7 +36,7 @@ export const FoodImg: React.FC<Props> = ({ q, w = 200, h = 200, src, style }) =>
         backgroundColor: '#D6E0CF',
       }}
     >
-      <Image source={{ uri: url }} style={[{ width: '100%', height: '100%' }, style]} resizeMode="cover" />
+      <Image source={source} style={[{ width: '100%', height: '100%' }, style]} resizeMode="cover" />
     </View>
   );
 };
