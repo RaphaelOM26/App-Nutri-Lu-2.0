@@ -74,4 +74,30 @@ router.post('/redeem', requireAuth, async (req, res, next) => {
   }
 });
 
+// Concessão de acesso para DESENVOLVIMENTO. Só existe quando ALLOW_DEV_LOGIN=1,
+// a mesma flag que libera o login fake — as duas juntas permitem testar o fluxo
+// completo pela API sem acesso ao banco. Nunca ligar em produção com clientes.
+if (process.env.ALLOW_DEV_LOGIN === '1') {
+  const { registrarCompra } = await import('../services/billing.js');
+
+  router.post('/dev-grant', async (req, res, next) => {
+    try {
+      const meses = Number(req.body?.meses ?? 3);
+      const validoAte = new Date();
+      validoAte.setMonth(validoAte.getMonth() + meses);
+      const r = await registrarCompra({
+        source: 'cortesia',
+        externalId: req.body?.external_id || `dev-${Date.now()}`,
+        email: req.body?.email || null,
+        validoAte,
+      });
+      res.json({ ...r, validoAte });
+    } catch (e) {
+      next(e);
+    }
+  });
+
+  console.warn('[acesso] ⚠ ALLOW_DEV_LOGIN=1 — rota POST /billing/dev-grant ATIVA');
+}
+
 export default router;
