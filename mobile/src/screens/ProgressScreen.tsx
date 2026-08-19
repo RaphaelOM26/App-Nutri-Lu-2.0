@@ -1016,7 +1016,7 @@ const MacrosTab: React.FC = () => {
   const theme = useTheme();
   const { displayedMacros, mealsByDate } = useApp();
   // Targets vêm do state (mesma fonte que Home e Diário).
-  // No futuro virão do perfil real do user; por ora seguem o seed de demo.
+  // No futuro virão do perfil real do user; por ora seguem valores de demo.
   const targets = {
     p: displayedMacros.p.target,
     c: displayedMacros.c.target,

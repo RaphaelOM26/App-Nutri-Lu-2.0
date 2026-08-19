@@ -1,4 +1,4 @@
-// Tipos e seed de notificações (mock no MVP).
+// Tipos e lista inicial de notificações (mock no MVP).
 // Backend real virá depois — neste momento popula o painel pra UX testar.
 
 import type { IconName } from '../components/Icons';

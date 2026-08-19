@@ -1,5 +1,5 @@
 // Persistência local de receitas extraídas via AsyncStorage.
-// As receitas seed (mockData.INITIAL_RECIPES) ficam sempre disponíveis;
+// As receitas do livro (mockData.INITIAL_RECIPES) ficam sempre disponíveis;
 // aqui guardamos apenas as criadas/importadas pelo usuário.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';

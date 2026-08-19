@@ -45,7 +45,7 @@ export const LuRecipesScreen: React.FC = () => {
     }
   };
 
-  // Source de receitas: se tem coleção, filtra; senão usa TODAS as curadas (todas as seed).
+  // Source de receitas: se tem coleção, filtra; senão usa todas as do livro.
   // Quando os PDFs forem importados, "TODAS as curadas" = união de todas as coleções.
   const baseRecipes = useMemo(() => {
     if (collection) {

@@ -2,7 +2,8 @@
 // Mostra: hero, título, macros, tabs (Ingredientes/Modo/Notas), com toggle de
 // despensa/lista nos ingredientes e atalho pra Lista de Compras.
 //
-// Param pode ser { recipe } (seed), { saved } (do AsyncStorage) ou { extracted }
+// Param pode ser { recipe } / { nutriId } (livro da nutri), { saved } (do
+// AsyncStorage) ou { extracted }
 // (recém-extraída, ainda não salva).
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -379,7 +380,7 @@ export const RecipeDetailScreen: React.FC = () => {
   // extrai isso do post; o backend já aplica sanity check (reconcileServings).
   const recipeServes = Math.max(1, view.baseServings);
   // Macros exibidos = POR PORÇÃO × porções que o user vai comer.
-  // Seeds já têm kcal por porção no design (scale = servings direto);
+  // Receita do livro já tem macro por porção (scale = servings direto);
   // saved/extracted têm o TOTAL estimado dos ingredientes (÷ recipeServes).
   // Macros MEDIDOS (receitas do livro da nutri) vencem qualquer cálculo. Eles
   // já vêm POR PORÇÃO, então escalam só por `servings` — ao contrário da
@@ -535,7 +536,7 @@ export const RecipeDetailScreen: React.FC = () => {
   };
 
   // ─── Foto: derivados + handlers (Feature #1) ────────────────────
-  // Só receitas saved/extracted podem trocar foto (seed é curada/read-only).
+  // Só receitas saved/extracted podem trocar foto (as do livro são read-only).
   const canChangePhoto = view.kind === 'saved' || view.kind === 'extracted';
   const imageQueryForGen = canChangePhoto ? view.data.imageQuery : undefined;
   const heroImage = photo.changed ? photo.value : view.imageDataUrl;
@@ -821,7 +822,7 @@ export const RecipeDetailScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Macros card — seeds usam valores do design; saved/extracted usam estimativa via foodDB */}
+        {/* Macros card — livro usa macro medido; saved/extracted estimam via foodDB */}
         {showMacros && (
           <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
             <Card pad={16} radius={20}>

@@ -1,5 +1,5 @@
 // Dados iniciais — porte do `initialState()` em Design 2.0/app.jsx.
-// Em produção isso virá do backend; no MVP fica como seed local.
+// Em produção isso virá do backend; no MVP fica local.
 
 export type MacroValue = { value: number; target: number };
 
@@ -120,8 +120,8 @@ export const INITIAL_MEALS: Meal[] = [
 ];
 
 // As 153 receitas do livro da nutricionista (Conteúdo/Receitas nutri Lu.xlsx).
-// Substituíram as 280 seeds extraídas de PDFs em 2026-08-19: aquelas tinham
-// macros constantes, kcal zerada em 25 e rendimento perdido em 279 de 280.
+// São a base de receitas do app: macros medidos por porção, rendimento real
+// e foto própria.
 // Geradas por scripts/fotos/importar-receitas.mjs — não edite à mão.
 import { NUTRI_RECIPES } from './nutriRecipes';
 
@@ -154,7 +154,7 @@ export const INITIAL_RECIPES: Recipe[] = NUTRI_RECIPES.map((r) => ({
   // vale se uma receita nova entrar na planilha antes de a foto ser gerada.
   q: r.name,
   time: r.time,
-  // kcal MEDIDA pela nutri, por porção — a seed trazia o total da receita.
+  // kcal MEDIDA pela nutri, por porção.
   kcal: r.macros.kcal,
   tag: rotuloDaReceita(r.meals, r.tipo),
   servings: r.servings,

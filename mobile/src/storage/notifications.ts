@@ -1,4 +1,4 @@
-// Persistência só do que importa: IDs lidas. Lista de notifs é seed/derivada.
+// Persistência só do que importa: IDs lidas. A lista de notifs é derivada.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

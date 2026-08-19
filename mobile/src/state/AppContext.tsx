@@ -169,14 +169,14 @@ type State = {
   selectedDateKey: string;
   /** Targets de macros (vêm do onboarding via macroTargets storage). */
   macroTargets: { kcal: number; p: number; c: number; f: number };
-  recipes: Recipe[]; // receitas seed (mock)
+  recipes: Recipe[]; // receitas do livro da nutri
   savedRecipes: SavedRecipe[]; // receitas extraídas/salvas pelo usuário
   foodDB: Food[];
   /** IDs de alimentos favoritados (Food.id). Persistido. */
   favoriteFoodIds: string[];
   /** IDs de alimentos vistos recentemente, mais recente primeiro (cap em MAX_RECENTS). Persistido. */
   recentFoodIds: string[];
-  /** IDs de receitas favoritadas (seed `r1`/`r2` ou saved `rcp_...`). Persistido. */
+  /** IDs de receitas favoritadas (`NL-001` ou saved `rcp_...`). Persistido. */
   favoriteRecipeIds: string[];
   /** IDs de receitas vistas recentemente, mais recente primeiro (cap em MAX_RECIPE_RECENTS). Persistido. */
   recentRecipeIds: string[];

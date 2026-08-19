@@ -510,7 +510,7 @@ const MyRecipes: React.FC<MyRecipesProps> = ({ filter, setFilter, savedRecipes, 
   ];
 
   // Aplica filter + query + sort APENAS em savedRecipes (receitas importadas).
-  // As 280 receitas seed das coleções da Lu vivem na tab Descobrir.
+  // As receitas do livro da nutri vivem na tab Descobrir, por coleção.
   const filteredSaved = useMemo(() => {
     const out = savedRecipes.filter((r) => {
       if (query && !r.title.toLowerCase().includes(query)) return false;
@@ -734,61 +734,6 @@ const SavedCard: React.FC<SavedCardProps> = ({ recipe, foodDB, isFav, onPress, o
   );
 };
 
-type SeedCardProps = {
-  recipe: Recipe;
-  isFav: boolean;
-  onPress: () => void;
-  onToggleFav: () => void;
-};
-
-const SeedCard: React.FC<SeedCardProps> = ({ recipe, isFav, onPress, onToggleFav }) => {
-  const theme = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        width: cardWidth,
-        backgroundColor: theme.bgElev,
-        borderRadius: 18,
-        overflow: 'hidden',
-      }}
-    >
-      <View style={{ position: 'relative' }}>
-        <FoodImg q={recipe.q} w="100%" h={120} style={{ borderRadius: 0 }} />
-        <FavBadge isFav={isFav} onPress={onToggleFav} />
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 8,
-            left: 8,
-            backgroundColor: 'rgba(0,0,0,0.55)',
-            paddingVertical: 3,
-            paddingHorizontal: 8,
-            borderRadius: 100,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 4,
-          }}
-        >
-          <Icon.clock size={10} color="#fff" stroke={2} />
-          <Text style={{ fontFamily: FONT.body, fontSize: 10, fontWeight: '700', color: '#fff' }}>{recipe.time}</Text>
-        </View>
-      </View>
-      <View style={{ padding: 12 }}>
-        <Text style={{ fontFamily: FONT.head, fontSize: 14, fontWeight: '700', color: theme.text, lineHeight: 18 }} numberOfLines={2}>
-          {recipe.name}
-        </Text>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-          <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textMuted, fontWeight: '600' }}>
-            {recipe.kcal} kcal · {recipe.tag}
-          </Text>
-          <Text style={{ fontFamily: FONT.body, fontSize: 10, color: theme.textFaint }}>{recipe.servings} porç.</Text>
-        </View>
-      </View>
-    </Pressable>
-  );
-};
-
 const FavBadge: React.FC<{ isFav: boolean; onPress: () => void }> = ({ isFav, onPress }) => {
   const theme = useTheme();
   return (
@@ -905,7 +850,6 @@ const DiscoverRecipes: React.FC<DiscoverProps> = ({ onOpen, onOpenLuChat, onOpen
   const onOpenRecipeFromModal = () => {
     if (!currentCandidate) return;
     setSuggestOpen(false);
-    // SeedRecipe é compatível com Recipe (mesmos campos base) + extras ignorados pelo nav.
     onOpen(currentCandidate.recipe.id, { nutriId: currentCandidate.recipe.id });
   };
 
@@ -1395,11 +1339,11 @@ const LuCollectionCard: React.FC<{ collection: LuCollection; onPress: () => void
 };
 
 // Helper: gera query do Unsplash pra preview da coleção. Usa coverQuery se houver,
-// senão pega o `q` da primeira receita seed correspondente.
+// senão pega o `q` da primeira receita correspondente.
 function previewQueryFor(col: RecipeCollection, recipes: Recipe[]): string {
   if (col.coverQuery) return col.coverQuery;
-  const firstSeed = recipes.find((r) => col.recipeIds.includes(r.id));
-  return firstSeed?.q || 'food,plate';
+  const primeira = recipes.find((r) => col.recipeIds.includes(r.id));
+  return primeira?.q || 'food,plate';
 }
 
 // (Plano alimentar virou aba própria no menu inferior — antiga sub-aba removida.)
@@ -1658,8 +1602,8 @@ const CollectionDetailModal: React.FC<{
   type CollectionItem = { id: string; title: string; sub: string; q: string; navParam: { recipe?: Recipe; saved?: SavedRecipe } };
   const inCol: CollectionItem[] = collection.recipeIds
     .map<CollectionItem | null>((rid) => {
-      const seed = recipes.find((r) => r.id === rid);
-      if (seed) return { id: seed.id, title: seed.name, sub: `${seed.kcal} kcal · ${seed.time}`, q: seed.q, navParam: { recipe: seed } };
+      const receita = recipes.find((r) => r.id === rid);
+      if (receita) return { id: receita.id, title: receita.name, sub: `${receita.kcal} kcal · ${receita.time}`, q: receita.q, navParam: { recipe: receita } };
       const saved = savedRecipes.find((r) => r.id === rid);
       if (saved) return { id: saved.id, title: saved.title, sub: `${saved.ingredients.length} ingredientes`, q: saved.title, navParam: { saved } };
       return null;
