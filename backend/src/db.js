@@ -197,5 +197,42 @@ export async function initSchema() {
     );
   `);
 
-  console.log('[db] schema inicializado (day_snapshots + comunidade + moderação + acesso OK)');
+
+  // ai_usage: uma linha por chamada à OpenAI. Existe porque o gasto
+  // recorrente do app é a IA e o painel da OpenAI só mostra o total — não
+  // diz qual feature nem qual pessoa consumiu. Guarda TOKENS, nunca dólares:
+  // preço muda e não pertence ao banco (ver services/uso.js).
+  //
+  // ON DELETE SET NULL no user_id: excluir a conta apaga o vínculo com a
+  // pessoa, mas o custo já gasto continua contando no total do mês — do
+  // contrário o relatório encolheria sozinho a cada exclusão de conta.
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS ai_usage (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      rota TEXT NOT NULL,
+      tipo TEXT NOT NULL CHECK (tipo IN ('chat', 'imagem', 'transcricao')),
+      modelo TEXT,
+      user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      device_id TEXT,
+      input_tokens INTEGER,
+      output_tokens INTEGER,
+      cached_tokens INTEGER,
+      reasoning_tokens INTEGER,
+      total_tokens INTEGER,
+      imagens INTEGER,
+      ms INTEGER,
+      ok BOOLEAN NOT NULL DEFAULT TRUE,
+      erro TEXT
+    );
+  `);
+  await p.query(`
+    CREATE INDEX IF NOT EXISTS idx_ai_usage_rota_dia
+      ON ai_usage(rota, criado_em DESC);
+  `);
+  await p.query(`
+    CREATE INDEX IF NOT EXISTS idx_ai_usage_user
+      ON ai_usage(user_id, criado_em DESC) WHERE user_id IS NOT NULL;
+  `);
+  console.log('[db] schema inicializado (day_snapshots + comunidade + moderação + acesso + uso OK)');
 }

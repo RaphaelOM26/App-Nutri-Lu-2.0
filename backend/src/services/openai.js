@@ -1,10 +1,17 @@
 // Cliente OpenAI compartilhado e helpers de prompts/schemas.
 
 import OpenAI from 'openai';
+import { contabilizar } from './uso.js';
 
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// contabilizar() embrulha os métodos que gastam (chat, imagem, transcrição) pra
+// cada chamada virar uma linha em ai_usage. Fica AQUI, na criação do cliente,
+// e não nas rotas: assim rota nova que chame a OpenAI já nasce contabilizada,
+// sem ninguém precisar lembrar.
+export const openai = contabilizar(
+  new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  }),
+);
 
 export const MODEL = process.env.OPENAI_MODEL || 'gpt-5.4-mini';
 

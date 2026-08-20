@@ -5,6 +5,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { initSchema } from './db.js';
+import { contextoDeUso } from './services/uso.js';
 import extractRecipeRouter from './routes/extractRecipe.js';
 import analyzeFoodRouter from './routes/analyzeFood.js';
 import chatRouter from './routes/chat.js';
@@ -47,6 +48,11 @@ app.use((req, res, next) => {
   });
   next();
 });
+
+// Contexto de uso da IA. Precisa vir antes das rotas: é ele que guarda qual
+// endpoint e qual pessoa originaram a chamada à OpenAI, que acontece lá no
+// fundo do handler, longe do req. Não faz I/O nem atrasa a requisição.
+app.use(contextoDeUso);
 
 // Healthcheck — útil pra confirmar que o Expo Go consegue alcançar o backend
 app.get('/health', (req, res) => {
