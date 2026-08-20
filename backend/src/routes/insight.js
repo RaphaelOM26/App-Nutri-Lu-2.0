@@ -3,6 +3,7 @@
 // e retorna 1-2 frases motivadoras/práticas baseadas nos dados do dia.
 
 import express from 'express';
+import { requirePremium } from '../services/billing.js';
 import { tetoDiario } from '../services/limites.js';
 import { openai, MODEL } from '../services/openai.js';
 
@@ -53,7 +54,7 @@ function buildContextMessage(ctx) {
   return `Dados do dia:\n${parts.join('\n')}`;
 }
 
-router.post('/', tetoDiario('insight', 20, 'LIMITE_INSIGHT_DIA'), async (req, res, next) => {
+router.post('/', requirePremium, tetoDiario('insight', 20, 'LIMITE_INSIGHT_DIA'), async (req, res, next) => {
   try {
     const { context } = req.body || {};
     const tone = context?.tone === 'alert' ? 'alert' : 'good';

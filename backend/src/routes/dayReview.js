@@ -3,6 +3,7 @@
 // + comentário final. Disparada quando o usuário toca "Completar dia".
 
 import express from 'express';
+import { requirePremium } from '../services/billing.js';
 import { tetoDiario } from '../services/limites.js';
 import { openai, MODEL } from '../services/openai.js';
 
@@ -49,7 +50,7 @@ function buildContextMessage(ctx) {
   return `Dados do dia que está sendo fechado:\n${parts.join('\n\n')}`;
 }
 
-router.post('/', tetoDiario('resumo-dia', 10, 'LIMITE_RESUMO_DIA'), async (req, res, next) => {
+router.post('/', requirePremium, tetoDiario('resumo-dia', 10, 'LIMITE_RESUMO_DIA'), async (req, res, next) => {
   try {
     const { context } = req.body || {};
     const messages = [

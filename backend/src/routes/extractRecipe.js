@@ -7,13 +7,14 @@
 // Resposta: { title, ingredients[], steps[], time, servings, confidence }
 
 import { Router } from 'express';
+import { requirePremium } from '../services/billing.js';
 import { tetoDiario } from '../services/limites.js';
 import { openai, MODEL, RECIPE_SCHEMA, RECIPE_SYSTEM_PROMPT } from '../services/openai.js';
 import { reconcileServings, estimateTotalKcal, sanitizeRecipe } from '../utils/recipeSanity.js';
 
 const router = Router();
 
-router.post('/', tetoDiario('importar-receita', 15, 'LIMITE_IMPORTAR_DIA'), async (req, res, next) => {
+router.post('/', requirePremium, tetoDiario('importar-receita', 15, 'LIMITE_IMPORTAR_DIA'), async (req, res, next) => {
   try {
     const { source, data } = req.body || {};
 
