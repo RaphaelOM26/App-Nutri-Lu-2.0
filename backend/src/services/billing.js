@@ -145,7 +145,7 @@ export async function temAcesso(userId) {
        FROM users u
        JOIN purchases p
          ON (
-              (p.email IS NOT NULL AND u.email IS NOT NULL AND p.email = LOWER(u.email))
+              (p.email IS NOT NULL AND u.email IS NOT NULL AND p.email = BTRIM(LOWER(u.email)))
               OR EXISTS (
                    SELECT 1 FROM access_codes c
                     WHERE c.purchase_id = p.id AND c.redeemed_by_user_id = u.id

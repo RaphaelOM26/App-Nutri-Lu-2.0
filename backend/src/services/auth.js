@@ -72,6 +72,11 @@ export async function verifyProviderToken(provider, identityToken) {
 // posteriores preservam o nome já salvo, mas preenchem email/device_id se vierem.
 export async function upsertUser({ provider, sub, displayName, email, deviceId }) {
   const p = getPool();
+  // O e-mail é o que casa a conta com a compra no caminho principal do acesso,
+  // então nasce normalizado. Hoje ele vem do token do provedor e já vem limpo,
+  // mas qualquer origem futura (painel da nutri, IAP, importação) que deixasse
+  // passar um espaço viraria cliente pagante sem acesso e sem explicação.
+  const emailNormalizado = typeof email === 'string' ? email.trim().toLowerCase() : null;
   const { rows } = await p.query(
     `INSERT INTO users (provider, provider_sub, display_name, email, device_id)
      VALUES ($1, $2, $3, $4, $5)
@@ -79,7 +84,7 @@ export async function upsertUser({ provider, sub, displayName, email, deviceId }
        email = COALESCE(users.email, EXCLUDED.email),
        device_id = COALESCE(EXCLUDED.device_id, users.device_id)
      RETURNING id, provider, display_name, email`,
-    [provider, sub, displayName, email, deviceId || null]
+    [provider, sub, displayName, emailNormalizado, deviceId || null]
   );
   return rows[0];
 }
