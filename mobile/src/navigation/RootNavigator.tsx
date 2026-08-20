@@ -30,7 +30,6 @@ import {
   PlannerScreen,
   ShoppingListScreen,
   JourneySummaryScreen,
-  InviteFriendsScreen,
   AccessScreen,
   PlanWeekScreen,
   PlanMealScreen,
@@ -86,7 +85,6 @@ export function RootNavigator() {
       <Stack.Screen name="Planner" component={PlannerScreen} />
       <Stack.Screen name="ShoppingList" component={ShoppingListScreen} />
       <Stack.Screen name="JourneySummary" component={JourneySummaryScreen} />
-      <Stack.Screen name="InviteFriends" component={InviteFriendsScreen} />
       <Stack.Screen name="Access" component={AccessScreen} options={{ animation: 'slide_from_bottom' }} />
 
       {/* Plano alimentar premium — PlanWeek é a aba "Plan"; estas vêm por cima */}

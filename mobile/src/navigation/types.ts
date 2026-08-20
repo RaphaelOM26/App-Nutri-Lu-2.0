@@ -83,8 +83,6 @@ export type RootStackParamList = {
   ShoppingList: undefined;
   // Resumo da jornada (compartilhável)
   JourneySummary: undefined;
-  // Convidar amigos
-  InviteFriends: undefined;
   // Ativação do acompanhamento. `codigo` chega pelo link da mensagem e só
   // pré-preenche o campo — o resgate continua sendo um toque da pessoa.
   Access: { codigo?: string } | undefined;

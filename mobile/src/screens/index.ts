@@ -19,7 +19,6 @@ export { ChatLuScreen } from './ChatLuScreen';
 export { PlannerScreen } from './PlannerScreen';
 export { ShoppingListScreen } from './ShoppingListScreen';
 export { JourneySummaryScreen } from './JourneySummaryScreen';
-export { InviteFriendsScreen } from './InviteFriendsScreen';
 export { AccessScreen } from './AccessScreen';
 // Plano alimentar premium (feature paga, v1.0)
 export { PlanWeekScreen } from './plan/PlanWeekScreen';
