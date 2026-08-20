@@ -83,8 +83,6 @@ export type RootStackParamList = {
   ShoppingList: undefined;
   // Resumo da jornada (compartilhável)
   JourneySummary: undefined;
-  // Convidar amigos
-  InviteFriends: undefined;
   // Plano alimentar premium (feature paga, v1.0) — fluxo Dark Luxe.
   // PlanWeek é a ABA (TabParamList.Plan); estas são telas push por cima.
   PlanMeal: { mealId: string };

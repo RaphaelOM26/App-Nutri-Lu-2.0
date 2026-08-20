@@ -142,8 +142,6 @@ export const ProfileScreen: React.FC = () => {
   // Conquistas: user começa em 0 — sistema de unlock virá depois.
   const achievementsCount = 0;
 
-  // (Share inline removido — agora abre a tela dedicada InviteFriends com link + gameficação)
-
   const items: MenuItem[] = [
     {
       icon: 'chart',
@@ -169,12 +167,6 @@ export const ProfileScreen: React.FC = () => {
       label: 'Configurações',
       subtitle: 'Tema do app e idioma',
       onPress: () => setSettingsOpen(true),
-    },
-    {
-      icon: 'user',
-      label: 'Convidar amigos',
-      subtitle: 'Ganhe Premium grátis a cada 5 convites',
-      onPress: () => nav.navigate('InviteFriends'),
     },
   ];
 
