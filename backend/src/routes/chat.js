@@ -6,6 +6,7 @@
 // streaming, cap de mensagens. Por agora, chat sem estado.
 
 import express from 'express';
+import { tetoDiario } from '../services/limites.js';
 import { requirePremium } from '../services/billing.js';
 import { openai, MODEL } from '../services/openai.js';
 
@@ -60,7 +61,7 @@ function buildContextMessage(ctx) {
   return `Contexto do dia:\n${parts.join('\n\n')}`;
 }
 
-router.post('/', requirePremium, async (req, res, next) => {
+router.post('/', requirePremium, tetoDiario('chat-lu', 40, 'LIMITE_CHAT_DIA'), async (req, res, next) => {
   try {
     const { messages, context } = req.body || {};
     if (!Array.isArray(messages) || messages.length === 0) {

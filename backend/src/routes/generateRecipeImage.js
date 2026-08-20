@@ -13,6 +13,8 @@
 // do app — imagem grande infla o storage local).
 
 import { Router } from 'express';
+import { requirePremium } from '../services/billing.js';
+import { tetoDiario } from '../services/limites.js';
 import { openai } from '../services/openai.js';
 
 const router = Router();
@@ -37,7 +39,9 @@ function buildPrompt({ title, imageQuery, ingredients }) {
   );
 }
 
-router.post('/', async (req, res, next) => {
+// Duas camadas: só quem tem acesso, e mesmo assim com teto diário. É a chamada
+// mais cara do app por unidade — sem teto, um laço deixa a conta sem fundo.
+router.post('/', requirePremium, tetoDiario('gerar-imagem', 3, 'LIMITE_GERAR_IMAGEM_DIA'), async (req, res, next) => {
   try {
     const { title, imageQuery, ingredients } = req.body || {};
     if (!title || typeof title !== 'string') {

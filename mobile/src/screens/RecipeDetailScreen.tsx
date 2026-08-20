@@ -1403,27 +1403,25 @@ export const RecipeDetailScreen: React.FC = () => {
             </View>
             {!generating && genPreview && (
               <Text style={{ fontFamily: FONT.body, fontSize: 11, color: theme.textFaint, textAlign: 'center' }}>
-                Não ficou boa? Gere novamente até acertar.
+                Se preferir outra imagem, use uma foto sua da galeria ou da câmera.
               </Text>
             )}
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-              <View style={{ flex: 1 }}>
-                <Btn variant="secondary" size="md" icon={Icon.sparkle} onPress={runGenerate} disabled={generating} full>
-                  {generating ? 'Gerando…' : 'Gerar novamente'}
-                </Btn>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Btn
-                  variant="primary"
-                  size="md"
-                  icon={Icon.check}
-                  onPress={() => genPreview && applyPhoto(genPreview)}
-                  disabled={generating || !genPreview}
-                  full
-                >
-                  Usar esta
-                </Btn>
-              </View>
+            {/* Havia um "Gerar novamente" aqui. Saiu de propósito: cada toque é
+                uma geração paga, e o botão convidava explicitamente à repetição
+                ("Não ficou boa? Gere novamente até acertar") — um laço de um
+                toque só em cima da chamada mais cara do app. Quem não gostar do
+                resultado tem galeria e câmera, que não custam nada. */}
+            <View style={{ marginTop: 4 }}>
+              <Btn
+                variant="primary"
+                size="md"
+                icon={Icon.check}
+                onPress={() => genPreview && applyPhoto(genPreview)}
+                disabled={generating || !genPreview}
+                full
+              >
+                Usar esta
+              </Btn>
             </View>
             <Pressable onPress={() => { setGenMode(false); setGenPreview(null); }} style={{ padding: 10, alignItems: 'center' }}>
               <Text style={{ fontFamily: FONT.bodyBold, fontSize: 13, fontWeight: '600', color: theme.textMuted }}>Voltar</Text>

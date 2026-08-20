@@ -6,12 +6,13 @@
 // e a IA estima macros de cada item identificado.
 
 import { Router } from 'express';
+import { tetoDiario } from '../services/limites.js';
 import { requirePremium } from '../services/billing.js';
 import { openai, FOOD_MODEL, FOOD_ANALYSIS_SCHEMA, FOOD_SYSTEM_PROMPT } from '../services/openai.js';
 
 const router = Router();
 
-router.post('/', requirePremium, async (req, res, next) => {
+router.post('/', requirePremium, tetoDiario('foto-ia', 30, 'LIMITE_FOTO_IA_DIA'), async (req, res, next) => {
   try {
     const { image } = req.body || {};
     if (!image) {
