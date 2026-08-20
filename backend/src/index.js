@@ -19,6 +19,17 @@ import communityRouter from './routes/community.js';
 import billingRouter from './routes/billing.js';
 
 const app = express();
+
+// Atrás do proxy do Railway, req.ip é o endereço do PROXY, não o do usuário —
+// e o teto diário cai nele quando a chamada é anônima (userId → device_id → IP).
+// Sem isto, ou o teto não limita ninguém (o proxy varia), ou todos os anônimos
+// dividem UM contador e uma pessoa sozinha zera a cota do dia do app inteiro.
+//
+// O número 1, e não `true`: com `true` o Express lê o PRIMEIRO endereço do
+// X-Forwarded-For, que o cliente pode forjar pra escapar do teto. Com 1 ele lê
+// o endereço posto pela borda do Railway, que o cliente não controla.
+app.set('trust proxy', 1);
+
 const PORT = process.env.PORT || 3001;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 

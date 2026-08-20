@@ -9,6 +9,8 @@
 // Pra rodar local em dev (Expo Go), o mobile/.env aponta pro IP da
 // máquina na rede local (localhost no celular = o próprio celular).
 
+import { getDeviceId } from '../storage/deviceId';
+
 const PRODUCTION_API_URL = 'https://app-nutri-lu-20-production.up.railway.app';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || PRODUCTION_API_URL;
@@ -92,6 +94,31 @@ function avisarPremium() {
   for (const fn of ouvintesPremium) fn();
 }
 
+/**
+ * Injeta o device_id em toda requisição POST.
+ *
+ * O teto diário do servidor identifica quem chamou por userId → device_id → IP,
+ * nessa ordem. O app roda anônimo por padrão, então sem device_id a conta cai
+ * no IP — e o IP que o servidor enxerga é o do proxy do Railway, igual pra todo
+ * mundo. Ou o teto não limita ninguém, ou uma pessoa sozinha consome a cota do
+ * dia de todos os usuários.
+ *
+ * Fica aqui, e não nas sete chamadas de IA, pelo mesmo motivo do 402: rota nova
+ * entra coberta sem ninguém precisar lembrar dela.
+ */
+async function comDeviceId(body: unknown): Promise<unknown> {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
+  try {
+    // device_id ANTES do spread: quem já manda o seu (day-snapshot, login social)
+    // continua mandando o próprio.
+    return { device_id: await getDeviceId(), ...(body as object) };
+  } catch {
+    // Falha ao ler o id não pode impedir a chamada — o servidor cai no IP,
+    // que é o comportamento de antes, não uma regressão.
+    return body;
+  }
+}
+
 async function postJSON<T>(path: string, body: unknown, token?: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
@@ -99,7 +126,7 @@ async function postJSON<T>(path: string, body: unknown, token?: string): Promise
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(await comDeviceId(body)),
   });
   const text = await res.text();
   let data: any;
