@@ -24,6 +24,7 @@ import { formatRelativeTime, type AppNotification } from '../data/notifications'
 import { generateInsight, ApiError, computeInsightTone, type InsightTone } from '../api/client';
 import { calcStreak } from '../storage/habits';
 import { loadInsight, saveInsight, makeStateHash } from '../storage/insight';
+import { useSemAcesso } from '../state/accessState';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -64,6 +65,9 @@ export const HomeScreen: React.FC = () => {
   // Insight regenerado a cada mudança real nos macros/refeições/hidratação.
   // Cache por "stateHash" evita chamada quando nada mudou (remounts).
   // Debounce 1.5s evita chamadas em sequência se o user registrar vários itens rápido.
+  // O insight é gerado por IA e faz parte do acompanhamento. Quem não tem
+  // acesso não vê o card — e, principalmente, o app nem faz a chamada.
+  const semAcesso = useSemAcesso();
   const [insight, setInsight] = useState<string | null>(null);
   const [insightTone, setInsightTone] = useState<InsightTone>('good');
   const [insightLoading, setInsightLoading] = useState(false);
@@ -79,6 +83,7 @@ export const HomeScreen: React.FC = () => {
 
   useEffect(() => {
     if (!isToday) return; // não gera insight pra dia diferente do atual
+    if (semAcesso) return; // sem acompanhamento, sem insight
     let alive = true;
     const timer = setTimeout(async () => {
       const cached = await loadInsight();
@@ -319,8 +324,8 @@ export const HomeScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Insight — só pra hoje */}
-        {isToday && (() => {
+        {/* Insight — só pra hoje, e só pra quem tem acompanhamento */}
+        {isToday && !semAcesso && (() => {
           const isAlert = insightTone === 'alert';
           // Alert: tons de rosa suave; Good: azul gelo (atual).
           const cardBg = isAlert ? '#F5DCDF' : theme.accentIce;
@@ -339,7 +344,7 @@ export const HomeScreen: React.FC = () => {
                       {labelText}
                     </Text>
                     <Text style={{ fontFamily: FONT.head, fontSize: 15, fontWeight: '700', color: textColor, marginTop: 4, lineHeight: 20 }}>
-                      {insight || (insightLoading ? 'Pensando no insight do dia…' : 'Sua proteína está 18% acima da média da semana. Bom trabalho.')}
+                      {insight || (insightLoading ? 'Pensando no insight do dia…' : 'Registre sua primeira refeição e a Lu comenta seu dia.')}
                     </Text>
                   </View>
                 </View>

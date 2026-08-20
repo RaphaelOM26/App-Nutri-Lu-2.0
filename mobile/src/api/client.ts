@@ -77,6 +77,21 @@ export type FoodAnalysis = {
 export type ExtractSource = 'image' | 'url' | 'video';
 
 // ─── Helpers ────────────────────────────────────────────────────
+// Rotas pagas respondem 402 quando a conta não tem acesso. Em vez de cada tela
+// tratar isso por conta própria, quem quiser saber se inscreve aqui — assim uma
+// rota paga nova já entra coberta, sem ninguém lembrar de tratá-la.
+type OuvintePremium = () => void;
+const ouvintesPremium: OuvintePremium[] = [];
+
+/** Registra um ouvinte para o 402 de qualquer rota paga. */
+export function onPremiumRequired(fn: OuvintePremium): void {
+  ouvintesPremium.push(fn);
+}
+
+function avisarPremium() {
+  for (const fn of ouvintesPremium) fn();
+}
+
 async function postJSON<T>(path: string, body: unknown, token?: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
@@ -94,6 +109,7 @@ async function postJSON<T>(path: string, body: unknown, token?: string): Promise
     throw new ApiError(`Resposta inválida do servidor (HTTP ${res.status}).`, res.status);
   }
   if (!res.ok) {
+    if (res.status === 402) avisarPremium();
     throw new ApiError(data?.error || `Erro HTTP ${res.status}`, res.status, data?.code);
   }
   return data as T;
@@ -465,6 +481,25 @@ export async function fetchCommunityLeaderboard(
   });
   if (!res.ok) throw new ApiError('Erro ao carregar o rank', res.status);
   return res.json();
+}
+
+/** Estado do acesso pago desta conta. Exige sessão. */
+export async function fetchAccess(
+  token: string,
+): Promise<{ acesso: boolean; validoAte?: string | null }> {
+  const res = await fetch(`${BASE_URL}/billing/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new ApiError('Não consegui verificar o acesso', res.status);
+  return res.json();
+}
+
+/** Vincula um código de acesso à conta. */
+export async function redeemAccessCode(
+  token: string,
+  code: string,
+): Promise<{ ok: true; acesso: boolean }> {
+  return postJSON('/billing/redeem', { code }, token);
 }
 
 export { BASE_URL };

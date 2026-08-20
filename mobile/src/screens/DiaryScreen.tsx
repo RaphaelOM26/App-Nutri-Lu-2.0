@@ -28,6 +28,7 @@ import { TODAY, TODAY_MONTH, TODAY_YEAR } from '../state/AppContext';
 import { todayKey } from '../storage/completedDays';
 import { getDeviceId } from '../storage/deviceId';
 import { generateDayReview, getDaySnapshot, ApiError, type DaySnapshotPayload } from '../api/client';
+import { useSemAcesso } from '../state/accessState';
 import { MarkdownText } from '../components/MarkdownText';
 import { ActivityIndicator } from 'react-native';
 
@@ -88,6 +89,7 @@ export const DiaryScreen: React.FC = () => {
   const [copyLoading, setCopyLoading] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewText, setReviewText] = useState<string | null>(null);
+  const semAcesso = useSemAcesso();
   const [reviewLoading, setReviewLoading] = useState(false);
   const toast = useToast();
 
@@ -96,6 +98,13 @@ export const DiaryScreen: React.FC = () => {
   const completeToday = async () => {
     const key = todayKey();
     completeDay(key);
+    // A análise do dia é feita por IA e faz parte do acompanhamento. Sem
+    // acesso, o dia fecha normalmente e o modal nem abre — melhor que abrir
+    // e mostrar erro de algo que a pessoa não contratou.
+    if (semAcesso) {
+      showToast('Dia concluído 🎯');
+      return;
+    }
     setReviewOpen(true);
     setReviewText(null);
     setReviewLoading(true);
