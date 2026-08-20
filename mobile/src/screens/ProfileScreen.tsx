@@ -21,6 +21,7 @@ import { SettingsModal } from '../components/SettingsModal';
 import { useApp } from '../state/AppContext';
 import { useToast } from '../state/ToastContext';
 import { useAuthSession, signOut, deleteAccount } from '../state/authState';
+import { useAccess } from '../state/accessState';
 import { fetchBlockedUsers, unblockCommunityUser } from '../api/client';
 import { showCommunityRules } from '../components/communityRules';
 import { calcStreak } from '../storage/habits';
@@ -144,6 +145,12 @@ export const ProfileScreen: React.FC = () => {
 
   // (Share inline removido — agora abre a tela dedicada InviteFriends com link + gameficação)
 
+  const acesso = useAccess();
+  const temAcesso = acesso?.acesso === true;
+  const validadeAcesso = acesso?.validoAte
+    ? new Date(acesso.validoAte).toLocaleDateString('pt-BR')
+    : null;
+
   const items: MenuItem[] = [
     {
       icon: 'chart',
@@ -157,12 +164,20 @@ export const ProfileScreen: React.FC = () => {
       subtitle: 'Lembrete diário de pesagem',
       onPress: () => setRemindersOpen(true),
     },
+    // Acesso ao acompanhamento. Substituiu o antigo item "Premium · grátis 7
+    // dias", que prometia um teste gratuito que não existe neste modelo e só
+    // mostrava um toast. O rótulo muda com o estado pra a pessoa que já tem
+    // acesso não ser convidada a ativar o que já está ativo.
     {
-      icon: 'sparkle',
-      label: 'Premium · grátis 7 dias',
-      subtitle: 'Receitas exclusivas + Lu sem limite',
-      accent: true,
-      onPress: () => toast('Premium chega em breve · vai liberar receitas + Lu ilimitada', 'info'),
+      icon: temAcesso ? 'checkCircle' : 'lock',
+      label: temAcesso ? 'Meu acesso' : 'Ativar meu acesso',
+      subtitle: temAcesso
+        ? validadeAcesso
+          ? `Acompanhamento ativo até ${validadeAcesso}`
+          : 'Acompanhamento ativo'
+        : 'Já tem um código? Ative por aqui',
+      accent: !temAcesso,
+      onPress: () => nav.navigate('Access'),
     },
     {
       icon: 'settings',

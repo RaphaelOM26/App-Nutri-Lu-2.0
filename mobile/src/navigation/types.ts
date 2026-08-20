@@ -85,6 +85,9 @@ export type RootStackParamList = {
   JourneySummary: undefined;
   // Convidar amigos
   InviteFriends: undefined;
+  // Ativação do acompanhamento. `codigo` chega pelo link da mensagem e só
+  // pré-preenche o campo — o resgate continua sendo um toque da pessoa.
+  Access: { codigo?: string } | undefined;
   // Plano alimentar premium (feature paga, v1.0) — fluxo Dark Luxe.
   // PlanWeek é a ABA (TabParamList.Plan); estas são telas push por cima.
   PlanMeal: { mealId: string };
