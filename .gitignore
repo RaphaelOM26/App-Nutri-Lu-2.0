@@ -71,6 +71,7 @@ backend/scripts/food-test*/expected.json
 # redimensionadas que o app usa vão pra mobile/assets, essas não entram.
 scripts/fotos/saida/
 scripts/fotos/saida-thumbs/
+scripts/fotos/saida-800/
 
 # Lock do Excel quando a planilha está aberta
 Conteúdo/~$*.xlsx

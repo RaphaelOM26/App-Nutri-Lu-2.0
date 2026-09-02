@@ -1,6 +1,6 @@
 // AUTO-GERADO por scripts/fotos/importar-receitas.mjs — NÃO EDITE À MÃO.
 // Fonte: Conteúdo/Receitas nutri Lu.xlsx (livro oficial da nutricionista).
-// 153 receitas. Rode o script de novo quando a planilha mudar.
+// 407 receitas. Rode o script de novo quando a planilha mudar.
 
 import type { Ingredient, DeclaredMacros, MealCategory } from '../api/client';
 
@@ -6085,7 +6085,8 @@ export const NUTRI_RECIPES: NutriRecipe[] = [
     "name": "Banana Assada com Chocolate e Pasta de Amendoim",
     "tipo": "sobremesa",
     "meals": [
-      "snack"
+      "snack",
+      "dessert"
     ],
     "tags": [
       "Vegetariana"
@@ -12402,6 +12403,15999 @@ export const NUTRI_RECIPES: NutriRecipe[] = [
       "c": 6,
       "f": 26
     }
+  },
+  {
+    "id": "NL-154",
+    "name": "Pão Francês com Creme de Ricota e Frango",
+    "tipo": "prato",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "½ pão francês"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "Frango cozido e desfiado"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Creme de ricota"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Tomate picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque o frango desfiado em uma tigela.",
+      "Acrescente o creme de ricota.",
+      "Adicione o cheiro-verde e misture até formar um recheio cremoso.",
+      "Acrescente o tomate picado e misture delicadamente.",
+      "Abra a metade do pão francês.",
+      "Distribua todo o recheio.",
+      "Consuma em temperatura ambiente ou aqueça rapidamente na sanduicheira, se desejar."
+    ],
+    "macros": {
+      "kcal": 230,
+      "p": 24,
+      "c": 18,
+      "f": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Creme de ricota por cottage ou requeijão light. Pão francês por pão integral em quantidade equivalente."
+  },
+  {
+    "id": "NL-155",
+    "name": "Iogurte Proteico com Morango e Aveia Crocante",
+    "tipo": "prato",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "160",
+        "unit": "g",
+        "name": "Iogurte natural proteico"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "Morangos picados"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "Aveia em flocos"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "Chia"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque o iogurte em uma tigela ou taça.",
+      "Higienize e pique os morangos.",
+      "Distribua os morangos sobre o iogurte.",
+      "Acrescente a aveia.",
+      "Finalize com a chia e a canela.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 20,
+      "c": 27,
+      "f": 5,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Iogurte zero lactose. Morango por mamão, kiwi ou outra fruta em porção equivalente."
+  },
+  {
+    "id": "NL-156",
+    "name": "Torrada com Cottage, Ovo e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "1 fatia de pão integral"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "1 ovo inteiro"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "Cottage"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Tomate picado ou em rodelas"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Torre a fatia de pão até ficar levemente crocante.",
+      "Prepare o ovo mexido em frigideira antiaderente ou cozinhe-o, conforme preferência.",
+      "Espalhe o cottage sobre a torrada.",
+      "Acrescente o ovo.",
+      "Distribua o tomate.",
+      "Finalize com orégano.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 250,
+      "p": 19,
+      "c": 19,
+      "f": 11
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Cottage por creme de ricota ou ricota temperada. Para versão sem lactose, utilizar produtos adequados."
+  },
+  {
+    "id": "NL-157",
+    "name": "Creme Gelado de Banana com Iogurte e Leite em Pó",
+    "tipo": "sobremesa",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "Banana previamente congelada"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "Iogurte natural"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Leite em pó desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Corte previamente a banana em pedaços e congele.",
+      "Coloque a banana congelada no processador ou liquidificador.",
+      "Acrescente o iogurte natural.",
+      "Adicione o leite em pó.",
+      "Bata até obter um creme homogêneo e espesso.",
+      "Finalize com canela.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 14,
+      "c": 34,
+      "f": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Iogurte zero lactose. Banana por morango congelado."
+  },
+  {
+    "id": "NL-158",
+    "name": "Cuscuz Pequeno com Ricota Cremosa e Ovo",
+    "tipo": "prato",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Flocão de milho"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "1 ovo inteiro"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "Ricota"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "Requeijão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Hidrate o flocão com uma pequena quantidade de água e uma pitada de sal.",
+      "Deixe descansar por aproximadamente 5 minutos.",
+      "Cozinhe na cuscuzeira até ficar macio.",
+      "Amasse a ricota com um garfo.",
+      "Acrescente o requeijão e o cheiro-verde.",
+      "Misture até formar um creme.",
+      "Prepare o ovo mexido em uma frigideira antiaderente.",
+      "Sirva o cuscuz acompanhado do creme de ricota e do ovo."
+    ],
+    "macros": {
+      "kcal": 285,
+      "p": 18,
+      "c": 27,
+      "f": 12
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Ricota por cottage. Requeijão por creme de ricota. Para versão sem lactose, utilizar equivalentes adequados."
+  },
+  {
+    "id": "NL-159",
+    "name": "Vitamina Cremosa de Morango com Whey",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "ml",
+        "name": "Leite desnatado"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "Morangos"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Whey protein"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Higienize os morangos.",
+      "Coloque o leite no liquidificador.",
+      "Acrescente os morangos e o whey protein.",
+      "Adicione gelo a gosto.",
+      "Bata até obter uma bebida lisa e cremosa.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 190,
+      "p": 23,
+      "c": 18,
+      "f": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Leite zero lactose. Morango por outra fruta em quantidade equivalente."
+  },
+  {
+    "id": "NL-160",
+    "name": "Pãozinho de Queijo e Ovo na Sanduicheira",
+    "tipo": "prato",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "1 fatia de pão integral"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "1 ovo inteiro"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "Queijo minas"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Tomate picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o ovo rapidamente com um garfo.",
+      "Coloque a fatia de pão em uma sanduicheira.",
+      "Distribua o ovo sobre o pão cuidadosamente.",
+      "Acrescente o queijo minas.",
+      "Adicione o tomate.",
+      "Finalize com orégano.",
+      "Feche a sanduicheira.",
+      "Cozinhe até o ovo ficar completamente firme, o pão dourar e o queijo derreter.",
+      "Sirva ainda quente."
+    ],
+    "macros": {
+      "kcal": 250,
+      "p": 17,
+      "c": 18,
+      "f": 12
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Queijo minas por muçarela, cottage ou queijo sem lactose. Pão integral por pão tradicional ou versão sem glúten."
+  },
+  {
+    "id": "NL-161",
+    "name": "Taça de Mamão com Creme Proteico de Iogurte",
+    "tipo": "prato",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "Mamão em cubos"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "Iogurte natural"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "Leite em pó desnatado"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "Chia"
+      }
+    ],
+    "steps": [
+      "Coloque o iogurte em uma tigela.",
+      "Acrescente o leite em pó.",
+      "Misture até formar um creme homogêneo.",
+      "Corte o mamão em cubos.",
+      "Distribua o mamão em uma taça.",
+      "Cubra com o creme de iogurte.",
+      "Finalize com a chia.",
+      "Sirva imediatamente ou mantenha refrigerado até o consumo."
+    ],
+    "macros": {
+      "kcal": 200,
+      "p": 13,
+      "c": 27,
+      "f": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Iogurte zero lactose. Mamão por manga, morango ou outra fruta em quantidade equivalente."
+  },
+  {
+    "id": "NL-162",
+    "name": "Wrap Pequeno de Ovo com Creme de Ricota",
+    "tipo": "prato",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "½ unidade de wrap ou Rap10"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "1 ovo inteiro"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "Creme de ricota"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Tomate picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Folhas de alface a gosto"
+      }
+    ],
+    "steps": [
+      "Prepare o ovo mexido em uma frigideira antiaderente.",
+      "Aqueça o wrap rapidamente para deixá-lo mais maleável.",
+      "Espalhe o creme de ricota.",
+      "Acrescente o ovo mexido.",
+      "Distribua o tomate.",
+      "Finalize com as folhas de alface.",
+      "Enrole cuidadosamente.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 235,
+      "p": 15,
+      "c": 18,
+      "f": 12
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Creme de ricota por cottage ou requeijão light. Para versão sem glúten, utilizar wrap certificado adequado."
+  },
+  {
+    "id": "NL-163",
+    "name": "Mingau Proteico Cremoso de Baunilha",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "180",
+        "unit": "ml",
+        "name": "Leite desnatado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Aveia em flocos finos"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "Whey protein sabor baunilha"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "Leite em pó desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque o leite e a aveia em uma panela pequena.",
+      "Leve ao fogo baixo.",
+      "Mexa continuamente até a aveia cozinhar e o mingau engrossar.",
+      "Desligue o fogo.",
+      "Aguarde alguns segundos para reduzir levemente a temperatura.",
+      "Acrescente o whey protein e o leite em pó.",
+      "Misture vigorosamente até obter um creme homogêneo.",
+      "Finalize com canela.",
+      "Sirva ainda morno."
+    ],
+    "macros": {
+      "kcal": 245,
+      "p": 24,
+      "c": 31,
+      "f": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-164",
+    "name": "Strogonoff Leve de Frango com Arroz",
+    "tipo": "prato",
+    "meals": [
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "Peito de frango em cubos"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "Arroz branco cozido"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "Creme de leite leve ou zero lactose"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "Molho de tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Cebola picada"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "Mostarda"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e páprica a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça o azeite e refogue a cebola.",
+      "Acrescente o frango e deixe dourar.",
+      "Adicione o molho de tomate e a mostarda.",
+      "Cozinhe por aproximadamente 3 minutos.",
+      "Desligue o fogo e misture o creme de leite.",
+      "Sirva com o arroz."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 39,
+      "c": 31,
+      "f": 12
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Pode utilizar creme de leite zero lactose."
+  },
+  {
+    "id": "NL-165",
+    "name": "Macarrão à Bolonhesa de Patinho",
+    "tipo": "prato",
+    "meals": [
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "Macarrão cru"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "Patinho moído"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "Molho de tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Cenoura ralada"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, orégano e manjericão a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o macarrão até ficar al dente.",
+      "Refogue a cebola e o alho no azeite.",
+      "Acrescente o patinho e deixe dourar.",
+      "Junte a cenoura e o molho de tomate.",
+      "Tempere e cozinhe por aproximadamente 5 minutos.",
+      "Sirva o molho sobre o macarrão."
+    ],
+    "macros": {
+      "kcal": 410,
+      "p": 31,
+      "c": 45,
+      "f": 12
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-166",
+    "name": "Peixe Assado com Batata e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "Filé de tilápia, pescada ou linguado"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "Batata inglesa em rodelas finas"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "Tomate em rodelas"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Cebola"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, alho, sal e orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere o peixe com limão, alho e sal.",
+      "Cozinhe previamente as rodelas de batata por aproximadamente 5 minutos.",
+      "Em um refratário, distribua a batata, o tomate e a cebola.",
+      "Coloque o peixe por cima.",
+      "Regue com azeite e finalize com orégano.",
+      "Asse a 200 °C por aproximadamente 15 a 20 minutos."
+    ],
+    "macros": {
+      "kcal": 330,
+      "p": 35,
+      "c": 25,
+      "f": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-167",
+    "name": "Panqueca de Carne com Molho de Tomate",
+    "tipo": "prato",
+    "meals": [
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "12min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "Farinha de aveia"
+      },
+      {
+        "quantity": "60",
+        "unit": "ml",
+        "name": "Leite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 pitada de sal"
+      },
+      {
+        "quantity": "90",
+        "unit": "g",
+        "name": "Patinho moído"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Cebola"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Tomate picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "Molho de tomate"
+      }
+    ],
+    "steps": [
+      "Bata o ovo, a farinha, o leite e o sal.",
+      "Despeje em uma frigideira antiaderente e doure dos dois lados.",
+      "Refogue separadamente a carne com a cebola e o tomate.",
+      "Recheie a panqueca e enrole.",
+      "Cubra com o molho de tomate.",
+      "Aqueça por alguns minutos antes de servir."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 34,
+      "c": 27,
+      "f": 17
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Pode utilizar frango desfiado no recheio."
+  },
+  {
+    "id": "NL-168",
+    "name": "Frango Xadrez Caseiro com Arroz",
+    "tipo": "prato",
+    "meals": [
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "Peito de frango em cubos"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "Arroz cozido"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "Pimentão"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "Cenoura"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "Cebola"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Molho shoyu com menor teor de sódio"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cebolinha a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça o azeite em uma frigideira.",
+      "Doure o frango.",
+      "Acrescente a cebola, a cenoura e o pimentão.",
+      "Refogue mantendo os legumes levemente firmes.",
+      "Acrescente o shoyu e misture.",
+      "Finalize com cebolinha e sirva com o arroz."
+    ],
+    "macros": {
+      "kcal": 375,
+      "p": 39,
+      "c": 34,
+      "f": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-169",
+    "name": "Polenta Cremosa com Frango Desfiado ao Molho",
+    "tipo": "prato",
+    "meals": [
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "35",
+        "unit": "g",
+        "name": "Fubá"
+      },
+      {
+        "quantity": "180",
+        "unit": "ml",
+        "name": "Água"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "Frango cozido e desfiado"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "Molho de tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Cebola"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "Parmesão ralado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o fubá com a água e uma pitada de sal, mexendo até ficar cremoso.",
+      "Refogue a cebola e acrescente o frango.",
+      "Junte o molho de tomate e cozinhe por alguns minutos.",
+      "Coloque a polenta em um prato fundo.",
+      "Distribua o frango por cima.",
+      "Finalize com o parmesão e o cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 350,
+      "p": 34,
+      "c": 34,
+      "f": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-170",
+    "name": "Arroz de Uma Panela com Frango e Cenoura",
+    "tipo": "prato",
+    "meals": [
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "Peito de frango em cubinhos"
+      },
+      {
+        "quantity": "35",
+        "unit": "g",
+        "name": "Arroz cru"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "Cenoura ralada"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "Tomate picado"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Cebola"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "150",
+        "unit": "ml",
+        "name": "Água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, alho e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola e o alho no azeite.",
+      "Acrescente o frango e deixe dourar.",
+      "Junte o arroz, a cenoura e o tomate.",
+      "Acrescente a água e ajuste o sal.",
+      "Cozinhe em fogo baixo até o arroz ficar macio.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 385,
+      "p": 38,
+      "c": 38,
+      "f": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-171",
+    "name": "Filé Mignon Suíno com Purê de Batata",
+    "tipo": "prato",
+    "meals": [
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "Filé mignon suíno em medalhões"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "Batata inglesa cozida"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "Leite"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e alecrim a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere a carne com alho, sal e alecrim.",
+      "Grelhe em frigideira com azeite até dourar e cozinhar completamente.",
+      "Amasse a batata ainda quente.",
+      "Acrescente o leite aos poucos até obter um purê cremoso.",
+      "Sirva os medalhões acompanhados do purê."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 35,
+      "c": 25,
+      "f": 17
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-172",
+    "name": "Tilápia Desfiada com Arroz Cremoso de Abobrinha",
+    "tipo": "prato",
+    "meals": [
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "Filé de tilápia"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "Arroz cozido"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "Abobrinha ralada"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Creme de ricota"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Cebola"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, alho e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Grelhe a tilápia e desfie grosseiramente.",
+      "Refogue a cebola e a abobrinha no azeite.",
+      "Acrescente o arroz cozido.",
+      "Misture o creme de ricota até ficar levemente cremoso.",
+      "Acrescente o peixe e misture delicadamente.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 375,
+      "p": 36,
+      "c": 30,
+      "f": 13
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-173",
+    "name": "Batata Recheada com Carne Moída Cremosa",
+    "tipo": "prato",
+    "meals": [
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "Batata inglesa"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "Patinho moído"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Creme de ricota"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "Tomate picado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde, sal e páprica a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe ou asse a batata até ficar macia.",
+      "Refogue a carne com a cebola e o tomate.",
+      "Abra a batata ao meio e retire delicadamente uma pequena quantidade do miolo.",
+      "Misture o miolo com o creme de ricota.",
+      "Junte à carne moída.",
+      "Recheie a batata e aqueça por mais alguns minutos no forno ou na airfryer.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 395,
+      "p": 33,
+      "c": 33,
+      "f": 15
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-174",
+    "name": "Sanduíche Cremoso de Grão-de-Bico",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "2 fatias de pão integral sem ingredientes de origem animal"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "Grão-de-bico cozido"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Cenoura ralada"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Tomate picado"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Suco de limão a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde, sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Amasse o grão-de-bico com um garfo.",
+      "Acrescente azeite, limão, sal e pimenta.",
+      "Misture a cenoura e o cheiro-verde.",
+      "Recheie o pão.",
+      "Acrescente o tomate e sirva."
+    ],
+    "macros": {
+      "kcal": 330,
+      "p": 12,
+      "c": 49,
+      "f": 10,
+      "fiber": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Pode acrescentar folhas de alface ou rúcula."
+  },
+  {
+    "id": "NL-175",
+    "name": "Bolinho de Batata com Milho na Airfryer",
+    "tipo": "petisco",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 5,
+    "ingredients": [
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "Batata inglesa cozida e amassada"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "Milho cozido"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Cenoura ralada"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "Farinha de aveia"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde, sal, orégano e páprica a gosto"
+      }
+    ],
+    "steps": [
+      "Misture a batata amassada com o milho e a cenoura.",
+      "Acrescente a farinha de aveia, o azeite e os temperos.",
+      "Modele pequenos bolinhos.",
+      "Leve à airfryer a 190 °C por aproximadamente 15 minutos.",
+      "Vire na metade do tempo para dourar dos dois lados."
+    ],
+    "macros": {
+      "kcal": 285,
+      "p": 7,
+      "c": 48,
+      "f": 8,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-176",
+    "name": "Bolo de Caneca de Chocolate",
+    "tipo": "bolo",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem lactose",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Farinha de aveia"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "Cacau em pó"
+      },
+      {
+        "quantity": "60",
+        "unit": "ml",
+        "name": "Bebida vegetal"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Banana madura amassada"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "Açúcar demerara ou adoçante culinário"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Óleo vegetal"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "½ colher de chá de fermento químico"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "Chocolate 70% sem leite picado"
+      }
+    ],
+    "steps": [
+      "Misture a banana, a bebida vegetal e o óleo.",
+      "Acrescente a farinha, o cacau e o açúcar.",
+      "Misture bem.",
+      "Acrescente o fermento.",
+      "Finalize com o chocolate picado.",
+      "Leve ao micro-ondas por aproximadamente 1 minuto e 30 segundos a 2 minutos."
+    ],
+    "macros": {
+      "kcal": 280,
+      "p": 7,
+      "c": 43,
+      "f": 10,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-177",
+    "name": "Bruschetta de Tomate com Manjericão",
+    "tipo": "petisco",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "2 fatias de pão italiano ou integral sem ingredientes de origem animal"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "Tomate picado"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "½ dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Manjericão e orégano a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Torre levemente as fatias de pão.",
+      "Esfregue o alho sobre o pão ainda quente.",
+      "Misture o tomate, o azeite, o manjericão, o sal e a pimenta.",
+      "Distribua sobre as torradas.",
+      "Finalize com orégano e sirva."
+    ],
+    "macros": {
+      "kcal": 250,
+      "p": 7,
+      "c": 39,
+      "f": 8,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-178",
+    "name": "Pastel Assado de Palmito e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 2,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "2 discos pequenos de massa para pastel sem ingredientes de origem animal"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "Palmito picado"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "Tomate picado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "Cebola"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola, o tomate e o palmito no azeite.",
+      "Tempere e deixe o recheio esfriar levemente.",
+      "Distribua sobre os discos de massa.",
+      "Feche pressionando as bordas com um garfo.",
+      "Leve à airfryer a 180 °C por aproximadamente 12 a 15 minutos."
+    ],
+    "macros": {
+      "kcal": 300,
+      "p": 6,
+      "c": 42,
+      "f": 12,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Verificar no rótulo se a massa não contém leite, ovos ou gordura de origem animal."
+  },
+  {
+    "id": "NL-179",
+    "name": "Creme Gelado de Manga com Coco",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "Manga congelada"
+      },
+      {
+        "quantity": "80",
+        "unit": "ml",
+        "name": "Bebida de coco ou bebida vegetal"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "Coco ralado sem açúcar"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "Chia"
+      }
+    ],
+    "steps": [
+      "Bata a manga congelada com a bebida vegetal.",
+      "Continue batendo até formar um creme espesso.",
+      "Coloque em uma tigela.",
+      "Finalize com coco ralado e chia."
+    ],
+    "macros": {
+      "kcal": 180,
+      "p": 3,
+      "c": 29,
+      "f": 7,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-180",
+    "name": "Pão Francês com Pasta Cremosa de Abacate e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "1 pão francês pequeno sem ingredientes de origem animal"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "Abacate"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "Tomate em rodelas"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Suco de limão a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, pimenta e orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Amasse o abacate.",
+      "Tempere com algumas gotas de limão, sal e pimenta.",
+      "Abra o pão.",
+      "Espalhe o creme de abacate.",
+      "Acrescente o tomate.",
+      "Finalize com orégano."
+    ],
+    "macros": {
+      "kcal": 285,
+      "p": 7,
+      "c": 39,
+      "f": 12,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-181",
+    "name": "Bolinho Assado de Banana, Aveia e Coco",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 2,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "1 banana pequena madura"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Aveia em flocos"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "Coco ralado"
+      },
+      {
+        "quantity": "20",
+        "unit": "ml",
+        "name": "Bebida vegetal"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "½ colher de chá de fermento"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "Uva-passa , opcional"
+      }
+    ],
+    "steps": [
+      "Amasse a banana.",
+      "Misture a aveia, o coco, a bebida vegetal e a canela.",
+      "Acrescente o fermento.",
+      "Distribua em duas forminhas pequenas.",
+      "Leve à airfryer a 170 °C por aproximadamente 12 a 15 minutos."
+    ],
+    "macros": {
+      "kcal": 245,
+      "p": 5,
+      "c": 43,
+      "f": 7,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-182",
+    "name": "Milho Quentinho Temperado com Páprica e Ervas",
+    "tipo": "petisco",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "Milho cozido"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "Azeite"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "Tomate picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Páprica, orégano e sal a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça o milho em uma frigideira.",
+      "Acrescente o azeite e o tomate.",
+      "Tempere com páprica e orégano.",
+      "Refogue por aproximadamente 2 minutos.",
+      "Finalize com cheiro-verde.",
+      "Sirva ainda quente."
+    ],
+    "macros": {
+      "kcal": 190,
+      "p": 5,
+      "c": 30,
+      "f": 6,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-183",
+    "name": "Maçã Quente com Canela, Aveia e Pasta de Amendoim",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Vegana",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "1 maçã média"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "Aveia em flocos"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "Pasta de amendoim integral"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      },
+      {
+        "quantity": "15",
+        "unit": "ml",
+        "name": "Água"
+      }
+    ],
+    "steps": [
+      "Corte a maçã em cubinhos.",
+      "Coloque em uma frigideira com a água e a canela.",
+      "Cozinhe em fogo baixo até começar a amolecer.",
+      "Acrescente a aveia e misture.",
+      "Transfira para uma tigela.",
+      "Finalize com a pasta de amendoim."
+    ],
+    "macros": {
+      "kcal": 240,
+      "p": 6,
+      "c": 38,
+      "f": 8,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-184",
+    "name": "Pão Francês com Patê Cremoso de Atum e Ovo",
+    "tipo": "prato",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "1 pão francês pequeno"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "atum em água escorrido"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo cozido"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Amasse o ovo cozido.",
+      "Misture com o atum e o creme de ricota.",
+      "Acrescente tomate e cheiro-verde.",
+      "Tempere e recheie o pão.",
+      "Se desejar, aqueça rapidamente na sanduicheira."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 35,
+      "c": 32,
+      "f": 14,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "O creme de ricota pode ser substituído por cottage."
+  },
+  {
+    "id": "NL-185",
+    "name": "Bolo Salgado de Caneca com Frango e Queijo",
+    "tipo": "bolo",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "frango cozido e desfiado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "farinha de aveia"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "iogurte natural"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "queijo minas ralado"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1/2 colher de chá de fermento químico"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, orégano e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Misture o ovo e o iogurte.",
+      "Acrescente a farinha, o frango, o queijo e o tomate.",
+      "Tempere.",
+      "Adicione o fermento por último.",
+      "Coloque em recipiente próprio para micro-ondas.",
+      "Cozinhe por aproximadamente 3 minutos."
+    ],
+    "macros": {
+      "kcal": 320,
+      "p": 34,
+      "c": 18,
+      "f": 13,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-186",
+    "name": "Cuscuz com Sardinha, Ovo e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "35",
+        "unit": "g",
+        "name": "flocão de milho"
+      },
+      {
+        "quantity": "40",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "sardinha escorrida"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Hidrate o flocão por 5 minutos.",
+      "Cozinhe o cuscuz.",
+      "Prepare o ovo mexido.",
+      "Misture a sardinha com tomate e cheiro-verde.",
+      "Sirva junto ao cuscuz."
+    ],
+    "macros": {
+      "kcal": 350,
+      "p": 27,
+      "c": 29,
+      "f": 14,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-187",
+    "name": "Ovos Mexidos Cremosos com Cottage e Pão Integral",
+    "tipo": "prato",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "2 ovos"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cottage"
+      },
+      {
+        "quantity": "35",
+        "unit": "g",
+        "name": "1 fatia de pão integral"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "tomate-cereja"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cebolinha a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Bata ligeiramente os ovos.",
+      "Cozinhe em fogo baixo, mexendo delicadamente.",
+      "Quando estiverem quase prontos, acrescente o cottage.",
+      "Sirva com o pão tostado e os tomates."
+    ],
+    "macros": {
+      "kcal": 330,
+      "p": 25,
+      "c": 20,
+      "f": 17,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-188",
+    "name": "Tapioca com Carne Desfiada e Creme de Ricota",
+    "tipo": "prato",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "goma de tapioca"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "carne bovina cozida e desfiada"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Prepare a tapioca.",
+      "Misture a carne com o creme de ricota.",
+      "Acrescente tomate e cheiro-verde.",
+      "Recheie e dobre."
+    ],
+    "macros": {
+      "kcal": 350,
+      "p": 29,
+      "c": 28,
+      "f": 14,
+      "fiber": 1
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-189",
+    "name": "Muffin Proteico de Atum e Queijo",
+    "tipo": "prato",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 3,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "2 ovos"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "atum em água escorrido"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "queijo minas ralado"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "1 colher de sopa de farinha de aveia sem glúten"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1/2 colher de chá de fermento químico"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano, cheiro-verde, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Bata os ovos com um garfo.",
+      "Acrescente o atum, o queijo, o tomate e a cenoura.",
+      "Misture a farinha de aveia e os temperos.",
+      "Acrescente o fermento por último.",
+      "Distribua em forminhas de silicone.",
+      "Leve à airfryer a 180 °C por aproximadamente 12 a 15 minutos."
+    ],
+    "macros": {
+      "kcal": 340,
+      "p": 36,
+      "c": 10,
+      "f": 18,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "O queijo minas pode ser substituído por cottage."
+  },
+  {
+    "id": "NL-190",
+    "name": "Cottage Cremoso com Ovos, Tomate e Torrada",
+    "tipo": "prato",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "2 ovos"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "cottage"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "1 fatia de pão integral"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate-cereja"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cebolinha e orégano a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Prepare os ovos mexidos em fogo baixo.",
+      "Coloque o cottage em uma tigela ou prato.",
+      "Acrescente os ovos ainda quentes.",
+      "Finalize com tomate, cebolinha e orégano.",
+      "Torre o pão e sirva ao lado."
+    ],
+    "macros": {
+      "kcal": 350,
+      "p": 28,
+      "c": 20,
+      "f": 19,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Pode usar cottage zero lactose para uma versão sem lactose."
+  },
+  {
+    "id": "NL-191",
+    "name": "Pão Sírio com Frango, Queijo e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "1 pão sírio pequeno"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "frango cozido e desfiado"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "queijo minas"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "tomate em rodelas"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Abra o pão sírio.",
+      "Misture o frango com o creme de ricota.",
+      "Recheie com o frango, o queijo e o tomate.",
+      "Finalize com orégano.",
+      "Leve à sanduicheira ou frigideira até o pão ficar levemente crocante e o queijo aquecer."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 38,
+      "c": 37,
+      "f": 11,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-192",
+    "name": "Queijo Minas Grelhado com Ovos e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "2 ovos"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "queijo minas frescal"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Grelhe o queijo dos dois lados.",
+      "Reserve.",
+      "Prepare os ovos.",
+      "Doure rapidamente o tomate.",
+      "Sirva tudo junto e finalize com orégano."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 27,
+      "c": 7,
+      "f": 28,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-193",
+    "name": "Tostada de Frango com Creme de Ricota e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "2 fatias de pão integral"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "frango cozido e desfiado"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "parmesão ralado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Misture o frango com o creme de ricota.",
+      "Distribua sobre o pão.",
+      "Acrescente tomate.",
+      "Finalize com parmesão e orégano.",
+      "Leve à airfryer a 180 °C por aproximadamente 5 minutos."
+    ],
+    "macros": {
+      "kcal": 360,
+      "p": 35,
+      "c": 30,
+      "f": 12,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-194",
+    "name": "Frango ao Molho de Laranja com Arroz e Cenoura",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "peito de frango em cubos"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "50",
+        "unit": "ml",
+        "name": "suco de laranja natural"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e pimenta-do-reino a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere o frango.",
+      "Doure no azeite.",
+      "Acrescente cebola e cenoura.",
+      "Junte o suco de laranja e cozinhe até reduzir levemente.",
+      "Sirva com o arroz.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 420,
+      "p": 43,
+      "c": 40,
+      "f": 10,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-195",
+    "name": "Carne Moída com Batata e Ervilha",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "patinho moído"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "batata em cubos"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "ervilha"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal, páprica e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e alho no azeite.",
+      "Acrescente a carne e deixe dourar.",
+      "Junte o tomate.",
+      "Acrescente a batata previamente cozida e a ervilha.",
+      "Misture e deixe apurar por alguns minutos.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 450,
+      "p": 41,
+      "c": 31,
+      "f": 19,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-196",
+    "name": "Filé de Peixe Assado com Tomate, Cebola e Batata",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "170",
+        "unit": "g",
+        "name": "filé de pescada ou linguado"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "batata em rodelas"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, alho, sal e orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere o peixe.",
+      "Cozinhe a batata por 5 minutos.",
+      "Monte um refratário com batata, tomate e cebola.",
+      "Coloque o peixe por cima.",
+      "Regue com azeite.",
+      "Asse a 200 °C por aproximadamente 20 minutos."
+    ],
+    "macros": {
+      "kcal": 345,
+      "p": 37,
+      "c": 27,
+      "f": 10,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-197",
+    "name": "Frango Gratinado com Espinafre e Creme de Ricota",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "frango em tiras"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "espinafre"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "muçarela"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, alho e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Doure o frango com cebola e alho.",
+      "Acrescente o espinafre e deixe murchar.",
+      "Misture o creme de ricota.",
+      "Transfira para um refratário.",
+      "Acrescente tomate e muçarela.",
+      "Leve ao forno até gratinar."
+    ],
+    "macros": {
+      "kcal": 430,
+      "p": 53,
+      "c": 9,
+      "f": 20,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-198",
+    "name": "Escondidinho de Carne com Purê de Abóbora",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "12min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "140",
+        "unit": "g",
+        "name": "patinho moído"
+      },
+      {
+        "quantity": "200",
+        "unit": "g",
+        "name": "abóbora cabotiá cozida"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "leite"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "queijo minas"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, alho e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Amasse a abóbora com o leite.",
+      "Refogue a carne com cebola, alho e tomate.",
+      "Coloque a carne em um refratário.",
+      "Cubra com o purê.",
+      "Finalize com o queijo.",
+      "Leve ao forno até dourar."
+    ],
+    "macros": {
+      "kcal": 440,
+      "p": 41,
+      "c": 29,
+      "f": 19,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-199",
+    "name": "Arroz de Forno com Frango, Milho e Queijo",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "milho"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "queijo minas"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde e orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Misture o arroz com o frango, milho, tomate e creme de ricota.",
+      "Coloque em um refratário.",
+      "Cubra com o queijo.",
+      "Finalize com orégano.",
+      "Leve ao forno por aproximadamente 15 minutos."
+    ],
+    "macros": {
+      "kcal": 455,
+      "p": 38,
+      "c": 45,
+      "f": 14,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-200",
+    "name": "Bife Rolê com Cenoura ao Molho de Tomate",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "15min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "160",
+        "unit": "g",
+        "name": "patinho em bifes finos"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cenoura em palitos"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "molho de tomate"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere os bifes.",
+      "Coloque palitos de cenoura sobre cada um.",
+      "Enrole e prenda com palitos.",
+      "Doure no azeite.",
+      "Acrescente cebola e molho de tomate.",
+      "Tampe e cozinhe até a carne ficar macia."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 43,
+      "c": 13,
+      "f": 18,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-201",
+    "name": "Frango com Quiabo e Arroz",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "peito de frango em cubos"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "quiabo"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal, páprica e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Doure o frango no azeite.",
+      "Acrescente cebola e alho.",
+      "Junte o quiabo e o tomate.",
+      "Cozinhe até ficar macio.",
+      "Sirva com o arroz.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 410,
+      "p": 43,
+      "c": 38,
+      "f": 10,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-202",
+    "name": "Salmão com Crosta de Gergelim e Legumes",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "salmão"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "gergelim"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "abobrinha"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "cenoura"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "brócolis"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere o salmão.",
+      "Pressione o gergelim sobre a superfície.",
+      "Asse ou grelhe até atingir o ponto desejado.",
+      "Salteie os legumes no azeite.",
+      "Sirva juntos."
+    ],
+    "macros": {
+      "kcal": 480,
+      "p": 37,
+      "c": 18,
+      "f": 30,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-203",
+    "name": "Carne Assada com Batata-Doce e Cebola",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "160",
+        "unit": "g",
+        "name": "carne bovina magra"
+      },
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "batata-doce"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal, páprica e alecrim a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere a carne.",
+      "Corte a batata em cubos.",
+      "Disponha carne, batata e cebola em uma assadeira.",
+      "Regue com azeite.",
+      "Asse a 200 °C até dourar e a carne atingir o ponto desejado."
+    ],
+    "macros": {
+      "kcal": 445,
+      "p": 42,
+      "c": 31,
+      "f": 18,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-204",
+    "name": "Frango com Creme de Abóbora e Queijo",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "frango em cubos"
+      },
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "abóbora cozida"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "queijo minas"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, páprica e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Bata ou amasse a abóbora com o creme de ricota.",
+      "Doure o frango com a cebola.",
+      "Acrescente o creme de abóbora.",
+      "Misture bem.",
+      "Finalize com queijo.",
+      "Tampe até derreter."
+    ],
+    "macros": {
+      "kcal": 400,
+      "p": 51,
+      "c": 19,
+      "f": 14,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-205",
+    "name": "Peixe ao Molho de Tomate com Alcaparras",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "170",
+        "unit": "g",
+        "name": "filé de peixe branco"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "molho de tomate"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "alcaparras"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, pimenta e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere o peixe.",
+      "Doure rapidamente no azeite.",
+      "Acrescente cebola e molho de tomate.",
+      "Junte as alcaparras.",
+      "Tampe e cozinhe até o peixe ficar macio.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 300,
+      "p": 38,
+      "c": 10,
+      "f": 11,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-206",
+    "name": "Carne Moída com Berinjela e Queijo Gratinado",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "140",
+        "unit": "g",
+        "name": "patinho moído"
+      },
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "berinjela em cubos"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "molho de tomate"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "muçarela"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho e orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a carne com cebola e alho.",
+      "Acrescente a berinjela.",
+      "Junte o molho de tomate.",
+      "Cozinhe até a berinjela ficar macia.",
+      "Transfira para um refratário.",
+      "Cubra com queijo e gratine."
+    ],
+    "macros": {
+      "kcal": 440,
+      "p": 44,
+      "c": 15,
+      "f": 23,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-207",
+    "name": "Frango Assado com Batata, Cebola e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "160",
+        "unit": "g",
+        "name": "peito de frango"
+      },
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "batata"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, páprica, sal e orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere o frango.",
+      "Corte batata, tomate e cebola.",
+      "Disponha tudo em uma assadeira.",
+      "Regue com azeite.",
+      "Asse a 200 °C por aproximadamente 30 minutos."
+    ],
+    "macros": {
+      "kcal": 405,
+      "p": 45,
+      "c": 31,
+      "f": 10,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-208",
+    "name": "Lombo Suíno com Molho de Mostarda e Mel",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "160",
+        "unit": "g",
+        "name": "lombo suíno"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "mostarda"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "mel"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere o lombo.",
+      "Doure no azeite.",
+      "Retire e reserve.",
+      "Refogue a cebola.",
+      "Misture mostarda e mel.",
+      "Retorne o lombo e envolva no molho."
+    ],
+    "macros": {
+      "kcal": 350,
+      "p": 43,
+      "c": 8,
+      "f": 16
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-209",
+    "name": "Arroz com Lentilha e Carne em Tiras",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "carne bovina em tiras"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "lentilha cozida"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Doure a carne.",
+      "Acrescente cebola e tomate.",
+      "Misture arroz e lentilha.",
+      "Acrescente à frigideira.",
+      "Ajuste os temperos.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 470,
+      "p": 38,
+      "c": 52,
+      "f": 12,
+      "fiber": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-210",
+    "name": "Torta de Batata com Atum e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "12min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "batata cozida"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "atum em água escorrido"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "queijo minas"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde e orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Amasse a batata.",
+      "Misture com o ovo.",
+      "Coloque metade em um refratário.",
+      "Recheie com atum, tomate e cebola.",
+      "Cubra com o restante.",
+      "Finalize com queijo e orégano.",
+      "Asse até dourar."
+    ],
+    "macros": {
+      "kcal": 445,
+      "p": 38,
+      "c": 35,
+      "f": 17,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-211",
+    "name": "Grão-de-Bico ao Molho de Tomate com Ovos",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "grão-de-bico cozido"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "2 ovos"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "molho de tomate"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "queijo minas"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde e páprica a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e tomate.",
+      "Acrescente o molho e o grão-de-bico.",
+      "Abra dois espaços e coloque os ovos.",
+      "Tampe até os ovos cozinharem.",
+      "Finalize com o queijo e cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 445,
+      "p": 25,
+      "c": 40,
+      "f": 21,
+      "fiber": 11
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-212",
+    "name": "Lentilha Cremosa com Legumes e Ovo",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "lentilha cozida"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "2 ovos"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "cenoura"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "abobrinha"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, alho e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue os legumes no azeite.",
+      "Acrescente a lentilha.",
+      "Amasse uma pequena parte para deixar o caldo cremoso.",
+      "Prepare os ovos separadamente.",
+      "Sirva sobre a lentilha.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 410,
+      "p": 24,
+      "c": 41,
+      "f": 17,
+      "fiber": 13
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-213",
+    "name": "Frango com Feijão-Preto, Arroz e Vinagrete",
+    "tipo": "prato",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "peito de frango grelhado"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "feijão-preto cozido"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "pimentão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, sal e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere e grelhe o frango.",
+      "Aqueça arroz e feijão.",
+      "Misture tomate, cebola, pimentão, limão e cheiro-verde para fazer o vinagrete.",
+      "Monte o prato com todos os componentes."
+    ],
+    "macros": {
+      "kcal": 480,
+      "p": 44,
+      "c": 50,
+      "f": 11,
+      "fiber": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-214",
+    "name": "Arroz com Brócolis e Alho",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "brócolis picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue o alho no azeite.",
+      "Acrescente o brócolis e cozinhe por alguns minutos.",
+      "Junte o arroz cozido.",
+      "Misture bem.",
+      "Ajuste o sal e finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 190,
+      "p": 5,
+      "c": 36,
+      "f": 4,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-215",
+    "name": "Arroz com Cenoura e Ervilha",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "ervilha"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola no azeite.",
+      "Acrescente a cenoura e a ervilha.",
+      "Cozinhe por 2 a 3 minutos.",
+      "Adicione o arroz.",
+      "Misture bem e ajuste o sal."
+    ],
+    "macros": {
+      "kcal": 210,
+      "p": 5,
+      "c": 40,
+      "f": 4,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-216",
+    "name": "Arroz Cremoso com Abóbora",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "abóbora cozida e amassada"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, noz-moscada e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola no azeite.",
+      "Acrescente a abóbora.",
+      "Adicione a água e misture até formar um creme.",
+      "Junte o arroz.",
+      "Misture bem.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 205,
+      "p": 4,
+      "c": 39,
+      "f": 4,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-217",
+    "name": "Arroz com Lentilha e Cebola Dourada",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "lentilha cozida"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cebola fatiada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Doure a cebola no azeite em fogo baixo.",
+      "Acrescente a lentilha.",
+      "Junte o arroz.",
+      "Misture bem.",
+      "Ajuste o sal e a pimenta."
+    ],
+    "macros": {
+      "kcal": 250,
+      "p": 8,
+      "c": 46,
+      "f": 4,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-218",
+    "name": "Arroz com Açafrão, Milho e Cheiro-Verde",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "milho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1/2 colher de chá de cúrcuma"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde e sal a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola no azeite.",
+      "Acrescente a cúrcuma.",
+      "Junte o milho.",
+      "Adicione o arroz.",
+      "Misture bem.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 205,
+      "p": 4,
+      "c": 40,
+      "f": 4,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-219",
+    "name": "Arroz com Espinafre e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "espinafre"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e alho a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e alho.",
+      "Acrescente o tomate.",
+      "Junte o espinafre e deixe murchar.",
+      "Adicione o arroz.",
+      "Misture bem."
+    ],
+    "macros": {
+      "kcal": 190,
+      "p": 5,
+      "c": 35,
+      "f": 4,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-220",
+    "name": "Arroz com Abobrinha e Cenoura",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "abobrinha ralada"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, alho e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e alho.",
+      "Acrescente a cenoura e a abobrinha.",
+      "Cozinhe rapidamente.",
+      "Junte o arroz.",
+      "Misture e finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 195,
+      "p": 4,
+      "c": 36,
+      "f": 4,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-221",
+    "name": "Arroz com Feijão-Fradinho e Pimentão",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "feijão-fradinho cozido"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "pimentão picado"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e pimentão.",
+      "Acrescente o tomate.",
+      "Junte o feijão-fradinho.",
+      "Adicione o arroz.",
+      "Misture e finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 255,
+      "p": 8,
+      "c": 47,
+      "f": 4,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-222",
+    "name": "Arroz Integral com Cogumelos e Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz integral cozido"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "cogumelos fatiados"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, salsinha e tomilho a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e alho no azeite.",
+      "Acrescente os cogumelos.",
+      "Cozinhe até dourarem.",
+      "Junte o arroz integral.",
+      "Finalize com as ervas."
+    ],
+    "macros": {
+      "kcal": 200,
+      "p": 6,
+      "c": 34,
+      "f": 5,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-223",
+    "name": "Arroz com Couve e Alho",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "couve fatiada fina"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Doure o alho no azeite.",
+      "Acrescente a couve e refogue rapidamente.",
+      "Junte o arroz.",
+      "Misture bem.",
+      "Ajuste os temperos."
+    ],
+    "macros": {
+      "kcal": 185,
+      "p": 4,
+      "c": 34,
+      "f": 4,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-224",
+    "name": "Arroz com Abacaxi e Cebola Dourada",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "abacaxi em cubos pequenos"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola fatiada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça o azeite e doure a cebola.",
+      "Acrescente o abacaxi.",
+      "Cozinhe por 2 a 3 minutos.",
+      "Junte o arroz.",
+      "Misture delicadamente.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 210,
+      "p": 3,
+      "c": 43,
+      "f": 4,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-225",
+    "name": "Arroz com Amêndoas em Lascas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "amêndoas em lascas"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola picada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Doure levemente as amêndoas em uma frigideira seca.",
+      "Retire e reserve.",
+      "Na mesma frigideira, aqueça o azeite e refogue a cebola.",
+      "Acrescente o arroz.",
+      "Junte as amêndoas.",
+      "Finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 225,
+      "p": 5,
+      "c": 33,
+      "f": 9,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-226",
+    "name": "Arroz com Coco Seco Ralado",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "coco seco ralado sem açúcar"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola picada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça o azeite e refogue a cebola.",
+      "Acrescente o coco ralado e mexa por alguns segundos.",
+      "Junte o arroz cozido.",
+      "Misture bem.",
+      "Ajuste o sal.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 235,
+      "p": 4,
+      "c": 36,
+      "f": 9,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-227",
+    "name": "Salada Fria de Feijão-Branco com Tomate e Pepino",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "feijão-branco cozido e escorrido"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "tomate-cereja cortado ao meio"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "pepino em cubos"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola roxa fatiada"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "salsinha picada"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque o feijão-branco já frio em uma tigela.",
+      "Acrescente o tomate, o pepino, a cebola e a salsinha.",
+      "Tempere com azeite, limão, sal e pimenta.",
+      "Misture delicadamente.",
+      "Mantenha refrigerada até servir."
+    ],
+    "macros": {
+      "kcal": 230,
+      "p": 10,
+      "c": 34,
+      "f": 6,
+      "fiber": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-228",
+    "name": "Salada Fria de Feijão-Rajado com Milho e Vinagrete",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "feijão-rajado cozido e escorrido"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "milho cozido"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "pimentão amarelo picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de vinagre"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Deixe o feijão esfriar completamente.",
+      "Misture com o milho, tomate, cebola e pimentão.",
+      "Tempere com azeite, vinagre, sal e pimenta.",
+      "Acrescente cheiro-verde.",
+      "Leve à geladeira até o momento de servir."
+    ],
+    "macros": {
+      "kcal": 245,
+      "p": 10,
+      "c": 39,
+      "f": 6,
+      "fiber": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-229",
+    "name": "Salada Fria de Feijão-Fradinho com Manga e Hortelã",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "feijão-fradinho cozido e escorrido"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "manga em cubos"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "pepino em cubos"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã picada a gosto"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque o feijão-fradinho frio em uma tigela.",
+      "Acrescente manga, pepino e cebola.",
+      "Tempere com azeite, limão, sal e pimenta.",
+      "Misture delicadamente.",
+      "Finalize com hortelã."
+    ],
+    "macros": {
+      "kcal": 245,
+      "p": 9,
+      "c": 42,
+      "f": 5,
+      "fiber": 8
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-230",
+    "name": "Salada Fria de Feijão-Vermelho com Cenoura e Tomate",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "feijão-vermelho cozido e escorrido"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate em cubos"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "pimentão amarelo"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de vinagre"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Misture o feijão frio com a cenoura.",
+      "Acrescente o tomate, a cebola e o pimentão.",
+      "Tempere com azeite, vinagre, sal e pimenta.",
+      "Finalize com salsinha.",
+      "Sirva bem fresca."
+    ],
+    "macros": {
+      "kcal": 235,
+      "p": 10,
+      "c": 36,
+      "f": 6,
+      "fiber": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-231",
+    "name": "Salada Fria de Feijão-Carioca com Abobrinha e Tomate",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "feijão-carioca cozido e bem escorrido"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "abobrinha em cubinhos"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Deixe o feijão completamente frio e bem escorrido.",
+      "Misture com a abobrinha, tomate, cebola e cenoura.",
+      "Tempere com azeite, limão, sal e pimenta.",
+      "Finalize com cheiro-verde.",
+      "Mantenha refrigerada até servir."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 9,
+      "c": 34,
+      "f": 6,
+      "fiber": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-232",
+    "name": "Sopa de Mandioca com Frango e Couve",
+    "tipo": "sopa",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "peito de frango cozido e desfiado"
+      },
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "mandioca cozida"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "couve fatiada"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "400",
+        "unit": "ml",
+        "name": "água ou caldo caseiro"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, pimenta e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Bata a mandioca com parte da água até formar um creme.",
+      "Refogue cebola e alho no azeite.",
+      "Acrescente o frango.",
+      "Junte o creme de mandioca e o restante da água.",
+      "Cozinhe por alguns minutos.",
+      "Acrescente a couve no final e cozinhe até murchar."
+    ],
+    "macros": {
+      "kcal": 430,
+      "p": 42,
+      "c": 50,
+      "f": 8,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-233",
+    "name": "Sopa de Lentilha com Carne Moída e Cenoura",
+    "tipo": "sopa",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "patinho moído"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "lentilha cozida"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "cenoura em cubos"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "400",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal, páprica e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e alho.",
+      "Acrescente a carne e deixe dourar.",
+      "Junte tomate e cenoura.",
+      "Acrescente a lentilha e a água.",
+      "Cozinhe até os legumes ficarem macios.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 410,
+      "p": 35,
+      "c": 40,
+      "f": 12,
+      "fiber": 11
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-234",
+    "name": "Creme de Abóbora com Carne Seca Desfiada",
+    "tipo": "sopa",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "15min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "abóbora cabotiá cozida"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "carne seca dessalgada, cozida e desfiada"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "350",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Bata a abóbora com a água.",
+      "Refogue cebola e alho no azeite.",
+      "Acrescente a carne seca.",
+      "Junte o creme de abóbora.",
+      "Cozinhe por 5 a 8 minutos.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 35,
+      "c": 24,
+      "f": 17,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-235",
+    "name": "Sopa de Feijão-Branco com Frango e Espinafre",
+    "tipo": "sopa",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "feijão-branco cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "espinafre"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "400",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Bata metade do feijão com parte da água.",
+      "Refogue cebola e alho.",
+      "Acrescente o frango.",
+      "Junte o feijão batido e o feijão inteiro.",
+      "Acrescente o tomate.",
+      "Finalize com o espinafre e cozinhe até murchar."
+    ],
+    "macros": {
+      "kcal": 370,
+      "p": 38,
+      "c": 36,
+      "f": 7,
+      "fiber": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-236",
+    "name": "Caldo de Batata-Doce com Carne Desfiada",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "carne bovina magra cozida e desfiada"
+      },
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "batata-doce cozida"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "350",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, pimenta e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Bata a batata-doce com a água.",
+      "Refogue cebola e alho no azeite.",
+      "Acrescente a carne.",
+      "Junte o creme de batata-doce.",
+      "Cozinhe até ficar bem quente e cremoso.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 445,
+      "p": 40,
+      "c": 38,
+      "f": 15,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-237",
+    "name": "Sopa de Grão-de-Bico com Frango e Legumes",
+    "tipo": "sopa",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "grão-de-bico cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "cenoura"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "abobrinha"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "400",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, alho e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque a cenoura, a abobrinha e o tomate para cozinhar.",
+      "Acrescente o grão-de-bico.",
+      "Junte o frango desfiado.",
+      "Cozinhe por mais alguns minutos.",
+      "Amasse parte do grão-de-bico para deixar o caldo mais encorpado.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 36,
+      "c": 42,
+      "f": 8,
+      "fiber": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-238",
+    "name": "Creme de Inhame com Frango e Alho-Poró",
+    "tipo": "sopa",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "inhame cozido"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "frango cozido e desfiado"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "alho-poró fatiado"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "350",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o inhame com a água.",
+      "Refogue cebola e alho-poró.",
+      "Acrescente o frango.",
+      "Junte o creme de inhame.",
+      "Cozinhe por alguns minutos.",
+      "Ajuste os temperos."
+    ],
+    "macros": {
+      "kcal": 400,
+      "p": 37,
+      "c": 42,
+      "f": 8,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-239",
+    "name": "Sopa de Abóbora com Lentilha e Espinafre",
+    "tipo": "sopa",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "abóbora em cubos"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "lentilha cozida"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "espinafre"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "400",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e páprica a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e alho.",
+      "Acrescente abóbora e tomate.",
+      "Junte a água e cozinhe até a abóbora amaciar.",
+      "Acrescente a lentilha.",
+      "Amasse alguns cubos de abóbora para engrossar o caldo.",
+      "Finalize com o espinafre."
+    ],
+    "macros": {
+      "kcal": 315,
+      "p": 14,
+      "c": 48,
+      "f": 7,
+      "fiber": 13
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-240",
+    "name": "Sopa de Arroz com Frango e Legumes",
+    "tipo": "sopa",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "frango cozido e desfiado"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "arroz cozido"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "cenoura"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "chuchu"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "450",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, alho e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe cenoura e chuchu na água.",
+      "Acrescente tomate e cebola.",
+      "Junte o frango.",
+      "Adicione o arroz.",
+      "Cozinhe por mais 5 minutos.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 350,
+      "p": 37,
+      "c": 35,
+      "f": 6,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-241",
+    "name": "Caldo Verde Leve com Frango",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "frango cozido e desfiado"
+      },
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "batata cozida"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "couve fatiada"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "400",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Bata a batata com a água até formar um caldo cremoso.",
+      "Refogue cebola e alho.",
+      "Acrescente o frango.",
+      "Junte o creme de batata.",
+      "Cozinhe por alguns minutos.",
+      "Acrescente a couve no final e cozinhe rapidamente."
+    ],
+    "macros": {
+      "kcal": 360,
+      "p": 37,
+      "c": 33,
+      "f": 8,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-242",
+    "name": "Salada de Macarrão com Frango, Rúcula e Tomate",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "15min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "peito de frango grelhado em tiras"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "rúcula"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "tomate-cereja"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de iogurte natural"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de mostarda"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o macarrão e deixe esfriar.",
+      "Grelhe o frango e corte em tiras.",
+      "Misture o iogurte, a mostarda e o azeite.",
+      "Em uma tigela, coloque o macarrão, a rúcula, o tomate e a cenoura.",
+      "Acrescente o frango.",
+      "Finalize com o molho e misture delicadamente."
+    ],
+    "macros": {
+      "kcal": 430,
+      "p": 38,
+      "c": 44,
+      "f": 12,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-243",
+    "name": "Salada de Penne com Atum, Alface e Pepino",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "12min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "penne cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "atum em água escorrido"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "alface americana"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "pepino em cubos"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o penne e espere esfriar.",
+      "Misture com o atum.",
+      "Acrescente alface, pepino, tomate e cebola.",
+      "Tempere com azeite, limão, sal e pimenta.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 32,
+      "c": 45,
+      "f": 10,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-244",
+    "name": "Salada de Massa com Carne em Tiras, Agrião e Tomate",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "15min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "macarrão parafuso cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "carne bovina magra em tiras"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "agrião"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate-cereja"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de mostarda"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a massa e deixe esfriar.",
+      "Grelhe a carne e corte em tiras.",
+      "Misture o azeite, a mostarda e o limão.",
+      "Junte a massa, o agrião, o tomate, a cenoura e a cebola.",
+      "Acrescente a carne.",
+      "Finalize com o molho."
+    ],
+    "macros": {
+      "kcal": 440,
+      "p": 34,
+      "c": 46,
+      "f": 15,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-245",
+    "name": "Salada de Macarrão com Salmão, Espinafre e Tomate",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "15min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "salmão grelhado em lascas"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "espinafre baby"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate-cereja"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "pepino"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Dill ou cheiro-verde a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a massa e deixe esfriar.",
+      "Grelhe o salmão e separe em lascas.",
+      "Misture a massa com o espinafre, tomate e pepino.",
+      "Acrescente o salmão.",
+      "Tempere com azeite, limão, sal e pimenta.",
+      "Finalize com dill ou cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 455,
+      "p": 30,
+      "c": 39,
+      "f": 20,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-246",
+    "name": "Salada de Macarrão com Frango, Alface e Manga",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "15min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "frango grelhado em cubos"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "alface"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "manga em cubos"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "pepino"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de iogurte natural"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de mostarda"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o macarrão e deixe esfriar.",
+      "Grelhe o frango e corte em cubos.",
+      "Misture o iogurte, a mostarda e o azeite.",
+      "Junte a massa, alface, manga, pepino e cebola.",
+      "Acrescente o frango.",
+      "Finalize com o molho e misture delicadamente."
+    ],
+    "macros": {
+      "kcal": 420,
+      "p": 37,
+      "c": 45,
+      "f": 11,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-247",
+    "name": "Abobrinha Refogada com Alho e Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "abobrinha em meia-lua"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola picada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano, salsinha, sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça o azeite e refogue a cebola e o alho.",
+      "Acrescente a abobrinha.",
+      "Cozinhe por poucos minutos, mexendo delicadamente.",
+      "Tempere e finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 85,
+      "p": 3,
+      "c": 8,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-248",
+    "name": "Chuchu Refogado com Tomate e Cheiro-Verde",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "180",
+        "unit": "g",
+        "name": "chuchu cozido em cubos"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, cheiro-verde, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola e o alho no azeite.",
+      "Acrescente o tomate e deixe amolecer.",
+      "Junte o chuchu.",
+      "Misture bem e cozinhe por mais alguns minutos.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 80,
+      "p": 2,
+      "c": 10,
+      "f": 4,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-249",
+    "name": "Berinjela Refogada com Pimentão e Cebola",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "140",
+        "unit": "g",
+        "name": "berinjela em cubos"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "pimentão"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, orégano, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola e o alho.",
+      "Acrescente a berinjela e o pimentão.",
+      "Cozinhe em fogo médio até começarem a amaciar.",
+      "Junte o tomate.",
+      "Tempere e cozinhe por mais alguns minutos."
+    ],
+    "macros": {
+      "kcal": 110,
+      "p": 3,
+      "c": 15,
+      "f": 5,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-250",
+    "name": "Mix de Couve-Flor e Cenoura Refogados",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "couve-flor"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "cenoura em tiras finas"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, cúrcuma, sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe rapidamente a couve-flor, deixando-a firme.",
+      "Refogue cebola e alho no azeite.",
+      "Acrescente a cenoura.",
+      "Junte a couve-flor.",
+      "Tempere e refogue por mais 2 a 3 minutos."
+    ],
+    "macros": {
+      "kcal": 105,
+      "p": 4,
+      "c": 14,
+      "f": 5,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-251",
+    "name": "Repolho Refogado com Cenoura e Cebolinha",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "repolho fatiado fino"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cebolinha, alho, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça o azeite e refogue cebola e alho.",
+      "Acrescente o repolho e a cenoura.",
+      "Refogue rapidamente, mantendo os legumes levemente crocantes.",
+      "Tempere.",
+      "Finalize com cebolinha."
+    ],
+    "macros": {
+      "kcal": 95,
+      "p": 3,
+      "c": 13,
+      "f": 4,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-252",
+    "name": "Abóbora Cozida com Especiarias",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "180",
+        "unit": "g",
+        "name": "abóbora em cubos"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Páprica doce a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cúrcuma a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Pimenta-do-reino a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a abóbora até ficar macia, sem desmanchar.",
+      "Escorra bem.",
+      "Misture com o azeite e as especiarias.",
+      "Ajuste o sal.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 110,
+      "p": 2,
+      "c": 19,
+      "f": 5,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-253",
+    "name": "Vagem Refogada com Alho e Cebola",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "160",
+        "unit": "g",
+        "name": "vagem"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a vagem rapidamente, mantendo-a firme.",
+      "Refogue cebola e alho no azeite.",
+      "Acrescente a vagem.",
+      "Refogue por mais 2 a 3 minutos.",
+      "Finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 95,
+      "p": 3,
+      "c": 13,
+      "f": 5,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-254",
+    "name": "Beterraba Cozida Temperada com Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "beterraba cozida em cubos"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha ou cheiro-verde a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a beterraba até ficar macia.",
+      "Deixe amornar e corte em cubos.",
+      "Tempere com azeite e limão.",
+      "Ajuste sal e pimenta.",
+      "Finalize com ervas."
+    ],
+    "macros": {
+      "kcal": 105,
+      "p": 2,
+      "c": 16,
+      "f": 5,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-255",
+    "name": "Purê Cremoso de Mandioca",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "mandioca cozida"
+      },
+      {
+        "quantity": "40",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "1 colher de chá de manteiga"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Noz-moscada a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a mandioca até ficar bem macia.",
+      "Retire o fio central.",
+      "Amasse ainda quente.",
+      "Acrescente o leite aos poucos.",
+      "Misture a manteiga.",
+      "Tempere com sal e noz-moscada."
+    ],
+    "macros": {
+      "kcal": 205,
+      "p": 3,
+      "c": 39,
+      "f": 5,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Para versão sem lactose, utilizar leite e manteiga zero lactose."
+  },
+  {
+    "id": "NL-256",
+    "name": "Purê de Inhame",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "inhame cozido"
+      },
+      {
+        "quantity": "40",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e noz-moscada a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o inhame até ficar bem macio.",
+      "Amasse ainda quente.",
+      "Acrescente o leite aos poucos.",
+      "Misture o azeite.",
+      "Tempere com sal e noz-moscada."
+    ],
+    "macros": {
+      "kcal": 180,
+      "p": 3,
+      "c": 34,
+      "f": 5,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Para versão sem lactose, utilizar leite zero lactose."
+  },
+  {
+    "id": "NL-257",
+    "name": "Purê Cremoso de Couve-Flor",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "g",
+        "name": "couve-flor"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Noz-moscada a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a couve-flor até ficar bem macia.",
+      "Escorra muito bem.",
+      "Bata ou processe com o creme de ricota.",
+      "Acrescente o azeite.",
+      "Tempere.",
+      "Leve novamente ao fogo por 2 minutos para encorpar."
+    ],
+    "macros": {
+      "kcal": 125,
+      "p": 6,
+      "c": 10,
+      "f": 7,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Para versão sem lactose, utilizar creme de ricota zero lactose."
+  },
+  {
+    "id": "NL-258",
+    "name": "Acelga Refogada com Alho e Cebola",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "180",
+        "unit": "g",
+        "name": "acelga fatiada"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça o azeite.",
+      "Refogue cebola e alho.",
+      "Acrescente a acelga.",
+      "Refogue rapidamente, apenas até começar a murchar.",
+      "Ajuste os temperos."
+    ],
+    "macros": {
+      "kcal": 80,
+      "p": 3,
+      "c": 8,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-259",
+    "name": "Chicória Refogada com Alho",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "chicória fatiada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Lave e corte a chicória em tiras.",
+      "Aqueça o azeite.",
+      "Doure levemente o alho.",
+      "Acrescente a chicória.",
+      "Refogue rapidamente até murchar.",
+      "Tempere com sal e pimenta."
+    ],
+    "macros": {
+      "kcal": 75,
+      "p": 3,
+      "c": 7,
+      "f": 5,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-260",
+    "name": "Frango ao Limão com Alho e Salsinha",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "peito de frango"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Suco de 1/2 limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      },
+      {
+        "quantity": "2",
+        "unit": "ml",
+        "name": "1 colher de café de azeite"
+      }
+    ],
+    "steps": [
+      "Tempere o frango com limão, alho, sal e pimenta.",
+      "Aqueça uma frigideira antiaderente com o azeite.",
+      "Grelhe dos dois lados até dourar e cozinhar completamente.",
+      "Finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 37,
+      "c": 2,
+      "f": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-261",
+    "name": "Frango com Tomate e Manjericão",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "peito de frango em cubos"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Manjericão fresco a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e pimenta a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de café de azeite"
+      }
+    ],
+    "steps": [
+      "Doure o frango.",
+      "Acrescente cebola e alho.",
+      "Junte o tomate e cozinhe até começar a formar um molho.",
+      "Finalize com manjericão."
+    ],
+    "macros": {
+      "kcal": 230,
+      "p": 38,
+      "c": 6,
+      "f": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-262",
+    "name": "Frango com Páprica e Cebola Roxa",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "peito de frango em tiras"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Páprica doce ou defumada a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e pimenta"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de café de azeite"
+      }
+    ],
+    "steps": [
+      "Tempere o frango com páprica, alho, sal e pimenta.",
+      "Grelhe em frigideira antiaderente.",
+      "Acrescente a cebola e deixe dourar levemente."
+    ],
+    "macros": {
+      "kcal": 225,
+      "p": 37,
+      "c": 5,
+      "f": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-263",
+    "name": "Frango ao Molho de Mostarda",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "peito de frango"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "mostarda"
+      },
+      {
+        "quantity": "20",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho e pimenta a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de café de azeite"
+      }
+    ],
+    "steps": [
+      "Grelhe o frango.",
+      "Misture mostarda e água.",
+      "Acrescente à frigideira.",
+      "Cozinhe por mais 1 a 2 minutos até envolver o frango."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 37,
+      "c": 2,
+      "f": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-264",
+    "name": "Frango com Abobrinha e Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "110",
+        "unit": "g",
+        "name": "peito de frango em cubos"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "abobrinha"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alecrim ou orégano a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de café de azeite"
+      }
+    ],
+    "steps": [
+      "Doure o frango.",
+      "Acrescente cebola e abobrinha.",
+      "Refogue rapidamente.",
+      "Finalize com ervas."
+    ],
+    "macros": {
+      "kcal": 215,
+      "p": 34,
+      "c": 5,
+      "f": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-265",
+    "name": "Tilápia com Limão e Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "filé de tilápia"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Suco de 1/2 limão"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal, pimenta e ervas a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere a tilápia.",
+      "Aqueça o azeite em frigideira antiaderente.",
+      "Grelhe dos dois lados até dourar."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 38,
+      "c": 1,
+      "f": 8
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-266",
+    "name": "Pescada Assada com Tomate",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "160",
+        "unit": "g",
+        "name": "filé de pescada"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, alho, sal e orégano"
+      }
+    ],
+    "steps": [
+      "Coloque o peixe em um refratário.",
+      "Cubra com tomate e cebola.",
+      "Tempere e regue com azeite.",
+      "Asse a 200 °C por aproximadamente 20 minutos."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 34,
+      "c": 6,
+      "f": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-267",
+    "name": "Merluza com Alho e Cheiro-Verde",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "170",
+        "unit": "g",
+        "name": "filé de merluza"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, sal e pimenta"
+      }
+    ],
+    "steps": [
+      "Tempere o peixe.",
+      "Grelhe com o azeite e o alho.",
+      "Finalize com cheiro-verde e limão."
+    ],
+    "macros": {
+      "kcal": 215,
+      "p": 34,
+      "c": 1,
+      "f": 8
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-268",
+    "name": "Linguado com Alcaparras e Limão",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "160",
+        "unit": "g",
+        "name": "filé de linguado"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "alcaparras"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Suco de 1/2 limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Pimenta e salsinha a gosto"
+      }
+    ],
+    "steps": [
+      "Grelhe o linguado no azeite.",
+      "Acrescente limão e alcaparras.",
+      "Cozinhe por mais 1 minuto.",
+      "Finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 200,
+      "p": 32,
+      "c": 1,
+      "f": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-269",
+    "name": "Atum Fresco Grelhado com Gergelim",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "atum fresco"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "gergelim"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere o atum.",
+      "Passe o gergelim sobre a superfície.",
+      "Grelhe rapidamente em frigideira bem quente.",
+      "Sirva no ponto desejado."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 38,
+      "c": 2,
+      "f": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-270",
+    "name": "Camarão ao Alho e Limão",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "160",
+        "unit": "g",
+        "name": "camarão limpo"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Suco de 1/2 limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, pimenta e salsinha"
+      }
+    ],
+    "steps": [
+      "Aqueça o azeite e doure levemente o alho.",
+      "Acrescente o camarão.",
+      "Cozinhe rapidamente até mudar de cor.",
+      "Finalize com limão e salsinha."
+    ],
+    "macros": {
+      "kcal": 205,
+      "p": 36,
+      "c": 2,
+      "f": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-271",
+    "name": "Camarão com Tomate e Páprica",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "camarão"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Páprica, alho, sal e cheiro-verde"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e alho.",
+      "Acrescente o tomate.",
+      "Junte os camarões e a páprica.",
+      "Cozinhe rapidamente.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 210,
+      "p": 34,
+      "c": 6,
+      "f": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-272",
+    "name": "Lombo Suíno com Limão e Alecrim",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "lombo suíno magro"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Suco de 1/2 limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alecrim a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e pimenta"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de café de azeite"
+      }
+    ],
+    "steps": [
+      "Tempere o lombo.",
+      "Grelhe em fogo médio dos dois lados.",
+      "Finalize com limão e alecrim."
+    ],
+    "macros": {
+      "kcal": 230,
+      "p": 35,
+      "c": 1,
+      "f": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-273",
+    "name": "Filé Mignon Suíno com Mostarda e Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "filé mignon suíno"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "mostarda"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Ervas secas a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e pimenta"
+      }
+    ],
+    "steps": [
+      "Tempere a carne.",
+      "Grelhe em frigideira antiaderente.",
+      "Acrescente a mostarda diluída em uma colher de sopa de água.",
+      "Envolva a carne no molho."
+    ],
+    "macros": {
+      "kcal": 215,
+      "p": 34,
+      "c": 2,
+      "f": 8
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-274",
+    "name": "Patinho em Tiras com Cebola",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "patinho em tiras"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e pimenta"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça bem uma frigideira antiaderente.",
+      "Doure a carne sem acrescentar óleo.",
+      "Acrescente a cebola e o alho.",
+      "Finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 30,
+      "c": 4,
+      "f": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-275",
+    "name": "Patinho Moído com Tomate e Abobrinha",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "patinho moído"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "abobrinha"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal, pimenta e cheiro-verde"
+      }
+    ],
+    "steps": [
+      "Doure o patinho em uma panela antiaderente.",
+      "Acrescente cebola e alho.",
+      "Junte abobrinha e tomate.",
+      "Cozinhe até os legumes ficarem macios.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 235,
+      "p": 30,
+      "c": 7,
+      "f": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-276",
+    "name": "Rosbife de Patinho com Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "patinho em peça ou bife alto"
+      }
+    ],
+    "steps": [
+      "Tempere a carne.",
+      "Sele todos os lados em frigideira antiaderente bem quente.",
+      "Termine o cozimento no forno, se necessário.",
+      "Deixe descansar por alguns minutos.",
+      "Corte em fatias finas."
+    ],
+    "macros": {
+      "kcal": 215,
+      "p": 30,
+      "c": 0,
+      "f": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-277",
+    "name": "Omelete de Claras com Atum",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "4 claras de ovo"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "atum em água escorrido"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cebolinha, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Bata ligeiramente as claras.",
+      "Coloque em frigideira antiaderente.",
+      "Acrescente o atum e o tomate.",
+      "Dobre a omelete.",
+      "Finalize com cebolinha."
+    ],
+    "macros": {
+      "kcal": 175,
+      "p": 34,
+      "c": 4,
+      "f": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-278",
+    "name": "Omelete de Claras com Frango e Espinafre",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "4 claras"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "espinafre"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue rapidamente o espinafre em frigideira antiaderente.",
+      "Acrescente as claras.",
+      "Distribua o frango e o tomate.",
+      "Cozinhe em fogo baixo.",
+      "Dobre e sirva."
+    ],
+    "macros": {
+      "kcal": 190,
+      "p": 35,
+      "c": 5,
+      "f": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-279",
+    "name": "Bacalhau Desfiado com Tomate e Cebola",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "130",
+        "unit": "g",
+        "name": "bacalhau dessalgado e desfiado"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola no azeite.",
+      "Acrescente o bacalhau.",
+      "Junte o tomate.",
+      "Cozinhe por alguns minutos.",
+      "Finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 225,
+      "p": 34,
+      "c": 5,
+      "f": 8
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-280",
+    "name": "Salada Caprese com Manjericão",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "tomate em rodelas"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "muçarela de búfala"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Folhas de manjericão a gosto"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Intercale as rodelas de tomate e a muçarela.",
+      "Distribua as folhas de manjericão.",
+      "Regue com azeite.",
+      "Tempere com sal e pimenta.",
+      "Sirva fria."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 12,
+      "c": 7,
+      "f": 16,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-281",
+    "name": "Salada de Palmito, Tomate e Pepino",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "palmito em rodelas"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "pepino"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, sal e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Corte os vegetais.",
+      "Misture com o palmito.",
+      "Tempere com azeite e limão.",
+      "Finalize com cheiro-verde.",
+      "Mantenha refrigerada até servir."
+    ],
+    "macros": {
+      "kcal": 115,
+      "p": 3,
+      "c": 13,
+      "f": 6,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-282",
+    "name": "Salada de Alface, Abacate e Tomate-Cereja",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "alface"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "abacate"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate-cereja"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "pepino"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Distribua as folhas em uma tigela.",
+      "Acrescente tomate e pepino.",
+      "Corte o abacate em cubos e adicione por último.",
+      "Tempere com limão, sal e pimenta."
+    ],
+    "macros": {
+      "kcal": 150,
+      "p": 3,
+      "c": 14,
+      "f": 11,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-283",
+    "name": "Salada de Rabanete, Pepino e Folhas Verdes",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "alface"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "rúcula"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "rabanete em rodelas finas"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "pepino"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Higienize e seque as folhas.",
+      "Acrescente o rabanete e o pepino.",
+      "Tempere com azeite e limão.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 90,
+      "p": 3,
+      "c": 9,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-284",
+    "name": "Salada de Grão-de-Bico com Pepino e Salsa",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "grão-de-bico cozido e frio"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "pepino"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Misture o grão-de-bico com os vegetais.",
+      "Acrescente a salsinha.",
+      "Tempere com azeite e limão.",
+      "Leve à geladeira até servir."
+    ],
+    "macros": {
+      "kcal": 225,
+      "p": 9,
+      "c": 34,
+      "f": 7,
+      "fiber": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-285",
+    "name": "Salada de Folhas com Figo e Nozes",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "folhas verdes variadas"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "2 figos frescos pequenos"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "nozes picadas"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "queijo minas"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de vinagre balsâmico"
+      }
+    ],
+    "steps": [
+      "Disponha as folhas no prato.",
+      "Corte os figos em quatro partes.",
+      "Acrescente o queijo e as nozes.",
+      "Regue com azeite e balsâmico."
+    ],
+    "macros": {
+      "kcal": 225,
+      "p": 7,
+      "c": 22,
+      "f": 14,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-286",
+    "name": "Salada de Couve Crua com Abacaxi e Cenoura",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "couve fatiada bem fina"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "abacaxi em cubos"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão e sal a gosto"
+      }
+    ],
+    "steps": [
+      "Massageie rapidamente a couve com algumas gotas de limão.",
+      "Acrescente cenoura e abacaxi.",
+      "Regue com azeite.",
+      "Ajuste o sal e misture."
+    ],
+    "macros": {
+      "kcal": 135,
+      "p": 3,
+      "c": 23,
+      "f": 5,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-287",
+    "name": "Salada de Alface com Palmito, Azeitona e Tomate-Cereja",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Sem glúten",
+      "Sem lactose",
+      "Vegana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "alface"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "palmito"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "tomate-cereja"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "azeitonas fatiadas"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Vinagre, sal e orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Distribua as folhas.",
+      "Acrescente palmito, tomate, azeitona e cebola.",
+      "Tempere com azeite e vinagre.",
+      "Finalize com orégano."
+    ],
+    "macros": {
+      "kcal": 125,
+      "p": 3,
+      "c": 10,
+      "f": 9,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-288",
+    "name": "Salada de Quinoa com Tomate, Pepino e Hortelã",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "quinoa cozida e fria"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "pepino"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã e salsinha a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Deixe a quinoa esfriar completamente.",
+      "Misture com tomate, pepino e cebola.",
+      "Acrescente as ervas.",
+      "Tempere com azeite e limão."
+    ],
+    "macros": {
+      "kcal": 200,
+      "p": 6,
+      "c": 29,
+      "f": 7,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-289",
+    "name": "Salada de Agrião com Laranja e Amêndoas",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "agrião"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "laranja em gomos"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "amêndoas em lascas"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Disponha o agrião no prato.",
+      "Acrescente os gomos de laranja.",
+      "Junte cebola e amêndoas.",
+      "Regue com azeite.",
+      "Tempere e sirva fria."
+    ],
+    "macros": {
+      "kcal": 170,
+      "p": 5,
+      "c": 19,
+      "f": 10,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-290",
+    "name": "Salada de Alface, Uva e Castanha-do-Pará",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "alface"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "uvas cortadas ao meio"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "castanha-do-pará picada"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "pepino"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão e sal a gosto"
+      }
+    ],
+    "steps": [
+      "Disponha as folhas.",
+      "Acrescente uva e pepino.",
+      "Finalize com castanhas.",
+      "Tempere com azeite e limão."
+    ],
+    "macros": {
+      "kcal": 170,
+      "p": 3,
+      "c": 19,
+      "f": 10,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-291",
+    "name": "Salada de Repolho Roxo com Abacaxi e Hortelã",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "repolho roxo fatiado fino"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "abacaxi em cubos"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão e sal a gosto"
+      }
+    ],
+    "steps": [
+      "Fatie o repolho bem fino.",
+      "Acrescente o abacaxi e a cebola.",
+      "Tempere com azeite e limão.",
+      "Finalize com hortelã.",
+      "Sirva gelada."
+    ],
+    "macros": {
+      "kcal": 130,
+      "p": 2,
+      "c": 21,
+      "f": 5,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-292",
+    "name": "Salada de Endívia com Maçã Verde e Nozes",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "endívia"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "maçã verde"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "nozes"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "pepino"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Corte a maçã em fatias finas.",
+      "Misture com a endívia e o pepino.",
+      "Acrescente as nozes.",
+      "Tempere com azeite e limão."
+    ],
+    "macros": {
+      "kcal": 185,
+      "p": 3,
+      "c": 24,
+      "f": 10,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-293",
+    "name": "Salada de Rúcula com Pêssego e Queijo Minas",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "rúcula"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "pêssego em fatias"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "queijo minas em cubos"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "sementes de girassol"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Vinagre balsâmico a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque a rúcula no prato.",
+      "Acrescente o pêssego e o queijo.",
+      "Finalize com as sementes.",
+      "Regue com azeite e balsâmico."
+    ],
+    "macros": {
+      "kcal": 220,
+      "p": 10,
+      "c": 18,
+      "f": 13,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-294",
+    "name": "Salada de Pepino, Abacate e Tomate com Coentro",
+    "tipo": "salada",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "pepino"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "abacate"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola roxa"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Coentro ou cheiro-verde a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Corte pepino, tomate e abacate em cubos.",
+      "Acrescente a cebola.",
+      "Tempere com limão, sal e pimenta.",
+      "Finalize com coentro ou cheiro-verde.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 145,
+      "p": 3,
+      "c": 15,
+      "f": 10,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-295",
+    "name": "Molho Cremoso de Limão e Ricota",
+    "tipo": "molho",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 2,
+    "ingredients": [
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "ricota"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Amasse bem a ricota.",
+      "Misture com a água e o limão.",
+      "Acrescente o azeite.",
+      "Tempere e misture até formar um molho cremoso."
+    ],
+    "macros": {
+      "kcal": 45,
+      "p": 2,
+      "c": 1,
+      "f": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-296",
+    "name": "Vitamina Proteica de Banana com Canela",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "1 banana pequena"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque todos os ingredientes no liquidificador.",
+      "Bata até ficar homogêneo e cremoso.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 280,
+      "p": 31,
+      "c": 35,
+      "f": 3,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Para versão sem lactose, utilize leite e whey zero lactose."
+  },
+  {
+    "id": "NL-297",
+    "name": "Vitamina Proteica de Mamão com Aveia",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "mamão"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "aveia em flocos"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o mamão com o leite e o whey.",
+      "Acrescente a aveia.",
+      "Bata novamente até ficar cremoso.",
+      "Finalize com canela."
+    ],
+    "macros": {
+      "kcal": 300,
+      "p": 32,
+      "c": 36,
+      "f": 4,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-298",
+    "name": "Vitamina de Manga com Whey e Iogurte",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "manga"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "iogurte natural"
+      },
+      {
+        "quantity": "80",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque todos os ingredientes no liquidificador.",
+      "Bata até obter uma vitamina espessa e cremosa.",
+      "Sirva gelada."
+    ],
+    "macros": {
+      "kcal": 265,
+      "p": 30,
+      "c": 30,
+      "f": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Use iogurte e whey zero lactose para versão sem lactose."
+  },
+  {
+    "id": "NL-299",
+    "name": "Vitamina Proteica de Abacaxi com Coco",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "abacaxi"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein zero lactose sabor baunilha"
+      },
+      {
+        "quantity": "180",
+        "unit": "ml",
+        "name": "leite desnatado zero lactose"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "coco ralado sem açúcar"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o abacaxi com o leite e o whey.",
+      "Acrescente o coco ralado.",
+      "Bata rapidamente.",
+      "Sirva bem gelada."
+    ],
+    "macros": {
+      "kcal": 285,
+      "p": 30,
+      "c": 29,
+      "f": 7,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-300",
+    "name": "Vitamina de Maçã com Canela e Whey",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "4min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "1 maçã pequena com casca"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Corte a maçã em pedaços e retire as sementes.",
+      "Bata com o leite e o whey.",
+      "Acrescente canela e gelo.",
+      "Bata até ficar homogêneo."
+    ],
+    "macros": {
+      "kcal": 270,
+      "p": 30,
+      "c": 33,
+      "f": 3,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-301",
+    "name": "Vitamina Proteica de Cacau com Banana",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "banana"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor chocolate"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "cacau em pó 100%"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque todos os ingredientes no liquidificador.",
+      "Bata até ficar bem cremoso.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 285,
+      "p": 32,
+      "c": 32,
+      "f": 4,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-302",
+    "name": "Vitamina de Pêssego com Whey e Iogurte",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "pêssego fresco"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "iogurte natural"
+      },
+      {
+        "quantity": "80",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o pêssego com o iogurte.",
+      "Acrescente o whey e a água.",
+      "Bata novamente.",
+      "Sirva gelado."
+    ],
+    "macros": {
+      "kcal": 245,
+      "p": 30,
+      "c": 25,
+      "f": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-303",
+    "name": "Vitamina Proteica de Maracujá",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "polpa de maracujá"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein zero lactose sabor baunilha"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite desnatado zero lactose"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Adoçante a gosto, opcional"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata rapidamente a polpa de maracujá com o leite.",
+      "Acrescente o whey.",
+      "Bata novamente até ficar cremoso.",
+      "Se desejar uma bebida sem sementes, coe a polpa antes de bater com os demais ingredientes."
+    ],
+    "macros": {
+      "kcal": 245,
+      "p": 30,
+      "c": 24,
+      "f": 3,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-304",
+    "name": "Vitamina de Uva com Whey e Iogurte",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "uvas sem sementes"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "iogurte natural"
+      },
+      {
+        "quantity": "80",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata as uvas com o iogurte e a água.",
+      "Acrescente o whey.",
+      "Bata até ficar homogêneo.",
+      "Sirva bem gelado."
+    ],
+    "macros": {
+      "kcal": 280,
+      "p": 29,
+      "c": 34,
+      "f": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-305",
+    "name": "Vitamina Proteica de Pera com Canela",
+    "tipo": "bebida",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "3min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "1 pera pequena com casca"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Corte a pera e retire apenas as sementes.",
+      "Bata com o leite e o whey.",
+      "Acrescente canela e gelo.",
+      "Bata até ficar bem cremoso."
+    ],
+    "macros": {
+      "kcal": 275,
+      "p": 30,
+      "c": 35,
+      "f": 3,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-306",
+    "name": "Mingau Proteico de Morango com Whey",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "aveia em flocos"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "morangos picados"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça o leite com a aveia em fogo baixo.",
+      "Mexa até engrossar.",
+      "Desligue o fogo e espere cerca de 1 minuto.",
+      "Acrescente o whey e misture bem.",
+      "Finalize com os morangos."
+    ],
+    "macros": {
+      "kcal": 335,
+      "p": 32,
+      "c": 42,
+      "f": 5,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-307",
+    "name": "Mingau de Paçoca com Whey",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "aveia"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "pasta de amendoim"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "amendoim torrado sem sal, picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o leite com a aveia até engrossar.",
+      "Retire do fogo.",
+      "Misture o whey e a pasta de amendoim.",
+      "Finalize com o amendoim picado e canela."
+    ],
+    "macros": {
+      "kcal": 350,
+      "p": 34,
+      "c": 32,
+      "f": 11,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-308",
+    "name": "Mingau de Pera com Aveia e Chia",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "aveia em flocos"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "pera com casca em cubos"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "chia"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque o leite, a aveia e metade da pera em uma panela.",
+      "Cozinhe em fogo baixo até engrossar.",
+      "Acrescente a chia e misture.",
+      "Finalize com o restante da pera e canela."
+    ],
+    "macros": {
+      "kcal": 280,
+      "p": 10,
+      "c": 45,
+      "f": 8,
+      "fiber": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-309",
+    "name": "Mingau Proteico de Coco com Whey",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "aveia sem glúten"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "coco seco ralado sem açúcar"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o leite com a aveia.",
+      "Quando atingir consistência cremosa, desligue o fogo.",
+      "Misture o whey.",
+      "Finalize com coco ralado e canela."
+    ],
+    "macros": {
+      "kcal": 330,
+      "p": 32,
+      "c": 30,
+      "f": 10,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-310",
+    "name": "Mingau de Milho com Canela",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "12min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "fubá fino"
+      },
+      {
+        "quantity": "100",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "leite em pó"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Adoçante culinário a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela em pó a gosto"
+      }
+    ],
+    "steps": [
+      "Dissolva o fubá na água fria.",
+      "Acrescente o leite.",
+      "Leve ao fogo baixo, mexendo sempre.",
+      "Quando engrossar, misture o leite em pó e o adoçante.",
+      "Finalize com canela."
+    ],
+    "macros": {
+      "kcal": 230,
+      "p": 9,
+      "c": 39,
+      "f": 4,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-311",
+    "name": "Mingau de Aveia com Abacaxi e Canela",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "aveia"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "abacaxi em cubos"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o abacaxi por 2 a 3 minutos em uma panela.",
+      "Acrescente o leite e a aveia.",
+      "Cozinhe em fogo baixo até engrossar.",
+      "Finalize com canela."
+    ],
+    "macros": {
+      "kcal": 255,
+      "p": 9,
+      "c": 45,
+      "f": 5,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-312",
+    "name": "Mingau Proteico de Doce de Leite",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "aveia"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor baunilha"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "doce de leite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o leite com a aveia.",
+      "Retire do fogo quando estiver cremoso.",
+      "Misture o whey.",
+      "Finalize com o doce de leite e uma pitada de canela."
+    ],
+    "macros": {
+      "kcal": 335,
+      "p": 32,
+      "c": 39,
+      "f": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-313",
+    "name": "Mingau de Ameixa com Chia",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "aveia"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "3 ameixas secas picadas"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "chia"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque o leite, a aveia e as ameixas na panela.",
+      "Cozinhe em fogo baixo, mexendo.",
+      "Quando engrossar, acrescente a chia.",
+      "Finalize com canela."
+    ],
+    "macros": {
+      "kcal": 300,
+      "p": 10,
+      "c": 46,
+      "f": 8,
+      "fiber": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-314",
+    "name": "Mingau Proteico de Chocolate com Pasta de Amendoim",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "aveia"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein sabor chocolate"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "cacau em pó"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "pasta de amendoim"
+      }
+    ],
+    "steps": [
+      "Cozinhe o leite com a aveia e o cacau.",
+      "Quando engrossar, desligue o fogo.",
+      "Acrescente o whey e misture.",
+      "Finalize com a pasta de amendoim."
+    ],
+    "macros": {
+      "kcal": 355,
+      "p": 34,
+      "c": 32,
+      "f": 11,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-315",
+    "name": "Mingau de Aveia com Uva-Passa e Castanhas",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "8min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "leite"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "aveia"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "uva-passa"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "castanhas picadas"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o leite com a aveia em fogo baixo.",
+      "Acrescente a uva-passa e continue mexendo.",
+      "Quando estiver cremoso, desligue o fogo.",
+      "Finalize com castanhas e canela."
+    ],
+    "macros": {
+      "kcal": 300,
+      "p": 10,
+      "c": 40,
+      "f": 11,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-316",
+    "name": "Batata Rústica com Páprica e Alecrim",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "batata com casca em gomos"
+      },
+      {
+        "quantity": "5",
+        "unit": "ml",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Páprica doce ou defumada a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alecrim, sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Corte a batata em gomos.",
+      "Misture com azeite e temperos.",
+      "Distribua na airfryer ou assadeira sem sobrepor.",
+      "Asse a 200 °C por aproximadamente 20 a 25 minutos, virando na metade do tempo."
+    ],
+    "macros": {
+      "kcal": 165,
+      "p": 3,
+      "c": 30,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-317",
+    "name": "Batata-Doce Assada com Canela e Páprica",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "batata-doce em cubos"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Páprica, canela, sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Misture a batata com os temperos e o azeite.",
+      "Leve à airfryer ou forno a 200 °C.",
+      "Asse por aproximadamente 20 minutos ou até dourar."
+    ],
+    "macros": {
+      "kcal": 180,
+      "p": 2,
+      "c": 33,
+      "f": 5,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-318",
+    "name": "Batata Bolinha com Alho e Salsinha",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "batata bolinha"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe as batatas até ficarem macias.",
+      "Corte ao meio.",
+      "Doure rapidamente no azeite com alho.",
+      "Finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 165,
+      "p": 3,
+      "c": 29,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-319",
+    "name": "Polenta Cremosa com Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "fubá"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "parmesão ralado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, pimenta e ervas a gosto"
+      }
+    ],
+    "steps": [
+      "Dissolva o fubá em parte da água fria.",
+      "Leve ao fogo com o restante da água.",
+      "Mexa até engrossar.",
+      "Acrescente parmesão e azeite.",
+      "Finalize com ervas."
+    ],
+    "macros": {
+      "kcal": 175,
+      "p": 5,
+      "c": 24,
+      "f": 7,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-320",
+    "name": "Cuscuz Temperado com Tomate e Cheiro-Verde",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "flocão de milho"
+      },
+      {
+        "quantity": "60",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde e sal a gosto"
+      }
+    ],
+    "steps": [
+      "Hidrate o flocão e deixe descansar por 5 minutos.",
+      "Cozinhe na cuscuzeira.",
+      "Refogue rapidamente cebola e tomate.",
+      "Misture ao cuscuz.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 215,
+      "p": 4,
+      "c": 37,
+      "f": 6,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-321",
+    "name": "Quinoa com Cenoura e Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "quinoa cozida"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha e cebolinha a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Misture a quinoa já cozida com a cenoura e o tomate.",
+      "Acrescente o azeite.",
+      "Tempere.",
+      "Finalize com bastante cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 190,
+      "p": 5,
+      "c": 27,
+      "f": 7,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-322",
+    "name": "Quinoa com Abobrinha e Limão",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "quinoa cozida"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "abobrinha em cubinhos"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Suco de limão a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue rapidamente a abobrinha no azeite.",
+      "Acrescente a quinoa.",
+      "Misture por 1 a 2 minutos.",
+      "Desligue o fogo e finalize com limão e salsinha."
+    ],
+    "macros": {
+      "kcal": 180,
+      "p": 5,
+      "c": 25,
+      "f": 7,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-323",
+    "name": "Farofa Leve de Cenoura e Cebola",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "farinha de mandioca"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "cenoura ralada"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola no azeite.",
+      "Acrescente a cenoura.",
+      "Junte a farinha aos poucos.",
+      "Misture em fogo baixo até ficar levemente crocante.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 160,
+      "p": 2,
+      "c": 27,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-324",
+    "name": "Farofa de Couve com Alho",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "farinha de mandioca"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "couve fatiada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Doure levemente o alho no azeite.",
+      "Acrescente a couve.",
+      "Junte a farinha de mandioca.",
+      "Misture por alguns minutos e tempere."
+    ],
+    "macros": {
+      "kcal": 155,
+      "p": 3,
+      "c": 25,
+      "f": 5,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-325",
+    "name": "Farofa de Banana com Cebola",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "farinha de mandioca"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "banana em cubos"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Doure a cebola no azeite.",
+      "Acrescente a banana e mexa delicadamente.",
+      "Junte a farinha.",
+      "Misture rapidamente.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 210,
+      "p": 2,
+      "c": 39,
+      "f": 5,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-326",
+    "name": "Grão-de-Bico Crocante com Páprica",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "grão-de-bico cozido"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Páprica, cúrcuma, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Seque bem o grão-de-bico.",
+      "Misture com o azeite e os temperos.",
+      "Leve à airfryer a 190 °C por aproximadamente 15 minutos.",
+      "Mexa na metade do tempo."
+    ],
+    "macros": {
+      "kcal": 210,
+      "p": 9,
+      "c": 28,
+      "f": 7,
+      "fiber": 8
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-327",
+    "name": "Lentilha Temperada com Tomate e Cebola",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "lentilha cozida"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola e o tomate rapidamente.",
+      "Acrescente a lentilha.",
+      "Misture delicadamente.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 195,
+      "p": 10,
+      "c": 29,
+      "f": 5,
+      "fiber": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-328",
+    "name": "Ervilha Fresca Refogada com Cebola e Hortelã",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "ervilha"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola no azeite.",
+      "Acrescente a ervilha.",
+      "Cozinhe por alguns minutos.",
+      "Finalize com hortelã, sal e pimenta."
+    ],
+    "macros": {
+      "kcal": 150,
+      "p": 7,
+      "c": 20,
+      "f": 5,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-329",
+    "name": "Palmito Assado com Tomate e Orégano",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "palmito em rodelas"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Distribua o palmito e o tomate em um refratário.",
+      "Regue com azeite.",
+      "Tempere com orégano, sal e pimenta.",
+      "Leve ao forno por aproximadamente 15 minutos."
+    ],
+    "macros": {
+      "kcal": 115,
+      "p": 4,
+      "c": 12,
+      "f": 6,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-330",
+    "name": "Tomates Assados com Alho e Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "g",
+        "name": "tomates"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano e manjericão a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Corte os tomates.",
+      "Disponha em uma assadeira.",
+      "Acrescente alho, azeite e temperos.",
+      "Asse a 200 °C por aproximadamente 20 minutos."
+    ],
+    "macros": {
+      "kcal": 95,
+      "p": 2,
+      "c": 10,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-331",
+    "name": "Mini Pimentões Assados Recheados com Ricota",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "pimentões"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "ricota"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "tomate picado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano e salsinha a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Corte os pimentões ao meio e retire as sementes.",
+      "Misture ricota, tomate e ervas.",
+      "Recheie os pimentões.",
+      "Asse a 200 °C por aproximadamente 20 minutos."
+    ],
+    "macros": {
+      "kcal": 170,
+      "p": 10,
+      "c": 14,
+      "f": 9,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Para versão sem lactose, utilize ricota zero lactose."
+  },
+  {
+    "id": "NL-332",
+    "name": "Cogumelos Salteados com Alho e Salsinha",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "180",
+        "unit": "g",
+        "name": "cogumelos frescos fatiados"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Aqueça bem a frigideira.",
+      "Acrescente o azeite e os cogumelos.",
+      "Deixe dourar antes de mexer.",
+      "Acrescente o alho.",
+      "Finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 110,
+      "p": 6,
+      "c": 9,
+      "f": 6,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-333",
+    "name": "Milho Refogado com Tomate e Cebolinha",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "milho cozido"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cebolinha, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola no azeite.",
+      "Acrescente o milho.",
+      "Junte o tomate e cozinhe rapidamente.",
+      "Finalize com cebolinha."
+    ],
+    "macros": {
+      "kcal": 175,
+      "p": 4,
+      "c": 27,
+      "f": 6,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-334",
+    "name": "Cebolas Assadas com Balsâmico e Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "cebola em gomos"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de sopa de vinagre balsâmico"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alecrim ou tomilho a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque as cebolas em um refratário.",
+      "Acrescente azeite e balsâmico.",
+      "Tempere com ervas.",
+      "Asse a 200 °C por aproximadamente 25 minutos."
+    ],
+    "macros": {
+      "kcal": 120,
+      "p": 2,
+      "c": 18,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-335",
+    "name": "Legumes Assados com Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "abobrinha"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "berinjela"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "cenoura"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "pimentão"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alecrim, orégano, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Corte os vegetais em pedaços semelhantes.",
+      "Misture com azeite e ervas.",
+      "Distribua em uma assadeira.",
+      "Asse a 200 °C por 25 a 30 minutos, mexendo na metade do tempo."
+    ],
+    "macros": {
+      "kcal": 160,
+      "p": 4,
+      "c": 23,
+      "f": 6,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-336",
+    "name": "Refresco de Melancia com Hortelã",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "melancia"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "5 folhas de hortelã"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque a melancia e a água no liquidificador.",
+      "Bata até ficar homogêneo.",
+      "Acrescente a hortelã e bata rapidamente.",
+      "Adicione gelo e sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 50,
+      "p": 1,
+      "c": 12,
+      "f": 0,
+      "fiber": 1
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-337",
+    "name": "Refresco de Morango com Água de Coco",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "morangos"
+      },
+      {
+        "quantity": "150",
+        "unit": "ml",
+        "name": "água de coco"
+      },
+      {
+        "quantity": "50",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Higienize os morangos.",
+      "Bata com a água de coco e a água.",
+      "Acrescente gelo.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 65,
+      "p": 1,
+      "c": 15,
+      "f": 0,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-338",
+    "name": "Refresco de Manga com Maracujá",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "manga"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "polpa de maracujá"
+      },
+      {
+        "quantity": "250",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata a manga com a água.",
+      "Acrescente a polpa de maracujá.",
+      "Bata rapidamente.",
+      "Adicione gelo e sirva."
+    ],
+    "macros": {
+      "kcal": 70,
+      "p": 1,
+      "c": 16,
+      "f": 0,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-339",
+    "name": "Refresco de Acerola com Hortelã",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "acerola"
+      },
+      {
+        "quantity": "250",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "5 folhas de hortelã"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata a acerola com a água.",
+      "Coe, se desejar.",
+      "Acrescente a hortelã e bata rapidamente.",
+      "Sirva com gelo."
+    ],
+    "macros": {
+      "kcal": 35,
+      "p": 1,
+      "c": 8,
+      "f": 0,
+      "fiber": 1
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-340",
+    "name": "Refresco de Goiaba com Hortelã",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "goiaba"
+      },
+      {
+        "quantity": "250",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata a goiaba com a água.",
+      "Coe, se desejar.",
+      "Acrescente a hortelã.",
+      "Sirva bem gelado."
+    ],
+    "macros": {
+      "kcal": 70,
+      "p": 2,
+      "c": 14,
+      "f": 1,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-341",
+    "name": "Refresco de Pêssego com Chá de Camomila",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "pêssego"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "chá de camomila preparado e frio"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Prepare o chá de camomila e espere esfriar completamente.",
+      "Bata o chá com o pêssego.",
+      "Acrescente gelo.",
+      "Sirva imediatamente."
+    ],
+    "macros": {
+      "kcal": 40,
+      "p": 1,
+      "c": 10,
+      "f": 0,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-342",
+    "name": "Refresco de Maçã com Canela",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "maçã com casca"
+      },
+      {
+        "quantity": "250",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Corte a maçã e retire as sementes.",
+      "Bata com a água gelada.",
+      "Acrescente a canela.",
+      "Sirva imediatamente com gelo."
+    ],
+    "macros": {
+      "kcal": 55,
+      "p": 0.5,
+      "c": 14,
+      "f": 0,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-343",
+    "name": "Refresco de Abacaxi com Gengibre",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "abacaxi"
+      },
+      {
+        "quantity": "250",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 pequena lasca de gengibre"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o abacaxi com a água.",
+      "Acrescente o gengibre.",
+      "Bata novamente por alguns segundos.",
+      "Sirva com gelo."
+    ],
+    "macros": {
+      "kcal": 50,
+      "p": 0.5,
+      "c": 13,
+      "f": 0,
+      "fiber": 1
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-344",
+    "name": "Refresco de Kiwi com Hortelã",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "1 kiwi médio"
+      },
+      {
+        "quantity": "250",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Descasque o kiwi.",
+      "Bata com a água.",
+      "Acrescente a hortelã e bata rapidamente.",
+      "Sirva com gelo."
+    ],
+    "macros": {
+      "kcal": 50,
+      "p": 1,
+      "c": 12,
+      "f": 0.5,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-345",
+    "name": "Refresco de Melão com Gengibre",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "melão"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 pequena lasca de gengibre"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o melão com a água.",
+      "Acrescente o gengibre.",
+      "Bata rapidamente.",
+      "Sirva com bastante gelo."
+    ],
+    "macros": {
+      "kcal": 50,
+      "p": 1,
+      "c": 12,
+      "f": 0,
+      "fiber": 1
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-346",
+    "name": "Refresco de Morango com Manjericão",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "morangos"
+      },
+      {
+        "quantity": "250",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "3 folhas de manjericão fresco"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata os morangos com a água.",
+      "Acrescente o manjericão.",
+      "Bata rapidamente apenas para incorporar.",
+      "Sirva gelado."
+    ],
+    "macros": {
+      "kcal": 35,
+      "p": 1,
+      "c": 8,
+      "f": 0,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-347",
+    "name": "Refresco de Pera com Hortelã",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "pera com casca"
+      },
+      {
+        "quantity": "250",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Corte a pera e retire as sementes.",
+      "Bata com a água.",
+      "Acrescente a hortelã e bata rapidamente.",
+      "Sirva com gelo."
+    ],
+    "macros": {
+      "kcal": 60,
+      "p": 0.5,
+      "c": 15,
+      "f": 0,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-348",
+    "name": "Refresco de Melancia com Gengibre",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "melancia"
+      },
+      {
+        "quantity": "200",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 pequena lasca de gengibre"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata a melancia com a água.",
+      "Acrescente o gengibre.",
+      "Bata por mais alguns segundos.",
+      "Sirva bem gelado."
+    ],
+    "macros": {
+      "kcal": 50,
+      "p": 1,
+      "c": 12,
+      "f": 0,
+      "fiber": 1
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-349",
+    "name": "Refresco de Caju com Hortelã",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "caju"
+      },
+      {
+        "quantity": "250",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o caju com a água.",
+      "Coe, se desejar.",
+      "Acrescente a hortelã.",
+      "Sirva bem gelado."
+    ],
+    "macros": {
+      "kcal": 45,
+      "p": 1,
+      "c": 10,
+      "f": 0,
+      "fiber": 2
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-350",
+    "name": "Refresco de Laranja com Gengibre e Canela",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "ml",
+        "name": "suco de laranja natural"
+      },
+      {
+        "quantity": "150",
+        "unit": "ml",
+        "name": "água gelada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 pequena lasca de gengibre"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Misture o suco de laranja com a água.",
+      "Acrescente o gengibre.",
+      "Finalize com uma pequena pitada de canela.",
+      "Adicione gelo e sirva."
+    ],
+    "macros": {
+      "kcal": 50,
+      "p": 1,
+      "c": 11,
+      "f": 0,
+      "fiber": 0.5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-351",
+    "name": "Água Saborizada de Morango e Hortelã",
+    "tipo": "bebida",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 litro de água"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "morangos fatiados"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "10 folhas de hortelã"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gelo a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque os morangos e a hortelã em uma jarra.",
+      "Acrescente a água.",
+      "Leve à geladeira por pelo menos 1 hora.",
+      "Acrescente gelo antes de servir."
+    ],
+    "macros": {
+      "kcal": 0,
+      "p": 0,
+      "c": 0,
+      "f": 0,
+      "fiber": 0
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-352",
+    "name": "Gelatina Cremosa de Morango com Iogurte",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1/2 pacote de gelatina zero sabor morango"
+      },
+      {
+        "quantity": "100",
+        "unit": "ml",
+        "name": "água quente"
+      },
+      {
+        "quantity": "100",
+        "unit": "ml",
+        "name": "água fria"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "iogurte natural desnatado"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "morangos picados"
+      }
+    ],
+    "steps": [
+      "Dissolva a gelatina na água quente.",
+      "Acrescente a água fria.",
+      "Leve à geladeira até começar a firmar.",
+      "Bata a gelatina com o iogurte até formar um creme.",
+      "Coloque em uma taça.",
+      "Finalize com os morangos e leve novamente à geladeira."
+    ],
+    "macros": {
+      "kcal": 100,
+      "p": 6,
+      "c": 15,
+      "f": 1,
+      "fiber": 1
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Para versão sem lactose, utilizar iogurte zero lactose."
+  },
+  {
+    "id": "NL-353",
+    "name": "Gelatina Batida de Maracujá com Iogurte",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1/2 pacote de gelatina zero sabor maracujá"
+      },
+      {
+        "quantity": "100",
+        "unit": "ml",
+        "name": "água quente"
+      },
+      {
+        "quantity": "100",
+        "unit": "ml",
+        "name": "água fria"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "iogurte natural desnatado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "polpa de maracujá"
+      }
+    ],
+    "steps": [
+      "Dissolva a gelatina na água quente.",
+      "Acrescente a água fria.",
+      "Leve à geladeira até ficar parcialmente firme.",
+      "Bata com o iogurte.",
+      "Coloque em uma taça.",
+      "Finalize com a polpa de maracujá."
+    ],
+    "macros": {
+      "kcal": 95,
+      "p": 6,
+      "c": 14,
+      "f": 1,
+      "fiber": 1
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-354",
+    "name": "Overnight Oats de Banana e Canela",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "aveia em flocos"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "iogurte natural desnatado"
+      },
+      {
+        "quantity": "50",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "banana em rodelas"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "chia"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Misture a aveia, o iogurte, o leite e a chia.",
+      "Coloque em um pote com tampa.",
+      "Acrescente a banana.",
+      "Finalize com canela.",
+      "Leve à geladeira de um dia para o outro."
+    ],
+    "macros": {
+      "kcal": 235,
+      "p": 10,
+      "c": 39,
+      "f": 5,
+      "fiber": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-355",
+    "name": "Overnight Oats de Cacau e Morango",
+    "tipo": "mingau",
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "aveia"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "iogurte natural desnatado"
+      },
+      {
+        "quantity": "50",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "morangos"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "cacau em pó"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "chia"
+      }
+    ],
+    "steps": [
+      "Misture a aveia, o iogurte, o leite, o cacau e a chia.",
+      "Acrescente metade dos morangos picados.",
+      "Tampe e deixe na geladeira durante a noite.",
+      "Finalize com o restante dos morangos antes de servir."
+    ],
+    "macros": {
+      "kcal": 210,
+      "p": 11,
+      "c": 30,
+      "f": 6,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-356",
+    "name": "Pudim de Chia com Morango",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "chia"
+      },
+      {
+        "quantity": "120",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "morangos picados"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1/2 colher de chá de essência de baunilha"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Adoçante a gosto, opcional"
+      }
+    ],
+    "steps": [
+      "Misture a chia com o leite e a baunilha.",
+      "Aguarde 5 minutos e mexa novamente.",
+      "Leve à geladeira por pelo menos 2 horas.",
+      "Finalize com os morangos."
+    ],
+    "macros": {
+      "kcal": 150,
+      "p": 6,
+      "c": 18,
+      "f": 6,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-357",
+    "name": "Pudim de Chia com Manga e Coco",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "chia"
+      },
+      {
+        "quantity": "120",
+        "unit": "ml",
+        "name": "bebida vegetal sem açúcar"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "manga em cubos"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "coco seco ralado sem açúcar"
+      }
+    ],
+    "steps": [
+      "Misture a chia com a bebida vegetal.",
+      "Aguarde 5 minutos e mexa novamente.",
+      "Leve à geladeira por pelo menos 2 horas.",
+      "Finalize com a manga e o coco ralado."
+    ],
+    "macros": {
+      "kcal": 175,
+      "p": 4,
+      "c": 22,
+      "f": 8,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-358",
+    "name": "Pudim Fit de Caneca de Chocolate",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "100",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "leite em pó desnatado"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "cacau em pó 100%"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Adoçante culinário a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1/2 colher de chá de essência de baunilha"
+      }
+    ],
+    "steps": [
+      "Bata o ovo com um garfo.",
+      "Acrescente o leite, o leite em pó, o cacau, o adoçante e a baunilha.",
+      "Misture bem até ficar homogêneo.",
+      "Coloque em uma caneca ou ramequim próprio para micro-ondas.",
+      "Leve ao micro-ondas em intervalos curtos até firmar, totalizando aproximadamente 2 a 3 minutos.",
+      "Espere amornar antes de servir."
+    ],
+    "macros": {
+      "kcal": 170,
+      "p": 13,
+      "c": 11,
+      "f": 8
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-359",
+    "name": "Salada de Frutas Vermelhas com Iogurte",
+    "tipo": "salada",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Sem glúten",
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "morango"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "uva"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "maçã com casca"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "iogurte natural desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã a gosto"
+      }
+    ],
+    "steps": [
+      "Higienize e corte as frutas.",
+      "Misture delicadamente.",
+      "Acrescente o iogurte.",
+      "Finalize com hortelã.",
+      "Sirva bem gelada."
+    ],
+    "macros": {
+      "kcal": 155,
+      "p": 5,
+      "c": 30,
+      "f": 2,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-360",
+    "name": "Salada Tropical de Frutas com Maracujá",
+    "tipo": "salada",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "7min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "mamão"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "melão"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "manga"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "abacaxi"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "polpa de maracujá"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã a gosto"
+      }
+    ],
+    "steps": [
+      "Corte todas as frutas em cubos pequenos.",
+      "Misture delicadamente.",
+      "Acrescente a polpa de maracujá.",
+      "Finalize com hortelã.",
+      "Mantenha refrigerada até servir."
+    ],
+    "macros": {
+      "kcal": 160,
+      "p": 2,
+      "c": 39,
+      "f": 1,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-361",
+    "name": "Macarrão ao Molho de Tomate com Abobrinha",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "15min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "abobrinha em cubos"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "molho de tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, manjericão, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola e o alho no azeite.",
+      "Acrescente a abobrinha e cozinhe rapidamente.",
+      "Junte o molho de tomate.",
+      "Acrescente o macarrão e misture.",
+      "Finalize com manjericão."
+    ],
+    "macros": {
+      "kcal": 285,
+      "p": 8,
+      "c": 48,
+      "f": 7,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-362",
+    "name": "Macarrão com Frango, Tomate e Espinafre",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "90",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "espinafre"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola.",
+      "Acrescente o frango.",
+      "Junte tomate e espinafre.",
+      "Acrescente o macarrão.",
+      "Misture e ajuste os temperos."
+    ],
+    "macros": {
+      "kcal": 325,
+      "p": 32,
+      "c": 33,
+      "f": 8,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-363",
+    "name": "Macarrão Cremoso com Cottage e Brócolis",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "brócolis"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "cottage"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal, pimenta e noz-moscada a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o brócolis deixando-o firme.",
+      "Misture o cottage com o leite.",
+      "Aqueça em fogo baixo.",
+      "Acrescente o brócolis e o macarrão.",
+      "Tempere e misture até ficar cremoso."
+    ],
+    "macros": {
+      "kcal": 290,
+      "p": 18,
+      "c": 39,
+      "f": 7,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-364",
+    "name": "Macarrão com Atum e Molho de Tomate",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "90",
+        "unit": "g",
+        "name": "atum em água escorrido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "molho de tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cheiro-verde e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola.",
+      "Acrescente o molho de tomate.",
+      "Junte o atum.",
+      "Misture o macarrão.",
+      "Finalize com cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 300,
+      "p": 29,
+      "c": 36,
+      "f": 5,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-365",
+    "name": "Macarrão com Berinjela, Tomate e Manjericão",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "berinjela em cubos"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Manjericão a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e berinjela no azeite.",
+      "Acrescente o tomate.",
+      "Cozinhe até formar um molho rústico.",
+      "Junte o macarrão.",
+      "Finalize com manjericão."
+    ],
+    "macros": {
+      "kcal": 290,
+      "p": 8,
+      "c": 48,
+      "f": 7,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-366",
+    "name": "Macarrão com Camarão, Limão e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "camarão limpo"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate-cereja"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Suco de limão a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal, pimenta e salsinha"
+      }
+    ],
+    "steps": [
+      "Doure o alho no azeite.",
+      "Acrescente os camarões e cozinhe rapidamente.",
+      "Junte os tomates.",
+      "Acrescente o macarrão.",
+      "Finalize com limão e salsinha."
+    ],
+    "macros": {
+      "kcal": 310,
+      "p": 28,
+      "c": 34,
+      "f": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-367",
+    "name": "Macarrão Integral com Frango e Brócolis",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Rico em fibras"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "macarrão integral cozido"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "frango em cubos"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "brócolis"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Grelhe o frango.",
+      "Acrescente o brócolis.",
+      "Junte o macarrão integral.",
+      "Regue com azeite.",
+      "Tempere e misture."
+    ],
+    "macros": {
+      "kcal": 330,
+      "p": 30,
+      "c": 36,
+      "f": 8,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-368",
+    "name": "Macarrão ao Alho e Óleo Leve com Tomate-Cereja",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "90",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "tomate-cereja"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Doure o alho no azeite.",
+      "Acrescente o tomate.",
+      "Junte o macarrão.",
+      "Misture bem.",
+      "Finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 275,
+      "p": 7,
+      "c": 47,
+      "f": 7,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-369",
+    "name": "Macarrão com Ricota, Espinafre e Tomate",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "ricota"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "espinafre"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "ml",
+        "name": "leite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, alho e noz-moscada a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue o espinafre.",
+      "Amasse a ricota com o leite.",
+      "Acrescente o tomate.",
+      "Junte o macarrão.",
+      "Misture até ficar cremoso."
+    ],
+    "macros": {
+      "kcal": 300,
+      "p": 16,
+      "c": 39,
+      "f": 9,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-370",
+    "name": "Macarrão com Carne Moída e Abobrinha",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "65",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "patinho moído"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "abobrinha"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "molho de tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      }
+    ],
+    "steps": [
+      "Doure a carne.",
+      "Acrescente cebola e abobrinha.",
+      "Junte o molho de tomate.",
+      "Acrescente o macarrão.",
+      "Misture e sirva."
+    ],
+    "macros": {
+      "kcal": 340,
+      "p": 28,
+      "c": 33,
+      "f": 12,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-371",
+    "name": "Macarrão com Cogumelos e Creme de Ricota",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "cogumelos"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "leite"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e cogumelos.",
+      "Acrescente creme de ricota e leite.",
+      "Misture até formar um molho.",
+      "Acrescente o macarrão.",
+      "Finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 285,
+      "p": 12,
+      "c": 38,
+      "f": 9,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-372",
+    "name": "Macarrão com Abóbora Cremosa e Frango",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "90",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "abóbora cozida"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "leite"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e noz-moscada a gosto"
+      }
+    ],
+    "steps": [
+      "Amasse a abóbora com o leite.",
+      "Refogue a cebola e o frango.",
+      "Acrescente o creme de abóbora.",
+      "Junte o macarrão.",
+      "Misture até ficar bem cremoso."
+    ],
+    "macros": {
+      "kcal": 315,
+      "p": 31,
+      "c": 34,
+      "f": 6,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-373",
+    "name": "Macarrão com Sardinha, Tomate e Cheiro-Verde",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "sardinha escorrida"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Limão e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue cebola e tomate.",
+      "Acrescente a sardinha.",
+      "Junte o macarrão.",
+      "Misture delicadamente.",
+      "Finalize com limão e cheiro-verde."
+    ],
+    "macros": {
+      "kcal": 335,
+      "p": 25,
+      "c": 35,
+      "f": 12
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-374",
+    "name": "Macarrão com Cenoura, Ervilha e Molho de Tomate",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "75",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "cenoura"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "ervilha"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "molho de tomate"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      }
+    ],
+    "steps": [
+      "Refogue a cebola e a cenoura.",
+      "Acrescente a ervilha.",
+      "Junte o molho de tomate.",
+      "Acrescente o macarrão.",
+      "Misture bem."
+    ],
+    "macros": {
+      "kcal": 315,
+      "p": 10,
+      "c": 52,
+      "f": 7,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-375",
+    "name": "Macarrão com Peixe Branco, Tomate e Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "65",
+        "unit": "g",
+        "name": "macarrão cozido"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "peixe branco em cubos"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, limão, salsinha, sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere o peixe.",
+      "Doure rapidamente no azeite.",
+      "Acrescente cebola e tomate.",
+      "Junte o macarrão.",
+      "Misture delicadamente.",
+      "Finalize com limão e salsinha."
+    ],
+    "macros": {
+      "kcal": 300,
+      "p": 28,
+      "c": 32,
+      "f": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-376",
+    "name": "Purê Cremoso de Cenoura com Ervas",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "5min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "180",
+        "unit": "g",
+        "name": "cenoura cozida"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha ou cebolinha a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a cenoura até ficar bem macia.",
+      "Bata ou amasse com o leite.",
+      "Acrescente o creme de ricota.",
+      "Leve ao fogo baixo e mexa até ficar cremoso.",
+      "Tempere e finalize com ervas."
+    ],
+    "macros": {
+      "kcal": 130,
+      "p": 5,
+      "c": 20,
+      "f": 4,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Para versão sem lactose, utilize leite e creme de ricota zero lactose."
+  },
+  {
+    "id": "NL-377",
+    "name": "Purê de Abóbora Cabotiá com Gengibre",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "g",
+        "name": "abóbora cabotiá cozida"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Gengibre ralado a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, pimenta-do-reino e noz-moscada a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a abóbora até ficar bem macia.",
+      "Amasse ainda quente.",
+      "Acrescente o azeite e o gengibre.",
+      "Tempere.",
+      "Leve ao fogo por alguns minutos, mexendo até ficar cremoso."
+    ],
+    "macros": {
+      "kcal": 145,
+      "p": 3,
+      "c": 25,
+      "f": 5,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-378",
+    "name": "Purê de Batata com Alho Assado",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "batata inglesa cozida"
+      },
+      {
+        "quantity": "40",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho assado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de manteiga"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e noz-moscada a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a batata até ficar macia.",
+      "Amasse ainda quente.",
+      "Amasse também o alho assado e misture.",
+      "Acrescente o leite aos poucos.",
+      "Junte a manteiga e ajuste os temperos."
+    ],
+    "macros": {
+      "kcal": 185,
+      "p": 4,
+      "c": 31,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Para versão sem lactose, utilize leite e manteiga zero lactose."
+  },
+  {
+    "id": "NL-379",
+    "name": "Purê de Batata-Doce com Páprica",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "batata-doce cozida"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "água do cozimento"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Páprica doce ou defumada a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a batata-doce.",
+      "Amasse ainda quente.",
+      "Acrescente a água aos poucos até atingir a textura desejada.",
+      "Misture o azeite.",
+      "Tempere com páprica, sal e pimenta."
+    ],
+    "macros": {
+      "kcal": 175,
+      "p": 2,
+      "c": 32,
+      "f": 5,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-380",
+    "name": "Purê de Mandioquinha com Salsinha",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "140",
+        "unit": "g",
+        "name": "mandioquinha cozida"
+      },
+      {
+        "quantity": "40",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Salsinha picada a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a mandioquinha até ficar bem macia.",
+      "Amasse.",
+      "Acrescente o leite aos poucos.",
+      "Misture o azeite.",
+      "Tempere e finalize com salsinha."
+    ],
+    "macros": {
+      "kcal": 190,
+      "p": 3,
+      "c": 34,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-381",
+    "name": "Purê de Ervilha com Hortelã",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegana",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "ervilha cozida"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Hortelã fresca a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a ervilha até ficar macia.",
+      "Bata com a água.",
+      "Acrescente o azeite.",
+      "Tempere.",
+      "Finalize com hortelã picada."
+    ],
+    "macros": {
+      "kcal": 175,
+      "p": 8,
+      "c": 22,
+      "f": 6,
+      "fiber": 8
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-382",
+    "name": "Purê Cremoso de Chuchu com Alho e Parmesão",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "220",
+        "unit": "g",
+        "name": "chuchu cozido"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "10",
+        "unit": "g",
+        "name": "parmesão ralado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 dente de alho"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, pimenta e noz-moscada a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o chuchu e escorra muito bem.",
+      "Bata ou amasse com o alho.",
+      "Acrescente o creme de ricota.",
+      "Leve ao fogo baixo para retirar o excesso de água.",
+      "Finalize com parmesão e temperos."
+    ],
+    "macros": {
+      "kcal": 115,
+      "p": 6,
+      "c": 11,
+      "f": 6,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-383",
+    "name": "Purê de Brócolis com Creme de Ricota",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "200",
+        "unit": "g",
+        "name": "brócolis cozido"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Alho, sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe o brócolis até ficar macio.",
+      "Escorra muito bem.",
+      "Bata com o creme de ricota.",
+      "Acrescente o azeite.",
+      "Leve ao fogo por alguns minutos e ajuste os temperos."
+    ],
+    "macros": {
+      "kcal": 145,
+      "p": 8,
+      "c": 14,
+      "f": 7,
+      "fiber": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-384",
+    "name": "Purê de Abobrinha com Ricota e Manjericão",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "220",
+        "unit": "g",
+        "name": "abobrinha"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "ricota"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Manjericão fresco a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, alho e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe ou refogue a abobrinha até amaciar.",
+      "Escorra bem qualquer excesso de líquido.",
+      "Bata com a ricota.",
+      "Acrescente o azeite.",
+      "Tempere e finalize com manjericão."
+    ],
+    "macros": {
+      "kcal": 145,
+      "p": 8,
+      "c": 9,
+      "f": 9,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-385",
+    "name": "Purê de Beterraba com Iogurte e Limão",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em fibras",
+      "Vegetariana",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "180",
+        "unit": "g",
+        "name": "beterraba cozida"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "iogurte natural"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe a beterraba até ficar bem macia.",
+      "Bata com o iogurte até formar um creme.",
+      "Acrescente o azeite e o limão.",
+      "Tempere.",
+      "Sirva morno ou em temperatura ambiente."
+    ],
+    "macros": {
+      "kcal": 150,
+      "p": 5,
+      "c": 20,
+      "f": 6,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-386",
+    "name": "Frango ao Molho de Maracujá",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten",
+      "Sem lactose"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "filé de peito de frango"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "polpa de maracujá"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "cebola picada"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 colher de chá de azeite"
+      },
+      {
+        "quantity": "40",
+        "unit": "ml",
+        "name": "água"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta-do-reino a gosto"
+      }
+    ],
+    "steps": [
+      "Tempere o frango e grelhe no azeite.",
+      "Retire e reserve.",
+      "Na mesma frigideira, refogue a cebola.",
+      "Acrescente o maracujá e a água.",
+      "Cozinhe por alguns minutos até reduzir.",
+      "Volte o frango para a frigideira e envolva no molho."
+    ],
+    "macros": {
+      "kcal": 315,
+      "p": 47,
+      "c": 9,
+      "f": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-387",
+    "name": "Frango Cremoso com Palmito e Alho-Poró",
+    "tipo": "prato",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "peito de frango em cubos"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "palmito picado"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "alho-poró"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "leite desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal e pimenta a gosto"
+      }
+    ],
+    "steps": [
+      "Doure o frango em uma frigideira antiaderente.",
+      "Acrescente o alho-poró e refogue.",
+      "Junte o palmito.",
+      "Misture o creme de ricota com o leite.",
+      "Acrescente ao frango e cozinhe em fogo baixo até ficar cremoso."
+    ],
+    "macros": {
+      "kcal": 330,
+      "p": 49,
+      "c": 9,
+      "f": 11
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-388",
+    "name": "Wrap Proteico de Frango com Cottage",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "10min",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "1 wrap integral pequeno"
+      },
+      {
+        "quantity": "90",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cottage"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Folhas verdes a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Sal, pimenta e ervas a gosto"
+      }
+    ],
+    "steps": [
+      "Misture o frango com o cottage.",
+      "Tempere a gosto.",
+      "Distribua sobre o wrap.",
+      "Acrescente tomate e folhas.",
+      "Enrole e sirva."
+    ],
+    "macros": {
+      "kcal": 310,
+      "p": 36,
+      "c": 25,
+      "f": 8,
+      "fiber": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-389",
+    "name": "Sanduíche Proteico de Rosbife e Creme de Ricota",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "2 fatias de pão integral"
+      },
+      {
+        "quantity": "90",
+        "unit": "g",
+        "name": "rosbife caseiro de patinho"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Tomate e rúcula a gosto"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Mostarda a gosto"
+      }
+    ],
+    "steps": [
+      "Passe o creme de ricota no pão.",
+      "Acrescente o rosbife.",
+      "Complete com tomate, rúcula e mostarda.",
+      "Feche o sanduíche."
+    ],
+    "macros": {
+      "kcal": 330,
+      "p": 32,
+      "c": 28,
+      "f": 11,
+      "fiber": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-390",
+    "name": "Pão Francês com Carne Moída Cremosa e Queijo",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "1 pão francês pequeno"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "patinho moído"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "queijo minas"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "creme de ricota"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Tomate e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Refogue a carne e tempere.",
+      "Misture o creme de ricota.",
+      "Abra o pão e coloque o recheio.",
+      "Acrescente o queijo.",
+      "Leve rapidamente à sanduicheira ou forno."
+    ],
+    "macros": {
+      "kcal": 390,
+      "p": 32,
+      "c": 30,
+      "f": 16
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-391",
+    "name": "Crepe Proteico de Frango e Ricota",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "2 claras"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "tapioca"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "ricota"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Temperos a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o ovo, as claras e a tapioca.",
+      "Despeje em frigideira antiaderente.",
+      "Cozinhe dos dois lados.",
+      "Recheie com frango e ricota.",
+      "Dobre e sirva."
+    ],
+    "macros": {
+      "kcal": 310,
+      "p": 37,
+      "c": 19,
+      "f": 9
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-392",
+    "name": "Omelete de Caneca com Frango e Cottage",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "3 claras"
+      },
+      {
+        "quantity": "60",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cottage"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Tomate e cheiro-verde a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o ovo e as claras.",
+      "Misture o frango, o cottage e os temperos.",
+      "Coloque em recipiente próprio para micro-ondas.",
+      "Cozinhe em intervalos curtos até firmar."
+    ],
+    "macros": {
+      "kcal": 265,
+      "p": 39,
+      "c": 4,
+      "f": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-393",
+    "name": "Cestinha Proteica de Atum e Cottage",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "35",
+        "unit": "g",
+        "name": "1 pão folha pequeno ou wrap"
+      },
+      {
+        "quantity": "90",
+        "unit": "g",
+        "name": "atum em água escorrido"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cottage"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Orégano a gosto"
+      }
+    ],
+    "steps": [
+      "Coloque o wrap em uma forminha, formando uma cestinha.",
+      "Leve ao forno por alguns minutos.",
+      "Misture atum, cottage e tomate.",
+      "Recheie a cestinha.",
+      "Finalize com orégano."
+    ],
+    "macros": {
+      "kcal": 280,
+      "p": 31,
+      "c": 22,
+      "f": 8
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-394",
+    "name": "Batata Pequena Recheada com Frango e Cottage",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "120",
+        "unit": "g",
+        "name": "batata inglesa"
+      },
+      {
+        "quantity": "90",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cottage"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cebolinha e páprica a gosto"
+      }
+    ],
+    "steps": [
+      "Cozinhe ou asse a batata.",
+      "Abra ao meio e retire uma pequena parte do miolo.",
+      "Misture o frango com cottage.",
+      "Recheie a batata.",
+      "Leve ao forno para aquecer."
+    ],
+    "macros": {
+      "kcal": 300,
+      "p": 34,
+      "c": 27,
+      "f": 6
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-395",
+    "name": "Mini Quiche Proteica de Frango sem Massa",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "3 claras"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "frango desfiado"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cottage"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "tomate"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Temperos a gosto"
+      }
+    ],
+    "steps": [
+      "Bata o ovo e as claras.",
+      "Misture cottage, frango e tomate.",
+      "Distribua em forminhas.",
+      "Asse a 180 °C por aproximadamente 20 minutos."
+    ],
+    "macros": {
+      "kcal": 275,
+      "p": 40,
+      "c": 5,
+      "f": 10
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-396",
+    "name": "Pão de Frigideira Proteico com Frango",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "farinha de aveia sem glúten"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "cottage"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1/2 colher de chá de fermento"
+      },
+      {
+        "quantity": "70",
+        "unit": "g",
+        "name": "frango desfiado"
+      }
+    ],
+    "steps": [
+      "Misture ovo, aveia, cottage e fermento.",
+      "Coloque metade em uma frigideira pequena.",
+      "Acrescente o frango.",
+      "Cubra com o restante.",
+      "Cozinhe dos dois lados em fogo baixo."
+    ],
+    "macros": {
+      "kcal": 330,
+      "p": 35,
+      "c": 23,
+      "f": 11
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-397",
+    "name": "Bolinho Salgado Proteico de Carne e Queijo",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "patinho moído"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "queijo minas"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "farinha de aveia sem glúten"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Cebola, salsinha e páprica a gosto"
+      }
+    ],
+    "steps": [
+      "Misture a carne, o ovo, a aveia e os temperos.",
+      "Modele os bolinhos.",
+      "Coloque um pequeno pedaço de queijo no centro.",
+      "Feche bem.",
+      "Asse ou prepare na airfryer até dourar."
+    ],
+    "macros": {
+      "kcal": 340,
+      "p": 34,
+      "c": 10,
+      "f": 18
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-398",
+    "name": "Creme Proteico de Chocolate com Morango",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "170",
+        "unit": "g",
+        "name": "iogurte proteico natural"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "whey protein"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "cacau em pó"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "morangos"
+      }
+    ],
+    "steps": [
+      "Misture o iogurte com whey e cacau.",
+      "Mexa até formar um creme uniforme.",
+      "Finalize com os morangos."
+    ],
+    "macros": {
+      "kcal": 230,
+      "p": 32,
+      "c": 18,
+      "f": 4,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-399",
+    "name": "Mousse Proteica de Limão",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "170",
+        "unit": "g",
+        "name": "iogurte proteico"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "whey sabor baunilha"
+      },
+      {
+        "quantity": "15",
+        "unit": "ml",
+        "name": "suco de limão"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Raspas de limão a gosto"
+      }
+    ],
+    "steps": [
+      "Misture o iogurte com o whey.",
+      "Acrescente o limão aos poucos.",
+      "Mexa até ficar cremoso.",
+      "Finalize com raspas.",
+      "Leve à geladeira antes de servir."
+    ],
+    "macros": {
+      "kcal": 200,
+      "p": 31,
+      "c": 12,
+      "f": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-400",
+    "name": "Cheesecake Proteico de Taça com Frutas Vermelhas",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "150",
+        "unit": "g",
+        "name": "iogurte proteico"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "cottage"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "whey sabor baunilha"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "frutas vermelhas"
+      }
+    ],
+    "steps": [
+      "Bata ou misture iogurte, cottage e whey.",
+      "Coloque em uma taça.",
+      "Cubra com as frutas.",
+      "Leve à geladeira por 30 minutos."
+    ],
+    "macros": {
+      "kcal": 250,
+      "p": 35,
+      "c": 20,
+      "f": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-401",
+    "name": "Sorvete Proteico de Banana e Whey",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "banana congelada"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "whey protein"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "iogurte proteico"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Bata a banana congelada com o iogurte.",
+      "Acrescente o whey.",
+      "Bata até ficar cremoso.",
+      "Consuma imediatamente ou leve ao congelador por 30 minutos."
+    ],
+    "macros": {
+      "kcal": 265,
+      "p": 31,
+      "c": 31,
+      "f": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-402",
+    "name": "Pudim Proteico de Café",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "170",
+        "unit": "g",
+        "name": "iogurte proteico"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "whey sabor baunilha"
+      },
+      {
+        "quantity": "30",
+        "unit": "ml",
+        "name": "café forte frio"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "chia"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Adoçante a gosto"
+      }
+    ],
+    "steps": [
+      "Misture o iogurte, whey e café.",
+      "Acrescente a chia.",
+      "Mexa novamente após 5 minutos.",
+      "Leve à geladeira por pelo menos 2 horas."
+    ],
+    "macros": {
+      "kcal": 225,
+      "p": 31,
+      "c": 14,
+      "f": 5,
+      "fiber": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-403",
+    "name": "Panqueca Proteica de Cacau e Banana",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "3 claras"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "whey"
+      },
+      {
+        "quantity": "50",
+        "unit": "g",
+        "name": "banana"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "cacau"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Amasse a banana.",
+      "Misture com ovo, claras, whey e cacau.",
+      "Coloque em frigideira antiaderente.",
+      "Cozinhe dos dois lados."
+    ],
+    "macros": {
+      "kcal": 270,
+      "p": 31,
+      "c": 21,
+      "f": 7
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-404",
+    "name": "Bowl Proteico de Iogurte, Mamão e Leite em Pó",
+    "tipo": "prato",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "170",
+        "unit": "g",
+        "name": "iogurte proteico"
+      },
+      {
+        "quantity": "20",
+        "unit": "g",
+        "name": "whey"
+      },
+      {
+        "quantity": "100",
+        "unit": "g",
+        "name": "mamão"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "leite em pó desnatado"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Misture o iogurte com o whey.",
+      "Acrescente o mamão.",
+      "Polvilhe leite em pó e canela."
+    ],
+    "macros": {
+      "kcal": 270,
+      "p": 33,
+      "c": 28,
+      "f": 3
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-405",
+    "name": "Creme Proteico de Coco e Abacaxi",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "170",
+        "unit": "g",
+        "name": "iogurte proteico"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "whey sabor baunilha"
+      },
+      {
+        "quantity": "80",
+        "unit": "g",
+        "name": "abacaxi picado"
+      },
+      {
+        "quantity": "5",
+        "unit": "g",
+        "name": "coco ralado sem açúcar"
+      }
+    ],
+    "steps": [
+      "Misture o iogurte com o whey.",
+      "Acrescente metade do abacaxi.",
+      "Finalize com o restante da fruta e o coco."
+    ],
+    "macros": {
+      "kcal": 245,
+      "p": 31,
+      "c": 23,
+      "f": 5
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-406",
+    "name": "Bolo Proteico de Caneca de Banana e Canela",
+    "tipo": "bolo",
+    "meals": [
+      "snack"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1 ovo"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "whey"
+      },
+      {
+        "quantity": "40",
+        "unit": "g",
+        "name": "banana amassada"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "farinha de aveia sem glúten"
+      },
+      {
+        "quantity": "30",
+        "unit": "g",
+        "name": "iogurte natural"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "1/2 colher de chá de fermento"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela a gosto"
+      }
+    ],
+    "steps": [
+      "Misture todos os ingredientes, deixando o fermento por último.",
+      "Coloque em caneca grande.",
+      "Leve ao micro-ondas por aproximadamente 1 minuto e 30 segundos a 2 minutos.",
+      "Aguarde alguns minutos antes de consumir."
+    ],
+    "macros": {
+      "kcal": 290,
+      "p": 28,
+      "c": 27,
+      "f": 8
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
+  },
+  {
+    "id": "NL-407",
+    "name": "Creme Gelado Proteico de Doce de Leite",
+    "tipo": "sobremesa",
+    "meals": [
+      "snack",
+      "dessert"
+    ],
+    "tags": [
+      "Rico em proteínas",
+      "Sem glúten"
+    ],
+    "tagsCondicionais": [],
+    "ressalvas": [],
+    "time": "—",
+    "servings": 1,
+    "ingredients": [
+      {
+        "quantity": "170",
+        "unit": "g",
+        "name": "iogurte proteico"
+      },
+      {
+        "quantity": "25",
+        "unit": "g",
+        "name": "whey sabor baunilha"
+      },
+      {
+        "quantity": "15",
+        "unit": "g",
+        "name": "doce de leite"
+      },
+      {
+        "quantity": "",
+        "unit": "",
+        "name": "Canela ou flor de sal, opcional"
+      }
+    ],
+    "steps": [
+      "Misture o iogurte com o whey.",
+      "Acrescente metade do doce de leite e misture levemente.",
+      "Finalize com o restante por cima.",
+      "Leve à geladeira por 20 a 30 minutos antes de servir."
+    ],
+    "macros": {
+      "kcal": 240,
+      "p": 31,
+      "c": 21,
+      "f": 4
+    },
+    "conservacao": "Consumir preferencialmente após o preparo. Prazo e condições de armazenamento não foram informados na conversa e devem ser validados antes da publicação.",
+    "substituicoes": "Não informadas na conversa."
   }
 ];
 
