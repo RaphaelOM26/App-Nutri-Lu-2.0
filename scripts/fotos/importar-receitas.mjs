@@ -45,6 +45,13 @@ const REFEICAO_PARA_CATEGORIA = {
   'pós-treino': 'snack',
   'pré ou pós-treino': 'snack',
   sobremesa: 'dessert',
+  // Termos que apareceram no lote de 407 (ago/2026). "Ao longo do dia" e
+  // "Bebida noturna" descrevem QUANDO se come, então mapeiam; "Fim de semana"
+  // sozinho não é horário e continua fora de propósito.
+  'ao longo do dia': 'snack',
+  'bebida noturna': 'snack',
+  'petisco de fim de semana': 'snack',
+  'sobremesa de fim de semana': 'dessert',
 };
 
 // ─── Tags ──────────────────────────────────────────────────────────────────
@@ -75,6 +82,10 @@ const VEGANAS_CONDICIONAIS = ['NL-061', 'NL-070', 'NL-093'];
 function inferirTipo(nome, refeicaoBruta) {
   const almocoOuJantar = /almoço|jantar/i.test(refeicaoBruta);
   if (/^chá\s/i.test(nome)) return 'bebida';
+  // Refresco, vitamina e água saborizada são bebida igual ao chá — pro app não
+  // importa se é quente ou gelada (o gerador de fotos é que separa as duas).
+  if (/^(refresco|suco|limonada|vitamina|smoothie|shake)\s/i.test(nome)) return 'bebida';
+  if (/^(água|agua) saborizada\s/i.test(nome)) return 'bebida';
   if (/^molho\b/i.test(nome)) return 'molho';
   if (/^salada\b/i.test(nome)) return 'salada';
   if (/^(sopa|creme)\b/i.test(nome)) return almocoOuJantar ? 'sopa' : 'sobremesa';
@@ -204,7 +215,11 @@ function main() {
     const rend = texto(r['Rendimento']);
     const servings = Math.max(1, parseInt((rend.match(/(\d+)/) || [])[1] || '1', 10));
 
-    const tempo = texto(r['Tempo de preparo']);
+    // "Não informado" em 81 receitas do lote de 407. Sem isso o card exibiria
+    // a frase inteira no lugar do tempo ("145 kcal · Não informado").
+    const tempo = /não informado|nao informado/i.test(texto(r['Tempo de preparo']))
+      ? ''
+      : texto(r['Tempo de preparo']);
     const min = (tempo.match(/(\d+)/) || [])[1];
 
     // Macros medidos, por porção. Faltando vira 0: o app já trata ausente como
@@ -321,7 +336,7 @@ export const NUTRI_RECIPES_BY_ID: Record<string, NutriRecipe> = Object.fromEntri
   // ── Mapa de fotos ────────────────────────────────────────────────────────
   // O Metro (bundler do React Native) resolve require() em tempo de build e só
   // aceita caminho literal — não dá pra montar `require('...' + id + '.jpg')`.
-  // Por isso o mapa é gerado com as 153 chamadas escritas uma a uma.
+  // Por isso o mapa é gerado com uma chamada escrita por extenso pra cada foto.
   const ASSETS = path.join(RAIZ, 'mobile', 'assets', 'receitas');
   const MAPA = path.join(RAIZ, 'mobile', 'src', 'data', 'nutriPhotos.ts');
   if (fs.existsSync(ASSETS)) {

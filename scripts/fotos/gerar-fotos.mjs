@@ -73,6 +73,11 @@ const ENQUADRAMENTO = {
   salada: 'served in a shallow everyday bowl',
   molho: 'in a small sauce bowl next to a few fresh salad leaves',
   bebida: 'in a clear glass mug on a small saucer, faint steam',
+  // Bebida GELADA não pode herdar o enquadramento do chá: "faint steam" num
+  // refresco de melancia é contradição, e sem enquadramento nenhum o modelo
+  // devolve um prato de comida com o copo de canto (medido no lote de ago/26).
+  bebidaFria: 'in a tall clear glass with ice, cold, condensation on the glass, no steam, nothing else on the plate',
+  vitamina: 'in a tall clear glass, thick and creamy, no ice, no steam, nothing else on the plate',
   petisco: 'piled informally on a small plate',
   sobremesa: 'a single portion in a small glass dessert cup',
   mingau: 'in a cereal bowl with a spoon resting inside',
@@ -92,6 +97,10 @@ function inferirTipo(receita) {
   // Sem \b depois de "chá": em JS o \b só enxerga [A-Za-z0-9_], e "á" não conta
   // como caractere de palavra — então /^chá\b/ nunca casa com "Chá de Hibisco".
   if (/^chá\s/i.test(nome)) return 'bebida';
+  // Famílias de bebida fria que entraram no lote de 407 (ago/26). Sem elas os
+  // 27 refrescos/vitaminas caíam em 'prato' e viravam foto de almoço.
+  if (/^(vitamina|smoothie|shake)\s/i.test(nome)) return 'vitamina';
+  if (/^(refresco|suco|limonada|água saborizada|agua saborizada)\s/i.test(nome)) return 'bebidaFria';
   if (/^molho\b/i.test(nome)) return 'molho';
   if (/^salada\b/i.test(nome)) return 'salada';
   // "Creme de Cenoura" no almoço é sopa; "Creme de Mamão" no lanche é sobremesa.
