@@ -3,7 +3,8 @@
 //
 // Trade-off conhecido: reinstalar o app gera um deviceId novo, perdendo o
 // histórico anterior. Pro beta fechado de 20 amigos é aceitável; quando
-// houver auth real (v0.2), substituímos por user.id do Clerk/Supabase.
+// houver auth real, substituímos pelo id do usuário (Apple/Google), que já
+// existe na tabela `users` e guarda o device_id como ponte pro histórico.
 //
 // Formato: v4 UUID-like — random hex em 5 grupos (8-4-4-4-12). Não é
 // criptograficamente forte (usa Math.random), mas o espaço de chaves é

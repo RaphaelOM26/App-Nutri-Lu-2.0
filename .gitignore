@@ -75,3 +75,9 @@ scripts/fotos/saida-800/
 
 # Lock do Excel quando a planilha está aberta
 Conteúdo/~$*.xlsx
+
+# Backups do banco de produção. NUNCA versionar — o repositório é PÚBLICO
+# e um dump traz e-mail de cliente, compra e conteúdo da comunidade.
+backups/
+*.json.gz
+backend/backup.log
