@@ -1,6 +1,10 @@
 // Persistência de configurações simples do perfil (peso meta + lembretes + dados do onboarding).
-// Mora no aparelho, por AsyncStorage. O backend (Postgres no Railway) guarda
-// só conta, compra e telemetria — dado do diário nunca saiu daqui.
+// Mora no aparelho, por AsyncStorage: nome, sexo, nascimento, altura, peso,
+// objetivo, metas, barreiras e motivações.
+//
+// ⚠️ Isto NÃO vale pro diário. As refeições sobem pro servidor a cada alteração
+// (`day_snapshots`, chaveado por device_id) com nome do alimento, porção, kcal,
+// macros e água. Qualquer texto sobre privacidade tem que refletir isso.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
