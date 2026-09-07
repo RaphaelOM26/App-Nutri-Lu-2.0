@@ -1,20 +1,27 @@
 // Estimativa calórica e de macros, pela metodologia da nutricionista.
 //
-// REGRA CENTRAL: o app estima em FAIXA, nunca em número fechado. Quem
-// transforma faixa em meta é a nutricionista, na aprovação do plano. Isso não é
-// cautela decorativa — é o que o material dela manda fazer:
+// MÉTODO: Harris-Benedict revisada. TMB → GET (× fator de atividade) → meta
+// (× fator do objetivo). Decisão dela em 07/09, quando perguntamos qual seguir
+// nos casos em que a fórmula de bolso e o Harris-Benedict discordam.
 //
-//   "Os valores em g/kg devem funcionar como faixas de referência, e não como
-//    distribuição automática obrigatória."
+// ⚠️ A fórmula de bolso (peso × 20-35 kcal/kg) foi DESCARTADA como método. Ela
+// tinha dois defeitos medidos: acima de ~105 kg entregava mais calorias que o
+// gasto estimado — "emagrecimento" com superávit — e em paciente leve produzia
+// déficit de até 47%, muito além dos 25% que o material dela autoriza.
 //
-// Escolher o meio da faixa seria a distribuição automática que ela proibiu.
+// ⚠️ O g/kg de proteína e gordura incide sobre o PESO IDEAL, não o atual.
+// Também decisão dela, e é o que torna o plano possível: sobre o peso atual,
+// uma paciente de 130 kg receberia 208 g de proteína e 104 g de gordura, que
+// sozinhos consomem 1.768 das 1.908 kcal da meta e deixam 35 g de carboidrato
+// no dia. Sobre o peso ideal, sobram 241 g.
 //
-// MÉTODO: fórmula de bolso (peso × fator kcal/kg). Harris-Benedict revisada
-// roda junto, mas SÓ como verificador silencioso — nunca entra no cálculo dos
-// macros. Motivo medido: as regras de g/kg são lineares no peso e a fórmula de
-// bolso também, então elas compõem; Harris-Benedict não é linear, e numa
-// paciente de 130 kg a meta dele (1.908 kcal) menos proteína e gordura por
-// g/kg deixaria 9 g de carboidrato no dia.
+// CONSEQUÊNCIA CONHECIDA: com peso ideal o carboidrato resultante costuma ficar
+// ACIMA da faixa de referência de 2-3 g/kg. Não é erro — é o outro lado da
+// escolha. Por isso `carboForaDaFaixa` é informação para o painel, nunca alerta:
+// aviso que dispara em quase toda paciente vira ruído e some justo no caso grave.
+//
+// REGRA QUE NÃO MUDA: o app estima em FAIXA. Quem transforma faixa em meta é a
+// nutricionista, na aprovação do plano.
 
 import type { Gender, ActivityLevel, GoalType } from '../storage/userProfile';
 
@@ -32,41 +39,42 @@ export type MacroProfile = {
 };
 
 /** Motivo pelo qual a estimativa merece o olhar da nutricionista. */
-export type AlertaEstimativa =
-  | 'META_ACIMA_DO_GASTO'
-  | 'DEFICIT_EXCESSIVO'
-  | 'ABAIXO_DO_PISO';
+export type AlertaEstimativa = 'ABAIXO_DO_PISO' | 'DEFICIT_EXCESSIVO';
 
 export type Estimativa = {
-  /** Faixa calórica da fórmula de bolso, arredondada a 50 kcal. */
+  /** Faixa calórica, das pontas de déficit/superávit que o material dela prevê. */
   kcal: Faixa;
   /**
-   * Ponto de trabalho dentro da faixa, arredondado a 50 kcal. Existe porque o
-   * anel do diário precisa de UM alvo — não dá pra desenhar progresso contra
-   * uma faixa. É rotulado como referência na interface, nunca como meta.
+   * Ponto de trabalho: o padrão automático que ela definiu por objetivo.
+   * Existe porque o anel do diário precisa de UM alvo — não dá pra desenhar
+   * progresso contra uma faixa. É rotulado como referência, nunca como meta.
    */
   kcalRef: number;
-  /** Faixas de macro em gramas/dia, direto das faixas g/kg do material dela. */
+  /** Faixas de macro em gramas/dia, sobre o PESO IDEAL. */
   p: Faixa;
   c: Faixa;
   f: Faixa;
   waterL: number;
-  /** Verificação silenciosa. Não aparece pra paciente; alimenta o painel. */
   conferencia: {
     bmr: number;
-    /** Gasto energético total por Harris-Benedict × fator de atividade. */
+    /** Gasto energético total: TMB × fator de atividade. */
     get: number;
-    /** % de déficit da kcalRef contra o GET. Negativo = superávit. */
-    deficitPct: number;
+    /** Peso ideal usado como base do g/kg. */
+    pesoIdeal: number;
+    /** % aplicado sobre o GET pra chegar na kcalRef. Negativo = déficit. */
+    ajustePct: number;
     alertas: AlertaEstimativa[];
   };
 };
 
-// ─── Fatores por objetivo (material da nutricionista) ──────────────────────
-const KCAL_POR_KG: Record<GoalType, Faixa> = {
-  lose: { min: 20, max: 25 },
-  maintain: { min: 25, max: 30 },
-  gain: { min: 30, max: 35 },
+// ─── Objetivo: o que se aplica sobre o GET ─────────────────────────────────
+// Material dela: emagrecimento GET × 0,80 (déficit padrão de 20%, faixa de 10 a
+// 25%); manutenção GET, com faixa operacional de ±5%; ganho GET × 1,10
+// (superávit padrão de 10%, faixa de 5 a 15%).
+const FATOR_OBJETIVO: Record<GoalType, { padrao: number; min: number; max: number }> = {
+  lose: { padrao: 0.80, min: 0.75, max: 0.90 },
+  maintain: { padrao: 1.00, min: 0.95, max: 1.05 },
+  gain: { padrao: 1.10, min: 1.05, max: 1.15 },
 };
 
 const PROTEINA_G_KG: Record<GoalType, Faixa> = {
@@ -89,10 +97,7 @@ export const CARBO_G_KG: Record<GoalType, Faixa> = {
   gain: { min: 3.0, max: 5.0 },
 };
 
-// ─── Atividade física ──────────────────────────────────────────────────────
-// Cinco níveis, como na tabela dela. A versão anterior do app tinha três e não
-// oferecia "sedentário" de verdade: quem marcava a opção mais baixa recebia
-// 1,375, que é o fator de levemente ativo — inflando a meta de quem menos gasta.
+// Cinco níveis, como na tabela dela.
 const FATOR_ATIVIDADE: Record<ActivityLevel, number> = {
   sedentary: 1.20,
   light: 1.375,
@@ -101,24 +106,22 @@ const FATOR_ATIVIDADE: Record<ActivityLevel, number> = {
   extreme: 1.90,
 };
 
-/** Onde cada nível cai dentro da faixa kcal/kg: sedentária no piso, extrema no
- *  teto. É assim que a atividade entra na fórmula de bolso, que sozinha só
- *  enxerga peso e objetivo. */
-const POSICAO_NA_FAIXA: Record<ActivityLevel, number> = {
-  sedentary: 0,
-  light: 0.25,
-  moderate: 0.5,
-  very: 0.75,
-  extreme: 1,
-};
-
 export const KCAL_POR_G = { p: 4, c: 4, f: 9 } as const;
 
 const AGUA_ML_POR_KG = 35;
 
-/** Piso provisório. Substituir pelo número que a nutricionista definir — até lá
- *  ele só ACENDE ALERTA, nunca corrige o valor em silêncio. */
-export const PISO_KCAL_PROVISORIO = 1200;
+/**
+ * IMC usado pra calcular o peso ideal.
+ * 22 é o meio da faixa de eutrofia e o valor mais usado na prática clínica.
+ * ⚠️ CONFIRMAR com a nutricionista — ela disse "peso ideal" sem especificar a
+ * fórmula, e trocar este número muda proteína e gordura de todo mundo.
+ */
+export const IMC_PESO_IDEAL = 22;
+
+/** Piso calórico por sexo, definido por ela em 07/09.
+ *  'other' usa o piso feminino: é o público do produto, e o piso só ACENDE
+ *  ALERTA — nunca corrige o valor em silêncio. */
+const PISO_KCAL: Record<Gender, number> = { female: 1200, male: 1500, other: 1200 };
 
 /** Déficit acima disto é sinalizado. O material dela limita a 25%, "apenas
  *  quando definido pelo profissional". */
@@ -138,8 +141,6 @@ export function ageFromBirthDate(birthDate: number, now: number = Date.now()): n
  *
  * Mulheres: 447,593 + (9,247 × peso) + (3,098 × altura) − (4,330 × idade)
  * Homens:   88,362 + (13,397 × peso) + (4,799 × altura) − (5,677 × idade)
- *
- * Só existe para conferir a estimativa. Nunca alimenta o cálculo de macros.
  */
 export function tmbHarrisBenedict(params: {
   gender: Gender;
@@ -152,58 +153,64 @@ export function tmbHarrisBenedict(params: {
   const homem = 88.362 + 13.397 * W + 4.799 * H - 5.677 * A;
   if (params.gender === 'female') return mulher;
   if (params.gender === 'male') return homem;
-  // 'other': média, pra não favorecer nenhuma das duas estimativas.
   return (mulher + homem) / 2;
 }
 
+/** Peso ideal pelo IMC de referência. Base do g/kg de proteína e gordura. */
+export function pesoIdeal(heightCm: number): number {
+  const m = heightCm / 100;
+  return IMC_PESO_IDEAL * m * m;
+}
+
 const arred = (v: number, passo: number) => Math.round(v / passo) * passo;
-const faixa = (peso: number, gkg: Faixa): Faixa => ({
-  min: Math.round(peso * gkg.min),
-  max: Math.round(peso * gkg.max),
+const faixa = (base: number, gkg: Faixa): Faixa => ({
+  min: Math.round(base * gkg.min),
+  max: Math.round(base * gkg.max),
 });
 
 /**
  * Estimativa inicial mostrada no fim do onboarding e usada como semente no
  * painel da nutricionista. Tudo em faixa, de propósito.
+ *
+ * ⚠️ As respostas da anamnese NÃO entram aqui. Foi decisão dela em 07/09: a
+ * anamnese vem antes da estimativa na ordem das telas, mas não altera o número.
+ * Ela muda o PLANO, não a conta.
  */
 export function estimar(profile: MacroProfile, now: number = Date.now()): Estimativa {
-  const { weightKg, goal, activityLevel } = profile;
+  const { weightKg, goal, activityLevel, heightCm } = profile;
 
-  const fator = KCAL_POR_KG[goal];
-  const kcalMin = weightKg * fator.min;
-  const kcalMax = weightKg * fator.max;
-  const pos = POSICAO_NA_FAIXA[activityLevel];
-  const kcalRef = kcalMin + (kcalMax - kcalMin) * pos;
-
-  // Verificação silenciosa contra o gasto estimado.
   const idade = ageFromBirthDate(profile.birthDate, now);
   const bmr = tmbHarrisBenedict({
     gender: profile.gender,
     weightKg,
-    heightCm: profile.heightCm,
+    heightCm,
     ageYears: idade,
   });
   const get = bmr * FATOR_ATIVIDADE[activityLevel];
+
+  const fator = FATOR_OBJETIVO[goal];
+  const kcalRef = get * fator.padrao;
+
+  const base = pesoIdeal(heightCm);
+  const piso = PISO_KCAL[profile.gender];
   const deficitPct = ((get - kcalRef) / get) * 100;
 
   const alertas: AlertaEstimativa[] = [];
-  // Acima de ~105 kg a fórmula de bolso ultrapassa o gasto e "emagrecimento"
-  // vira superávit. Medido: mulher 130 kg sedentária → bolso 2.600 vs gasto 2.385.
-  if (goal === 'lose' && deficitPct <= 0) alertas.push('META_ACIMA_DO_GASTO');
+  if (kcalRef < piso) alertas.push('ABAIXO_DO_PISO');
   if (goal === 'lose' && deficitPct > DEFICIT_MAXIMO_PCT) alertas.push('DEFICIT_EXCESSIVO');
-  if (kcalRef < PISO_KCAL_PROVISORIO) alertas.push('ABAIXO_DO_PISO');
 
   return {
-    kcal: { min: arred(kcalMin, 50), max: arred(kcalMax, 50) },
+    kcal: { min: arred(get * fator.min, 50), max: arred(get * fator.max, 50) },
     kcalRef: arred(kcalRef, 50),
-    p: faixa(weightKg, PROTEINA_G_KG[goal]),
-    c: faixa(weightKg, CARBO_G_KG[goal]),
-    f: faixa(weightKg, GORDURA_G_KG[goal]),
+    p: faixa(base, PROTEINA_G_KG[goal]),
+    c: faixa(base, CARBO_G_KG[goal]),
+    f: faixa(base, GORDURA_G_KG[goal]),
     waterL: Math.round((weightKg * AGUA_ML_POR_KG) / 100) / 10,
     conferencia: {
       bmr: Math.round(bmr),
       get: Math.round(get),
-      deficitPct: Math.round(deficitPct * 10) / 10,
+      pesoIdeal: Math.round(base * 10) / 10,
+      ajustePct: Math.round((fator.padrao - 1) * 1000) / 10,
       alertas,
     },
   };
@@ -216,8 +223,10 @@ export type MetasDefinidas = {
   f: number;
   /** Soma real dos macros (4P + 4C + 9G). Confere contra kcal. */
   kcalConferida: number;
-  /** Carboidrato resultante em g/kg, e se caiu fora da faixa de referência. */
+  /** Carboidrato resultante em g/kg do peso ideal. */
   carboGkg: number;
+  /** Informativo para o painel, NÃO alerta — com peso ideal, sair da faixa é o
+   *  comportamento esperado na maioria dos casos. */
   carboForaDaFaixa: boolean;
 };
 
@@ -225,32 +234,28 @@ export type MetasDefinidas = {
  * Transforma uma meta calórica em gramas, na ordem que o material dela define:
  * proteína primeiro, gordura no PISO da faixa, carboidrato completa o que sobra.
  *
- * O carboidrato é RESULTADO, não entrada — por isso ele pode cair fora da faixa
- * de referência. Quando cai, devolvemos `carboForaDaFaixa` pra tela avisar em
- * vez de corrigir em silêncio: é sinal de meta apertada demais pro perfil.
- *
- * Usado pelo painel da nutricionista. O app da paciente não chama isto antes da
- * aprovação — antes dela não existe meta, só faixa.
+ * O g/kg incide sobre o peso ideal (derivado da altura), não sobre o atual.
+ * Usado pelo painel. O app da paciente não chama isto antes da aprovação —
+ * antes dela não existe meta, só faixa.
  */
 export function distribuirMacros(params: {
   kcal: number;
-  weightKg: number;
+  heightCm: number;
   goal: GoalType;
-  /** g/kg de proteína. Sem isto, usa o piso da faixa do objetivo. */
   proteinaGkg?: number;
-  /** g/kg de gordura. Sem isto, usa o PISO — é o que o passo 3 dela pede. */
   gorduraGkg?: number;
 }): MetasDefinidas {
-  const { kcal, weightKg, goal } = params;
+  const { kcal, heightCm, goal } = params;
+  const base = pesoIdeal(heightCm);
   const pGkg = params.proteinaGkg ?? PROTEINA_G_KG[goal].min;
   const fGkg = params.gorduraGkg ?? GORDURA_G_KG[goal].min;
 
-  const p = Math.round(weightKg * pGkg);
-  const f = Math.round(weightKg * fGkg);
+  const p = Math.round(base * pGkg);
+  const f = Math.round(base * fGkg);
   const sobra = kcal - p * KCAL_POR_G.p - f * KCAL_POR_G.f;
   const c = Math.max(0, Math.round(sobra / KCAL_POR_G.c));
 
-  const carboGkg = weightKg > 0 ? c / weightKg : 0;
+  const carboGkg = base > 0 ? c / base : 0;
   const ref = CARBO_G_KG[goal];
 
   return {

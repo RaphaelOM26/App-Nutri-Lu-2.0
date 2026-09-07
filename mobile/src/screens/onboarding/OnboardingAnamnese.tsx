@@ -3,11 +3,14 @@
 // Vêm DEPOIS do onboarding e ANTES da estimativa, a pedido dela: a paciente não
 // deve ancorar num número antes de ser perguntada sobre si mesma.
 //
-// ⚠️ Vale registrar uma coisa pra ninguém se frustrar depois: estas respostas
-// NÃO mudam a estimativa. A fórmula de bolso usa peso, objetivo e atividade,
-// os três coletados no onboarding. O que elas mudam é o PLANO — é com elas que
-// o rascunho respeita o que a pessoa não come, o que ela faz questão de manter
-// e a rotina que ela tem de verdade.
+// ⚠️ Estas respostas NÃO mudam a estimativa. A nutricionista chegou a pedir que
+// mudassem e voltou atrás em 07/09: o Harris-Benedict usa sexo, idade, altura,
+// peso e atividade, todos coletados no onboarding, e nenhuma pergunta daqui
+// entra numa fórmula de caloria.
+//
+// O que elas mudam é o PLANO — é com elas que o rascunho respeita o que a
+// pessoa não come, o que ela faz questão de manter e a rotina que ela tem.
+// A exceção é `restricoes`, que vira FILTRO DURO no gerador.
 //
 // As três telas de abertura existem porque oito perguntas seguidas cansam. Elas
 // separam a sequência em capítulos e dizem por que cada bloco está sendo
@@ -37,6 +40,7 @@ import {
   type PeriodoFome,
   type FrequenciaDoces,
   type QualidadeSono,
+  type RestricaoAlimentar,
 } from '../../storage/anamnese';
 import type { OnboardingStackParamList } from '../../navigation/types';
 
@@ -158,22 +162,36 @@ export const AnamneseIntroComidaScreen: React.FC = () => {
 
 // ─── 2. Preferências ───────────────────────────────────────────────────────
 
+const RESTRICOES: Array<{ id: RestricaoAlimentar; label: string; sub: string }> = [
+  { id: 'sem-gluten', label: 'Sem glúten', sub: 'Nada com trigo, centeio ou cevada' },
+  { id: 'sem-lactose', label: 'Sem lactose', sub: 'Nada com leite e derivados' },
+  { id: 'vegetariana', label: 'Vegetariana', sub: 'Sem carne, peixe ou frango' },
+  { id: 'vegana', label: 'Vegana', sub: 'Nada de origem animal' },
+];
+
 export const AnamnesePreferenciasScreen: React.FC = () => {
   const nav = useNavigation<Nav>();
+  const theme = useTheme();
   const salvo = useAnamneseSalva();
   const [naoGosta, setNaoGosta] = useState('');
   const [indispensavel, setIndispensavel] = useState('');
+  const [restricoes, setRestricoes] = useState<RestricaoAlimentar[]>([]);
 
   useEffect(() => {
     if (!salvo) return;
     setNaoGosta(salvo.naoGosta ?? '');
     setIndispensavel(salvo.indispensavel ?? '');
+    setRestricoes(salvo.restricoes ?? []);
   }, [salvo]);
+
+  const alternar = (id: RestricaoAlimentar) =>
+    setRestricoes((atual) => (atual.includes(id) ? atual.filter((r) => r !== id) : [...atual, id]));
 
   const continuar = async () => {
     await salvarAnamnese({
       naoGosta: naoGosta.trim(),
       indispensavel: indispensavel.trim(),
+      restricoes,
     });
     nav.navigate('AnamneseIntroRotina');
   };
@@ -189,9 +207,34 @@ export const AnamnesePreferenciasScreen: React.FC = () => {
       <OnboardingTitle>O que entra e o que não entra</OnboardingTitle>
       <OnboardingSubtitle>Pode ser direta. Ninguém precisa gostar de tudo.</OnboardingSubtitle>
 
+      {/* As caixas vêm ANTES do texto livre de propósito: elas são o que vira
+          filtro no plano. O texto livre logo abaixo captura o resto — aversões,
+          alergias que não estão na lista, o jiló. */}
+      <Text
+        style={{
+          marginTop: 18,
+          marginBottom: 4,
+          fontFamily: FONT.head,
+          fontSize: 13,
+          color: theme.textMuted,
+        }}
+      >
+        Alguma dessas se aplica a você?
+      </Text>
+      {RESTRICOES.map((r) => (
+        <OptionCard
+          key={r.id}
+          label={r.label}
+          secondaryLabel={r.sub}
+          selected={restricoes.includes(r.id)}
+          showRadio
+          onPress={() => alternar(r.id)}
+        />
+      ))}
+
       <CampoTexto
-        label="O que você não gosta ou não consegue comer"
-        placeholder="Ex: peixe, jiló, fígado"
+        label="E o que você não gosta ou não pode comer?"
+        placeholder="Ex: peixe, jiló, castanhas"
         value={naoGosta}
         onChange={setNaoGosta}
       />

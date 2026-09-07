@@ -18,6 +18,20 @@ export type PeriodoFome = 'manha' | 'apos-almoco' | 'tarde' | 'noite';
 export type FrequenciaDoces = 'nao' | 'as-vezes' | 'frequentemente' | 'todos-os-dias';
 export type QualidadeSono = 'bom' | 'regular' | 'ruim';
 
+/**
+ * Restrições alimentares que o gerador de plano trata como FILTRO DURO —
+ * receita que contém o item sai da lista de candidatas antes de o modelo
+ * escolher. Nunca vira instrução no prompt: instrução é pedido, filtro é
+ * garantia, e restrição alimentar não é lugar pra confiar em modelo.
+ *
+ * São caixas de marcar, e não interpretação do texto livre, justamente por
+ * isso. A paciente pode escrever que não pode comer glúten no campo aberto —
+ * aquilo vira contexto pra IA montar melhor, não a trava de segurança.
+ *
+ * Os quatro valores casam com as tags que as 407 receitas já carregam.
+ */
+export type RestricaoAlimentar = 'sem-gluten' | 'sem-lactose' | 'vegetariana' | 'vegana';
+
 export type DiaNormal = {
   cafe?: string;
   almoco?: string;
@@ -26,8 +40,10 @@ export type DiaNormal = {
 };
 
 export type Anamnese = {
-  /** 13 — alimentos que não gosta, tem aversão ou não consegue consumir. */
+  /** 13 — o que não gosta OU não pode comer, em texto livre. */
   naoGosta?: string;
+  /** 13b — as mesmas restrições, estruturadas. É esta lista que vira filtro. */
+  restricoes?: RestricaoAlimentar[];
   /** 14 — o que ela considera indispensável manter pra conseguir seguir. */
   indispensavel?: string;
   /** 15 — dificuldade de rotina, acesso ou custo. */
