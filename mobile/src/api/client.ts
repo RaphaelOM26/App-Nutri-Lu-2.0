@@ -197,6 +197,10 @@ export type LuContext = {
     goal?: string;
     weightKg?: number;
     goalWeightKg?: number;
+    /** Dificuldades que a pessoa marcou no onboarding, já em texto. */
+    barriers?: string[];
+    /** O que ela disse que a motiva. Serve pro TOM da resposta, não pra regra. */
+    motivations?: string[];
   };
   macros?: {
     kcal: { value: number; target: number };

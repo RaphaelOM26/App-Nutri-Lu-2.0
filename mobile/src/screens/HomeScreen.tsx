@@ -22,6 +22,7 @@ import { useFocusReplay } from '../utils/useFocusReplay';
 import type { RootStackParamList } from '../navigation/types';
 import { formatRelativeTime, type AppNotification } from '../data/notifications';
 import { generateInsight, ApiError, computeInsightTone, type InsightTone } from '../api/client';
+import { montarPerfilLu } from '../utils/luProfile';
 import { calcStreak } from '../storage/habits';
 import { loadInsight, saveInsight, makeStateHash } from '../storage/insight';
 import { useSemAcesso } from '../state/accessState';
@@ -50,6 +51,10 @@ export const HomeScreen: React.FC = () => {
     name,
     completedDays,
     weightEntries,
+    goal,
+    weightGoalKg,
+    barriers,
+    motivations,
   } = useApp();
   // Nome de display + iniciais com fallbacks pra usuários pré-onboarding.
   const displayName = name ?? 'você';
@@ -98,7 +103,7 @@ export const HomeScreen: React.FC = () => {
         const macros = { kcal: displayedMacros.kcal, p: displayedMacros.p, c: displayedMacros.c, f: displayedMacros.f };
         const tone = computeInsightTone(macros);
         const { text, tone: returnedTone } = await generateInsight({
-          profile: { name: name ?? 'Anônima', goal: 'Perder peso', weightKg: 85.2, goalWeightKg: 82 },
+          profile: montarPerfilLu({ name, goal, weightKg: weightEntries[0]?.kg, goalWeightKg: weightGoalKg, barriers, motivations }),
           macros,
           meals: displayedMeals.map((m) => ({
             name: m.name,

@@ -12,6 +12,7 @@ import { IconBtn } from '../components/IconBtn';
 import { Icon } from '../components/Icons';
 import { MarkdownText } from '../components/MarkdownText';
 import { chatWithLu, ApiError, type ChatMessage, type LuContext } from '../api/client';
+import { montarPerfilLu } from '../utils/luProfile';
 import { useApp } from '../state/AppContext';
 import { addReport } from '../storage/luReports';
 
@@ -25,7 +26,10 @@ const makeInitialMessage = (name: string | null): ChatMessage => ({
 export const ChatLuScreen: React.FC = () => {
   const theme = useTheme();
   const nav = useNavigation();
-  const { water, displayedMacros, displayedMeals, name } = useApp();
+  const {
+    water, displayedMacros, displayedMeals, name,
+    goal, weightEntries, weightGoalKg, barriers, motivations,
+  } = useApp();
   const INITIAL_MESSAGE = useMemo(() => makeInitialMessage(name), [name]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -71,12 +75,7 @@ export const ChatLuScreen: React.FC = () => {
   };
 
   const buildContext = (): LuContext => ({
-    profile: {
-      name: name ?? 'Anônima',
-      goal: 'Perder peso',
-      weightKg: 85.2,
-      goalWeightKg: 82.0,
-    },
+    profile: montarPerfilLu({ name, goal, weightKg: weightEntries[0]?.kg, goalWeightKg: weightGoalKg, barriers, motivations }),
     macros: {
       kcal: displayedMacros.kcal,
       p: displayedMacros.p,

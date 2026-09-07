@@ -28,6 +28,7 @@ import { TODAY, TODAY_MONTH, TODAY_YEAR } from '../state/AppContext';
 import { todayKey } from '../storage/completedDays';
 import { getDeviceId } from '../storage/deviceId';
 import { generateDayReview, getDaySnapshot, ApiError, type DaySnapshotPayload } from '../api/client';
+import { montarPerfilLu } from '../utils/luProfile';
 import { useSemAcesso } from '../state/accessState';
 import { MarkdownText } from '../components/MarkdownText';
 import { ActivityIndicator } from 'react-native';
@@ -69,6 +70,7 @@ export const DiaryScreen: React.FC = () => {
     selectedDateKey, setSelectedDate, displayedMacros, displayedMeals, isToday,
     restoreDayFromSnapshot,
     water, todayCompleted, completeDay, uncompleteDay, name,
+    goal, weightEntries, weightGoalKg, barriers, motivations,
   } = useApp();
   // Decompõe YYYY-MM-DD do dia selecionado pro subtitle.
   const [selYear, selMonth, selDay] = selectedDateKey.split('-').map((n) => parseInt(n, 10));
@@ -110,7 +112,7 @@ export const DiaryScreen: React.FC = () => {
     setReviewLoading(true);
     try {
       const { text } = await generateDayReview({
-        profile: { name: name ?? 'Anônima', goal: 'Perder peso', weightKg: 85.2, goalWeightKg: 82 },
+        profile: montarPerfilLu({ name, goal, weightKg: weightEntries[0]?.kg, goalWeightKg: weightGoalKg, barriers, motivations }),
         macros: { kcal: displayedMacros.kcal, p: displayedMacros.p, c: displayedMacros.c, f: displayedMacros.f },
         meals: displayedMeals.map((m) => ({
           name: m.name,
