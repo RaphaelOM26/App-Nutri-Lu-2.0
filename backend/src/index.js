@@ -4,8 +4,10 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { initSchema } from './db.js';
+import { initSchema, getPool } from './db.js';
+import { aplicarMigracoes } from './migrations.js';
 import { contextoDeUso } from './services/uso.js';
+import { exigirChaveDoApp } from './services/chaveDoApp.js';
 import extractRecipeRouter from './routes/extractRecipe.js';
 import analyzeFoodRouter from './routes/analyzeFood.js';
 import chatRouter from './routes/chat.js';
@@ -74,15 +76,21 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Rotas de IA
-app.use('/extract-recipe', extractRecipeRouter);
-app.use('/analyze-food', analyzeFoodRouter);
-app.use('/chat', chatRouter);
-app.use('/insight', insightRouter);
-app.use('/day-review', dayReviewRouter);
-app.use('/transcribe-meal', transcribeMealRouter);
+// Rotas de IA. Todas atrás da chave do app — que só passa a valer quando
+// APP_API_KEY existir no ambiente (ver services/chaveDoApp.js pra ordem de
+// implantação; ligar antes da frota atualizar derruba quem está em build velho).
+//
+// /day-snapshot fica FORA: ela não chama IA, não custa por uso, e é o que
+// guarda o diário. Trancá-la junto faria o app perder o histórico do dia de
+// quem estiver numa versão antiga, por um ganho que não existe.
+app.use('/extract-recipe', exigirChaveDoApp, extractRecipeRouter);
+app.use('/analyze-food', exigirChaveDoApp, analyzeFoodRouter);
+app.use('/chat', exigirChaveDoApp, chatRouter);
+app.use('/insight', exigirChaveDoApp, insightRouter);
+app.use('/day-review', exigirChaveDoApp, dayReviewRouter);
+app.use('/transcribe-meal', exigirChaveDoApp, transcribeMealRouter);
 app.use('/day-snapshot', daySnapshotRouter);
-app.use('/generate-recipe-image', generateRecipeImageRouter);
+app.use('/generate-recipe-image', exigirChaveDoApp, generateRecipeImageRouter);
 app.use('/auth', authRouter);
 app.use('/community', communityRouter);
 app.use('/billing', billingRouter);
@@ -114,6 +122,9 @@ async function start() {
   if (process.env.DATABASE_URL) {
     try {
       await initSchema();
+      // Migrações vêm DEPOIS do initSchema: as tabelas base existem primeiro,
+      // as alterações entram por cima.
+      await aplicarMigracoes(getPool());
     } catch (e) {
       console.error('[boot] falha ao inicializar schema:', e.message);
     }

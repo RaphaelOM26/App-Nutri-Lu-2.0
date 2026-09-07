@@ -4,7 +4,7 @@
 
 import express from 'express';
 import { requirePremium } from '../services/billing.js';
-import { tetoDiario } from '../services/limites.js';
+import { teto } from '../services/limites.js';
 import { openai, MODEL } from '../services/openai.js';
 
 const router = express.Router();
@@ -54,7 +54,7 @@ function buildContextMessage(ctx) {
   return `Dados do dia:\n${parts.join('\n')}`;
 }
 
-router.post('/', requirePremium, tetoDiario('insight', 20, 'LIMITE_INSIGHT_DIA'), async (req, res, next) => {
+router.post('/', requirePremium, teto('insight', { gratis: 1, assinante: 1, assinanteMes: 31 }, 'LIMITE_INSIGHT'), async (req, res, next) => {
   try {
     const { context } = req.body || {};
     const tone = context?.tone === 'alert' ? 'alert' : 'good';

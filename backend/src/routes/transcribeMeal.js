@@ -6,13 +6,13 @@
 // Resposta: { transcript, items, total, mealType, confidence }
 
 import { Router } from 'express';
-import { tetoDiario } from '../services/limites.js';
+import { teto } from '../services/limites.js';
 import { requirePremium } from '../services/billing.js';
 import { openai, MODEL, MEAL_VOICE_SCHEMA, MEAL_VOICE_PROMPT } from '../services/openai.js';
 
 const router = Router();
 
-router.post('/', requirePremium, tetoDiario('voz', 30, 'LIMITE_VOZ_DIA'), async (req, res, next) => {
+router.post('/', requirePremium, teto('voz', { gratis: 8, assinante: 30, assinanteMes: 400 }, 'LIMITE_VOZ'), async (req, res, next) => {
   try {
     const { audio, format } = req.body || {};
 
