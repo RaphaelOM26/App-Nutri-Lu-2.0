@@ -176,7 +176,7 @@ export const OnboardingCeremonyScreen: React.FC = () => {
               lineHeight: 22,
             }}
           >
-            Vou montar seu plano agora.
+            Agora me conta um pouco sobre você.
           </Text>
         </View>
       </View>

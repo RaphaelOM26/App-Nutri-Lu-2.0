@@ -24,6 +24,7 @@ import { DMSerifDisplay_400Regular, DMSerifDisplay_400Regular_Italic } from '@ex
 import { AppProvider, useApp } from './src/state/AppContext';
 import { ToastProvider } from './src/state/ToastContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { linking } from './src/navigation/linking';
 import { OnboardingNavigator } from './src/navigation/OnboardingNavigator';
 import { MacrosWatcher } from './src/components/MacrosWatcher';
 import { useTheme } from './src/theme';
@@ -52,7 +53,10 @@ function AppContent() {
   return (
     <>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
-      <NavigationContainer ref={navigationRef}>
+      {/* `linking` só vale depois do onboarding: um link de ativação recebido
+          por quem ainda nem abriu o app cairia numa tela sem contexto. O
+          RootNavigator é quem tem a rota Access. */}
+      <NavigationContainer ref={navigationRef} linking={isOnboarded ? linking : undefined}>
         {isOnboarded ? <RootNavigator /> : <OnboardingNavigator />}
       </NavigationContainer>
     </>

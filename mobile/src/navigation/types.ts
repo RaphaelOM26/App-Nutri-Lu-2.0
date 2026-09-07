@@ -99,3 +99,12 @@ export type RootStackParamList = {
   PlanRecipe: { mealId: string };
   PlanReminders: undefined;
 };
+
+// Registra o RootStackParamList como o tipo global de navegação.
+// É o que faz o `linking` do NavigationContainer casar com as rotas reais —
+// sem isso o React Navigation usa um RootParamList vazio e recusa a config.
+declare global {
+  namespace ReactNavigation {
+    interface RootParamList extends RootStackParamList {}
+  }
+}

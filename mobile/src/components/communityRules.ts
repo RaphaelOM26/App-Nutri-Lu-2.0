@@ -15,12 +15,11 @@ import { Alert, Linking } from 'react-native';
 /**
  * Contato publicado pra denúncias e dúvidas — exigido pela guideline 1.2.
  *
- * PENDENTE (Raphael, 2026-08-18): trocar pelo e-mail institucional do app
- * quando ele existir. Até lá fica o mesmo endereço que já é o contato de
- * suporte no App Store Connect — visível publicamente na ficha da loja, então
- * não é exposição nova. Trocar aqui basta: é a única fonte do endereço.
+ * Resolvido em 07/09/2026: era o Gmail pessoal do Raphael desde agosto, à
+ * espera do e-mail institucional. Agora é o endereço de suporte do domínio,
+ * o mesmo que consta na página de suporte e na ficha da loja.
  */
-export const COMMUNITY_CONTACT_EMAIL = 'raphaeldrs@gmail.com';
+export const COMMUNITY_CONTACT_EMAIL = 'suporte@nutrilualves.com.br';
 
 const RULES_BODY = [
   'Ao publicar receitas você concorda em NÃO postar conteúdo:',

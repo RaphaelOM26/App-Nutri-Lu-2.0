@@ -2,7 +2,7 @@
 // ou abrem modais persistidos no AppContext.
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, Modal, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -344,6 +344,8 @@ export const ProfileScreen: React.FC = () => {
             </Card>
           </Pressable>
         </View>
+
+        <LinksLegais />
       </ScrollView>
 
       <EditWeightGoalModal
@@ -384,6 +386,53 @@ export const ProfileScreen: React.FC = () => {
   );
 };
 
+
+
+// Rodapé com as páginas legais.
+//
+// A Apple espera que a política de privacidade seja alcançável de DENTRO do
+// aplicativo, não só pela ficha da loja. E a LGPD trabalha na mesma direção: o
+// titular tem que conseguir saber o que é feito com os dados dele sem ter que
+// procurar.
+//
+// Discreto de propósito — é obrigação cumprida, não conteúdo a promover.
+const SITE = 'https://nutrilualves.com.br';
+
+const LinksLegais: React.FC = () => {
+  const theme = useTheme();
+  const abrir = (caminho: string) => {
+    Linking.openURL(`${SITE}/${caminho}`).catch(() => {});
+  };
+
+  return (
+    <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 28 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 18 }}>
+        {[
+          { rotulo: 'Privacidade', caminho: 'privacidade.html' },
+          { rotulo: 'Termos de uso', caminho: 'termos.html' },
+          { rotulo: 'Suporte', caminho: 'suporte.html' },
+        ].map((l) => (
+          <Text
+            key={l.caminho}
+            accessibilityRole="link"
+            onPress={() => abrir(l.caminho)}
+            style={{
+              fontFamily: FONT.body,
+              fontSize: 13,
+              color: theme.textMuted,
+              textDecorationLine: 'underline',
+            }}
+          >
+            {l.rotulo}
+          </Text>
+        ))}
+      </View>
+      <Text style={{ marginTop: 12, fontFamily: FONT.body, fontSize: 12, color: theme.textFaint }}>
+        Nutri Lu · Lu Alves Saúde e Educação LTDA
+      </Text>
+    </View>
+  );
+};
 
 // Card "Conta da comunidade" do perfil.
 //
