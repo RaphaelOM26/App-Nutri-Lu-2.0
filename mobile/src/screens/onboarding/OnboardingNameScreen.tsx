@@ -54,7 +54,7 @@ export const OnboardingNameScreen: React.FC = () => {
   return (
     <OnboardingScreen
       step={1}
-      total={12}
+      total={11}
       onBack={() => nav.goBack()}
       ctaLabel="Continuar"
       ctaDisabled={!canContinue}

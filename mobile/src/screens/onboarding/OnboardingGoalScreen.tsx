@@ -1,6 +1,6 @@
 // Tela 8 do onboarding — Objetivo.
 // 3 opções: Perder / Manter / Ganhar peso.
-// IMPORTANTE: se goal='maintain', pula DesiredWeight e Speed → vai direto pra Barriers.
+// IMPORTANTE: se goal='maintain', pula DesiredWeight → vai direto pra Barriers.
 
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -25,7 +25,7 @@ export const OnboardingGoalScreen: React.FC = () => {
   const { goal, setGoal } = useApp();
 
   const handleContinue = () => {
-    // Se "manter peso", pula DesiredWeight (9) e Speed (10).
+    // Se "manter peso", pula DesiredWeight.
     // O stack do navigator não fica poluído: back de Barriers volta direto pra Goal.
     if (goal === 'maintain') {
       nav.navigate('Barriers');
@@ -37,7 +37,7 @@ export const OnboardingGoalScreen: React.FC = () => {
   return (
     <OnboardingScreen
       step={7}
-      total={12}
+      total={11}
       onBack={() => nav.goBack()}
       ctaLabel="Continuar"
       ctaDisabled={!goal}

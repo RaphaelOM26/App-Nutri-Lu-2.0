@@ -36,7 +36,7 @@ export const OnboardingMotivationsScreen: React.FC = () => {
   return (
     <OnboardingScreen
       step={10}
-      total={12}
+      total={11}
       onBack={() => nav.goBack()}
       ctaLabel="Continuar"
       ctaDisabled={motivations.length === 0}

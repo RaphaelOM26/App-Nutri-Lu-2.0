@@ -37,7 +37,7 @@ export const OnboardingBarriersScreen: React.FC = () => {
   return (
     <OnboardingScreen
       step={9}
-      total={12}
+      total={11}
       onBack={() => nav.goBack()}
       ctaLabel="Continuar"
       ctaDisabled={barriers.length === 0}

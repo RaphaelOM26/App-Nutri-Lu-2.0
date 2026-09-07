@@ -32,7 +32,7 @@ export const OnboardingDesiredWeightScreen: React.FC = () => {
 
   const handleContinue = () => {
     setWeightGoal(val);
-    nav.navigate('Speed');
+    nav.navigate('Barriers');
   };
 
   const ctx = goal === 'gain' ? 'Ganhar peso' : 'Perder peso';
@@ -40,7 +40,7 @@ export const OnboardingDesiredWeightScreen: React.FC = () => {
   return (
     <OnboardingScreen
       step={8}
-      total={12}
+      total={11}
       onBack={() => nav.goBack()}
       ctaLabel="Continuar"
       ctaDisabled={invalid}

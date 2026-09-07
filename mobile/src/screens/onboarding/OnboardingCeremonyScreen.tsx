@@ -85,7 +85,7 @@ export const OnboardingCeremonyScreen: React.FC = () => {
   );
 
   return (
-    <OnboardingScreen ctaLabel="Vamos lá!" onCta={() => nav.navigate('Generating')}>
+    <OnboardingScreen ctaLabel="Vamos lá!" onCta={() => nav.navigate('AnamneseIntroComida')}>
       <View
         style={{
           flex: 1,

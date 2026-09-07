@@ -29,13 +29,20 @@ export type OnboardingStackParamList = {
   LuExplains: undefined;
   Goal: undefined;
   DesiredWeight: undefined;
-  Speed: undefined;
   Barriers: undefined;
   Motivations: undefined;
   Notifications: undefined;
   Ceremony: undefined;
-  Generating: undefined;
-  PlanReady: undefined;
+  // Anamnese — as 8 perguntas não clínicas, entre a cerimônia e a estimativa.
+  AnamneseIntroComida: undefined;
+  AnamnesePreferencias: undefined;
+  AnamneseIntroRotina: undefined;
+  AnamneseDiaNormal: undefined;
+  AnamneseLimitacoes: undefined;
+  AnamneseIntroCorpo: undefined;
+  AnamneseFomeDoces: undefined;
+  AnamneseAguaSono: undefined;
+  Estimate: undefined;
 };
 
 // Root stack (contém as tabs + telas modais fullscreen)

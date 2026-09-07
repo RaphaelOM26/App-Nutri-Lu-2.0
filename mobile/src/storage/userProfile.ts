@@ -1,5 +1,6 @@
 // Persistência de configurações simples do perfil (peso meta + lembretes + dados do onboarding).
-// Quando subir o backend (Sem 1-2 do plano de 30d), isso migra pra Supabase.
+// Mora no aparelho, por AsyncStorage. O backend (Postgres no Railway) guarda
+// só conta, compra e telemetria — dado do diário nunca saiu daqui.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -15,7 +16,8 @@ const NAME_KEY = '@nutri-lu/name';
 const GENDER_KEY = '@nutri-lu/gender';
 const BIRTH_DATE_KEY = '@nutri-lu/birth-date';
 const HEIGHT_KEY = '@nutri-lu/height-cm';
-const ACTIVITY_LEVEL_KEY = '@nutri-lu/activity-level';
+const ACTIVITY_LEVEL_KEY = '@nutri-lu/activity-level'; // legado, 3 níveis
+const ACTIVITY_LEVEL_V2_KEY = '@nutri-lu/activity-level-v2'; // 5 níveis
 const GOAL_TYPE_KEY = '@nutri-lu/goal';
 const WEEKLY_RATE_KEY = '@nutri-lu/weekly-rate';
 const BARRIERS_KEY = '@nutri-lu/barriers';
@@ -85,7 +87,21 @@ export type MacroTargets = {
   p: number;
   c: number;
   f: number;
+  /**
+   * De onde vieram estes números. Ausente = `estimativa` (é o caso de todo
+   * mundo que passou pelo onboarding antes deste campo existir).
+   *
+   * Só `nutricionista` pode ser chamado de META na interface. O que o app
+   * calcula sozinho é sempre referência — a palavra importa porque plano
+   * alimentar é ato de nutricionista, e o app não emite plano.
+   */
+  origem?: 'estimativa' | 'ajuste-manual' | 'nutricionista';
 };
+
+/** true quando as metas ainda não passaram pela nutricionista. */
+export function metasProvisorias(t: MacroTargets | null | undefined): boolean {
+  return (t?.origem ?? 'estimativa') !== 'nutricionista';
+}
 
 export async function loadMacroTargets(): Promise<MacroTargets | null> {
   try {
@@ -153,7 +169,31 @@ export async function saveSilenceAll(silenced: boolean): Promise<void> {
 // Tipos sentinela: null = ainda não respondeu. Useful pra detectar perfis pré-onboarding.
 
 export type Gender = 'female' | 'male' | 'other';
-export type ActivityLevel = 'sedentary' | 'moderate' | 'athlete';
+/**
+ * Cinco níveis, como na tabela da nutricionista (fatores 1,20 · 1,375 · 1,55 ·
+ * 1,725 · 1,90). A versão anterior tinha três e perguntava treinos por semana
+ * (0-2, 3-5, 6+), sem oferecer "sedentário" de verdade — quem marcava a opção
+ * mais baixa recebia 1,375, o fator de levemente ativo.
+ */
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'very' | 'extreme';
+
+const NIVEIS_ATIVIDADE: ActivityLevel[] = ['sedentary', 'light', 'moderate', 'very', 'extreme'];
+
+/**
+ * Migração dos 3 níveis antigos. O mapa preserva o FATOR que a pessoa já tinha
+ * em vez de reinterpretar a resposta dela: quem respondia "0-2 treinos" recebia
+ * 1,375, que na tabela nova se chama `light`. Ninguém acorda com meta diferente
+ * por causa de um refactor.
+ *
+ * ⚠️ Precisa de chave NOVA no storage: `sedentary` existe nas duas versões com
+ * significados diferentes (antes era 0-2 treinos, agora é sedentário de fato),
+ * então não dá pra distinguir pelo valor.
+ */
+const ATIVIDADE_LEGADA: Record<string, ActivityLevel> = {
+  sedentary: 'light',
+  moderate: 'moderate',
+  athlete: 'very',
+};
 export type GoalType = 'lose' | 'maintain' | 'gain';
 
 // Nome do usuário (default exibido quando vazio: "você")
@@ -233,8 +273,16 @@ export async function saveHeight(cm: number | null): Promise<void> {
 
 export async function loadActivityLevel(): Promise<ActivityLevel | null> {
   try {
-    const raw = await AsyncStorage.getItem(ACTIVITY_LEVEL_KEY);
-    if (raw === 'sedentary' || raw === 'moderate' || raw === 'athlete') return raw;
+    const v2 = await AsyncStorage.getItem(ACTIVITY_LEVEL_V2_KEY);
+    if (v2 && (NIVEIS_ATIVIDADE as string[]).includes(v2)) return v2 as ActivityLevel;
+
+    // Sem v2: migra o valor de 3 níveis, se existir, preservando o fator.
+    const legado = await AsyncStorage.getItem(ACTIVITY_LEVEL_KEY);
+    const migrado = legado ? ATIVIDADE_LEGADA[legado] : undefined;
+    if (migrado) {
+      await AsyncStorage.setItem(ACTIVITY_LEVEL_V2_KEY, migrado);
+      return migrado;
+    }
     return null;
   } catch {
     return null;
@@ -243,9 +291,9 @@ export async function loadActivityLevel(): Promise<ActivityLevel | null> {
 
 export async function saveActivityLevel(level: ActivityLevel | null): Promise<void> {
   if (level == null) {
-    await AsyncStorage.removeItem(ACTIVITY_LEVEL_KEY);
+    await AsyncStorage.multiRemove([ACTIVITY_LEVEL_V2_KEY, ACTIVITY_LEVEL_KEY]);
   } else {
-    await AsyncStorage.setItem(ACTIVITY_LEVEL_KEY, level);
+    await AsyncStorage.setItem(ACTIVITY_LEVEL_V2_KEY, level);
   }
 }
 

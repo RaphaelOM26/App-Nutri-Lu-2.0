@@ -26,7 +26,7 @@ export const OnboardingGenderScreen: React.FC = () => {
   return (
     <OnboardingScreen
       step={2}
-      total={12}
+      total={11}
       onBack={() => nav.goBack()}
       ctaLabel="Continuar"
       ctaDisabled={!gender}

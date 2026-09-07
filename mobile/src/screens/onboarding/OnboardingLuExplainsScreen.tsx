@@ -19,7 +19,7 @@ export const OnboardingLuExplainsScreen: React.FC = () => {
   return (
     <OnboardingScreen
       step={6}
-      total={12}
+      total={11}
       onBack={() => nav.goBack()}
       ctaLabel="Continuar"
       onCta={() => nav.navigate('Goal')}

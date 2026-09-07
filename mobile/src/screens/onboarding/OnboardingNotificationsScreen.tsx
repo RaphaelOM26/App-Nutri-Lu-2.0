@@ -37,7 +37,7 @@ export const OnboardingNotificationsScreen: React.FC = () => {
   return (
     <OnboardingScreen
       step={11}
-      total={12}
+      total={11}
       onBack={() => nav.goBack()}
       ctaLabel="Permitir"
       onCta={handleAllow}

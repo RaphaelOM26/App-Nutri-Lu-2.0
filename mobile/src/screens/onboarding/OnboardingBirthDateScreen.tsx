@@ -43,7 +43,7 @@ export const OnboardingBirthDateScreen: React.FC = () => {
   return (
     <OnboardingScreen
       step={3}
-      total={12}
+      total={11}
       onBack={() => nav.goBack()}
       ctaLabel="Continuar"
       onCta={handleContinue}

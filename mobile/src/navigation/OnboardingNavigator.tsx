@@ -1,12 +1,14 @@
 // Stack do onboarding. Rodado quando o user ainda não concluiu o funil
 // (isOnboarded === false no AppContext).
 //
-// Ordem das 16 telas (ver ONBOARDING_SPEC.md):
+// Ordem das 22 telas — 13 de perfil, 8 de anamnese e a estimativa no fim.
+// A anamnese vem ANTES da estimativa a pedido da nutricionista: a paciente não
+// deve ancorar num número antes de ser perguntada sobre si mesma.
 //   Welcome → Name → Gender → BirthDate → HeightWeight → Activity →
-//   LuExplains → Goal → DesiredWeight → Speed → Barriers → Motivations →
-//   Notifications → Ceremony → Generating → PlanReady
+//   LuExplains → Goal → DesiredWeight → Barriers → Motivations →
+//   Notifications → Ceremony → [anamnese: 3 aberturas + 5 perguntas] → Estimate
 //
-// Skip condicional: quando goal='maintain', GoalScreen pula DesiredWeight e Speed
+// Skip condicional: quando goal='maintain', GoalScreen pula DesiredWeight
 // (navega direto pra Barriers). Stack continua limpo — back funciona corretamente.
 
 import React from 'react';
@@ -21,13 +23,21 @@ import { OnboardingActivityScreen } from '../screens/onboarding/OnboardingActivi
 import { OnboardingLuExplainsScreen } from '../screens/onboarding/OnboardingLuExplainsScreen';
 import { OnboardingGoalScreen } from '../screens/onboarding/OnboardingGoalScreen';
 import { OnboardingDesiredWeightScreen } from '../screens/onboarding/OnboardingDesiredWeightScreen';
-import { OnboardingSpeedScreen } from '../screens/onboarding/OnboardingSpeedScreen';
 import { OnboardingBarriersScreen } from '../screens/onboarding/OnboardingBarriersScreen';
 import { OnboardingMotivationsScreen } from '../screens/onboarding/OnboardingMotivationsScreen';
 import { OnboardingNotificationsScreen } from '../screens/onboarding/OnboardingNotificationsScreen';
 import { OnboardingCeremonyScreen } from '../screens/onboarding/OnboardingCeremonyScreen';
-import { OnboardingGeneratingScreen } from '../screens/onboarding/OnboardingGeneratingScreen';
-import { OnboardingPlanReadyScreen } from '../screens/onboarding/OnboardingPlanReadyScreen';
+import { OnboardingEstimateScreen } from '../screens/onboarding/OnboardingEstimateScreen';
+import {
+  AnamneseIntroComidaScreen,
+  AnamnesePreferenciasScreen,
+  AnamneseIntroRotinaScreen,
+  AnamneseDiaNormalScreen,
+  AnamneseLimitacoesScreen,
+  AnamneseIntroCorpoScreen,
+  AnamneseFomeDocesScreen,
+  AnamneseAguaSonoScreen,
+} from '../screens/onboarding/OnboardingAnamnese';
 
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
@@ -49,14 +59,20 @@ export function OnboardingNavigator() {
       <Stack.Screen name="LuExplains" component={OnboardingLuExplainsScreen} />
       <Stack.Screen name="Goal" component={OnboardingGoalScreen} />
       <Stack.Screen name="DesiredWeight" component={OnboardingDesiredWeightScreen} />
-      <Stack.Screen name="Speed" component={OnboardingSpeedScreen} />
       <Stack.Screen name="Barriers" component={OnboardingBarriersScreen} />
       <Stack.Screen name="Motivations" component={OnboardingMotivationsScreen} />
       <Stack.Screen name="Notifications" component={OnboardingNotificationsScreen} />
-      {/* Cerimônia, Geração e Payoff bloqueiam back via gestureEnabled+sem header próprio */}
+      {/* Cerimônia e Estimativa bloqueiam back via gestureEnabled+sem header próprio */}
       <Stack.Screen name="Ceremony" component={OnboardingCeremonyScreen} />
-      <Stack.Screen name="Generating" component={OnboardingGeneratingScreen} />
-      <Stack.Screen name="PlanReady" component={OnboardingPlanReadyScreen} />
+      <Stack.Screen name="AnamneseIntroComida" component={AnamneseIntroComidaScreen} />
+      <Stack.Screen name="AnamnesePreferencias" component={AnamnesePreferenciasScreen} />
+      <Stack.Screen name="AnamneseIntroRotina" component={AnamneseIntroRotinaScreen} />
+      <Stack.Screen name="AnamneseDiaNormal" component={AnamneseDiaNormalScreen} />
+      <Stack.Screen name="AnamneseLimitacoes" component={AnamneseLimitacoesScreen} />
+      <Stack.Screen name="AnamneseIntroCorpo" component={AnamneseIntroCorpoScreen} />
+      <Stack.Screen name="AnamneseFomeDoces" component={AnamneseFomeDocesScreen} />
+      <Stack.Screen name="AnamneseAguaSono" component={AnamneseAguaSonoScreen} />
+      <Stack.Screen name="Estimate" component={OnboardingEstimateScreen} />
     </Stack.Navigator>
   );
 }
