@@ -89,6 +89,14 @@ async function main() {
   const apagados = await rotacionar();
   console.log(`\nok — ${resumo}`);
   console.log(`     ${REPO}/${PASTA}/${arquivo}${apagados ? ` (${apagados} antigo(s) removido(s))` : ''}`);
+
+  // Sair na marra. O fetch do Node guarda as conexões num pool com keep-alive,
+  // e isso segura o event loop aberto por minutos DEPOIS de o trabalho acabar.
+  // Medido no primeiro deploy: backup gravado às 17:08:42, processo ainda
+  // "Running" às 17:11. Num cron diário isso é minuto de execução queimado
+  // todo dia, e — pior — o painel mostra "rodando" quando já terminou, o que
+  // atrapalha justamente no dia que houver um problema de verdade.
+  process.exit(0);
 }
 
 main().catch((e) => {
