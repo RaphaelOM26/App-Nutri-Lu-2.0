@@ -15,6 +15,36 @@ const PRODUCTION_API_URL = 'https://app-nutri-lu-20-production.up.railway.app';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || PRODUCTION_API_URL;
 
+/**
+ * Chave compartilhada com o backend (cabeçalho `x-api-key`).
+ *
+ * ⚠️ NÃO mora no eas.json: o repositório é PÚBLICO, e publicar a chave no
+ * GitHub é pior do que não ter chave nenhuma. Ela vive como variável de
+ * ambiente SENSÍVEL no EAS (`eas env:create`), que o build injeta na hora de
+ * empacotar. Localmente, em `mobile/.env` — que é gitignored.
+ *
+ * Vazia em dev: o backend só cobra a chave quando ele mesmo tem APP_API_KEY
+ * configurada, então rodar sem ela continua funcionando (ver
+ * `backend/src/services/chaveDoApp.js` pra ordem de implantação).
+ */
+const APP_API_KEY = process.env.EXPO_PUBLIC_APP_API_KEY || '';
+
+/**
+ * Cabeçalhos de toda chamada ao backend.
+ *
+ * A chave vai em TUDO, e não só nas sete rotas de IA que o servidor protege
+ * hoje: rota que passar a ser protegida amanhã já chega coberta, sem depender
+ * de alguém lembrar de incluí-la. Mandar de sobra não custa nada; esquecer
+ * derruba a rota pra frota inteira que já está na loja.
+ */
+function cabecalhos(extras?: Record<string, string>): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    ...(APP_API_KEY ? { 'x-api-key': APP_API_KEY } : {}),
+    ...extras,
+  };
+}
+
 export type Ingredient = {
   quantity: string;
   unit: string;
@@ -122,10 +152,7 @@ async function comDeviceId(body: unknown): Promise<unknown> {
 async function postJSON<T>(path: string, body: unknown, token?: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: cabecalhos(token ? { Authorization: `Bearer ${token}` } : undefined),
     body: JSON.stringify(await comDeviceId(body)),
   });
   const text = await res.text();
@@ -153,7 +180,7 @@ export class ApiError extends Error {
 
 /** Verifica que o backend está acessível. */
 export async function checkHealth(): Promise<{ status: string; model: string }> {
-  const res = await fetch(`${BASE_URL}/health`);
+  const res = await fetch(`${BASE_URL}/health`, { headers: cabecalhos() });
   if (!res.ok) throw new ApiError(`Health check falhou`, res.status);
   return res.json();
 }
@@ -315,7 +342,7 @@ export async function getDaySnapshot(
   date: string,
 ): Promise<DaySnapshotPayload | null> {
   const url = `${BASE_URL}/day-snapshot?device_id=${encodeURIComponent(deviceId)}&date=${encodeURIComponent(date)}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: cabecalhos() });
   if (res.status === 404) return null;
   if (!res.ok) {
     const text = await res.text().catch(() => '');
@@ -352,7 +379,7 @@ export function socialLogin(payload: {
 /** Valida a sessão guardada e devolve o perfil. 401 = sessão expirou. */
 export async function fetchMe(token: string): Promise<AuthUser> {
   const res = await fetch(`${BASE_URL}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: cabecalhos({ Authorization: `Bearer ${token}` }),
   });
   if (!res.ok) throw new ApiError('Sessão expirada', res.status, 'AUTH_EXPIRED');
   const data = await res.json();
@@ -367,7 +394,7 @@ export async function fetchMe(token: string): Promise<AuthUser> {
 export async function deleteAccount(token: string): Promise<void> {
   const res = await fetch(`${BASE_URL}/auth/me`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: cabecalhos({ Authorization: `Bearer ${token}` }),
   });
   // 401 = a sessão já morreu; a conta some do mesmo jeito na prática (o app
   // desloga em seguida). Só erro real de servidor merece bloquear a UI.
@@ -422,7 +449,7 @@ export async function fetchCommunityRecipes(opts: {
     sort: opts.sort ?? 'recent',
   });
   const res = await fetch(`${BASE_URL}/community/recipes?${params}`, {
-    headers: opts.token ? { Authorization: `Bearer ${opts.token}` } : undefined,
+    headers: cabecalhos(opts.token ? { Authorization: `Bearer ${opts.token}` } : undefined),
   });
   if (!res.ok) throw new ApiError(`Erro ao carregar a comunidade`, res.status);
   return res.json();
@@ -441,7 +468,7 @@ export function rateCommunityRecipe(
 export async function unpublishCommunityRecipe(token: string, recipeId: string): Promise<void> {
   const res = await fetch(`${BASE_URL}/community/recipes/${recipeId}`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: cabecalhos({ Authorization: `Bearer ${token}` }),
   });
   if (!res.ok) throw new ApiError('Erro ao despublicar', res.status);
 }
@@ -471,7 +498,7 @@ export function blockCommunityUser(token: string, userId: string): Promise<{ ok:
 export async function unblockCommunityUser(token: string, userId: string): Promise<void> {
   const res = await fetch(`${BASE_URL}/community/users/${userId}/block`, {
     method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: cabecalhos({ Authorization: `Bearer ${token}` }),
   });
   if (!res.ok) throw new ApiError('Erro ao desbloquear', res.status);
 }
@@ -481,7 +508,7 @@ export async function fetchBlockedUsers(
   token: string,
 ): Promise<{ id: string; displayName: string }[]> {
   const res = await fetch(`${BASE_URL}/community/blocks`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: cabecalhos({ Authorization: `Bearer ${token}` }),
   });
   if (!res.ok) throw new ApiError('Erro ao carregar bloqueios', res.status);
   const data = await res.json();
@@ -508,7 +535,7 @@ export async function fetchCommunityLeaderboard(
   token?: string,
 ): Promise<{ top: LeaderboardEntry[]; me: LeaderboardEntry | null }> {
   const res = await fetch(`${BASE_URL}/community/leaderboard`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: cabecalhos(token ? { Authorization: `Bearer ${token}` } : undefined),
   });
   if (!res.ok) throw new ApiError('Erro ao carregar o rank', res.status);
   return res.json();
@@ -519,7 +546,7 @@ export async function fetchAccess(
   token: string,
 ): Promise<{ acesso: boolean; validoAte?: string | null }> {
   const res = await fetch(`${BASE_URL}/billing/me`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: cabecalhos({ Authorization: `Bearer ${token}` }),
   });
   if (!res.ok) throw new ApiError('Não consegui verificar o acesso', res.status);
   return res.json();
