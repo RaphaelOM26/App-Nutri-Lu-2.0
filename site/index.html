@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nutri Lu</title>
+<meta name="description" content="Nutri Lu — diário alimentar, acervo de receitas e acompanhamento nutricional com a nutricionista Lu Alves.">
+<style>
+/* Estilo compartilhado das páginas públicas do Nutri Lu.
+   Sobe junto com privacidade.html, termos.html e suporte.html. */
+
+:root {
+  --papel: #FBFAF6;
+  --tinta: #22271F;
+  --suave: #6B7264;
+  --linha: #DFE2D8;
+  --verde: #55704E;
+  --caixa: #FFFFFF;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --papel: #161A14;
+    --tinta: #EAEDE5;
+    --suave: #9AA394;
+    --linha: #2E352B;
+    --verde: #A8C39C;
+    --caixa: #1D221B;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.7;
+  font-size: 17px;
+}
+
+.pagina {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 72px 24px 80px;
+}
+
+.marca {
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--verde);
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+h1 {
+  font-size: 34px;
+  line-height: 1.2;
+  margin: 0 0 16px;
+  font-weight: 600;
+}
+
+.chamada {
+  font-size: 19px;
+  color: var(--suave);
+  margin: 0 0 40px;
+}
+
+p { margin: 0 0 14px; }
+
+a { color: var(--verde); }
+
+.caixa {
+  background: var(--caixa);
+  border: 1px solid var(--linha);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin: 24px 0;
+}
+
+.caixa p:last-child { margin-bottom: 0; }
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 32px 0 0;
+}
+
+.links a {
+  display: inline-block;
+  padding: 12px 18px;
+  border: 1px solid var(--linha);
+  border-radius: 10px;
+  background: var(--caixa);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.rodape {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--linha);
+  color: var(--suave);
+  font-size: 15px;
+}
+</style>
+</head>
+<body>
+<div class="pagina">
+
+<p class="marca">Nutri Lu</p>
+<h1>Seu diário alimentar, com a nutri junto.</h1>
+<p class="chamada">Registre por foto, por voz ou pela busca. Mais de 400 receitas com informação nutricional calculada porção por porção. E, para quem contrata o acompanhamento, o plano alimentar da nutricionista dentro do aplicativo.</p>
+
+<div class="caixa">
+  <p><strong>Precisa de ajuda?</strong> Escreva para <a href="mailto:suporte@nutrilualves.com.br">suporte@nutrilualves.com.br</a>.</p>
+  <p>Assuntos de dados pessoais e privacidade: <a href="mailto:contato@nutrilualves.com.br">contato@nutrilualves.com.br</a>.</p>
+</div>
+
+<div class="links">
+  <a href="privacidade.html">Política de Privacidade</a>
+  <a href="termos.html">Termos de Uso</a>
+  <a href="suporte.html">Suporte</a>
+</div>
+
+<div class="rodape">
+  LU ALVES SAÚDE E EDUCAÇÃO LTDA — CNPJ 68.943.601/0001-71<br>
+  Av. Santana, 289 — Sala D 193, Centro, Caetité/BA
+</div>
+
+</div>
+</body>
+</html>
