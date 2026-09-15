@@ -21,7 +21,17 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 let client = null;
 
+// ─── Modo local (só desenvolvimento) ──────────────────────────────────────
+// Com FOTOS_LOCAL_DIR definido, as fotos vão pra uma pasta no disco e são
+// servidas pelo próprio servidor em /dev-fotos/<chave>. Mesmo contrato das
+// URLs assinadas do R2, então a web não sabe a diferença. Nunca em produção.
+const LOCAL_DIR = process.env.FOTOS_LOCAL_DIR || null;
+const localBase = () => process.env.FOTOS_LOCAL_URL || `http://localhost:${process.env.PORT || 3001}`;
+export function fotosLocais() { return Boolean(LOCAL_DIR); }
+export function pastaLocal() { return LOCAL_DIR; }
+
 export function r2Configurado() {
+  if (LOCAL_DIR) return true;
   return Boolean(
     process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && process.env.R2_BUCKET,
   );
@@ -72,6 +82,7 @@ export async function urlDeUpload({ key, contentType, tamanho }) {
   if (tamanho && tamanho > TAMANHO_MAX) {
     throw Object.assign(new Error('Imagem grande demais (máximo 8 MB)'), { status: 400, code: 'BAD_REQUEST' });
   }
+  if (LOCAL_DIR) return { url: `${localBase()}/dev-fotos/${key}`, key };
   const cmd = new PutObjectCommand({ Bucket: process.env.R2_BUCKET, Key: key, ContentType: contentType });
   const url = await getSignedUrl(getClient(), cmd, { expiresIn: 600 });
   return { url, key };
@@ -80,12 +91,14 @@ export async function urlDeUpload({ key, contentType, tamanho }) {
 /** URL assinada pra exibir a foto. Vale 1 hora. */
 export async function urlDeLeitura(key) {
   if (!key) return null;
+  if (LOCAL_DIR) return `${localBase()}/dev-fotos/${key}`;
   const cmd = new GetObjectCommand({ Bucket: process.env.R2_BUCKET, Key: key });
   return getSignedUrl(getClient(), cmd, { expiresIn: 3600 });
 }
 
 export async function apagar(key) {
   if (!key) return;
+  if (LOCAL_DIR) { const { unlink } = await import('node:fs/promises'); await unlink(`${LOCAL_DIR}/${key}`).catch(() => {}); return; }
   await getClient().send(new DeleteObjectCommand({ Bucket: process.env.R2_BUCKET, Key: key }));
 }
 

@@ -6,6 +6,9 @@ import express from 'express';
 import cors from 'cors';
 import { initSchema, getPool } from './db.js';
 import { aplicarMigracoes } from './migrations.js';
+import { fotosLocais, pastaLocal } from './services/r2.js';
+import path from 'node:path';
+import fs from 'node:fs';
 import { contextoDeUso } from './services/uso.js';
 import { exigirChaveDoApp } from './services/chaveDoApp.js';
 import extractRecipeRouter from './routes/extractRecipe.js';
@@ -48,6 +51,20 @@ if (CORS_ORIGIN === '*') console.warn('[cors] CORS_ORIGIN ausente — qualquer o
 app.use(cors({ origin: origens.length === 1 && origens[0] === '*' ? '*' : origens }));
 // Limite alto pra acomodar imagens base64 (foto comum de celular ~2-4MB → base64 ~3-6MB)
 app.use(express.json({ limit: '15mb' }));
+
+// Fotos em disco (só desenvolvimento; ver services/r2.js). PUT grava, GET serve.
+if (fotosLocais()) {
+  const dir = pastaLocal();
+  app.put('/dev-fotos/*chave', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
+    const chave = String(req.params.chave || '').replace(/../g, '');
+    const destino = path.join(dir, ...chave.split('/'));
+    await fs.promises.mkdir(path.dirname(destino), { recursive: true });
+    await fs.promises.writeFile(destino, req.body);
+    res.json({ ok: true });
+  });
+  app.use('/dev-fotos', express.static(dir));
+  console.log(`[fotos] modo LOCAL: ${dir}`);
+}
 
 // Logging leve de requisições — método, rota, status e latência de cada
 // chamada. Faz os logs do Railway virarem úteis pra monitorar o tráfego real
