@@ -501,6 +501,8 @@ router.put('/perfil', async (req, res, next) => {
 const CAMPOS_CLINICOS = new Set([
   'doencas', 'historico_familiar', 'medicamentos_usa', 'medicamentos', 'suplementos_usa', 'suplementos', 'alergias',
   'perda_controle', 'perda_controle_quando', 'intestino', 'sintomas', 'alcool', 'exames',
+  // Rastreio de suplementação: objeto { usa, quais, <id da pergunta>: 'sim'|'nao' }
+  'suplementacao',
 ]);
 
 router.get('/anamnese-clinica', async (req, res, next) => {
