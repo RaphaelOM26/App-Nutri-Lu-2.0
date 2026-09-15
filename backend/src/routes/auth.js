@@ -95,7 +95,9 @@ router.post('/email/verify', async (req, res, next) => {
     const user = await upsertUser({
       provider: 'email',
       sub: email,
-      displayName: (req.body?.display_name || '').trim().slice(0, 40) || email.split('@')[0],
+      // Sem nome informado fica vazio: o pedaço do e-mail não é nome, e o
+      // onboarding pergunta como a pessoa quer ser chamada.
+      displayName: (req.body?.display_name || '').trim().slice(0, 40),
       email,
       deviceId: req.body?.device_id,
     });
