@@ -1,0 +1,92 @@
+{
+  "nome": "Mariana Costa",
+  "week_start": "2026-09-14",
+  "week_index": 2,
+  "week_total": 4,
+  "targets": { "kcal": 1650, "p": 150, "c": 120, "f": 60, "water_ml": 2000 },
+  "meta_kg": 68,
+  "note": "Subi a proteína do café pra você chegar no almoço sem fome. O jantar ficou mais leve porque você treina de manhã.",
+  "recado": "Mariana, começamos a semana 2. Se a fome vier antes do lanche da tarde, me chama que a gente ajusta.",
+  "supplements": [
+    { "name": "Whey protein", "dose": "30 g", "time": "07:00", "with_meal": "junto com o café" },
+    { "name": "Ômega 3", "dose": "1 cápsula", "time": "12:30", "with_meal": "no almoço" },
+    { "name": "Magnésio", "dose": "1 cápsula", "time": "21:30", "with_meal": "na ceia" }
+  ],
+  "days": [
+    { "weekday": 1, "meals": [
+      { "slot": "cafe", "time": "07:00", "name": "Overnight de morango com cheesecake", "code": "NL-024", "items": [ { "name": "Overnight de morango com cheesecake", "portion": "1 porção", "code": "NL-024", "kcal": 320, "p": 27, "c": 32, "f": 11 } ] },
+      { "slot": "lanche_manha", "time": "10:00", "name": "1 fruta da estação", "items": [ { "name": "Fruta da estação", "portion": "1 unidade", "kcal": 70, "p": 0, "c": 17, "f": 0 } ] },
+      { "slot": "almoco", "time": "12:30", "name": "Frango cremoso com leite de coco e curry, arroz integral e salada", "code": "NL-032", "items": [
+        { "name": "Frango cremoso com leite de coco e curry", "portion": "1 porção", "code": "NL-032", "kcal": 360, "p": 44, "c": 8, "f": 17 },
+        { "name": "Arroz integral cozido", "portion": "2 colheres de sopa", "grams": 50, "kcal": 62, "p": 1, "c": 13, "f": 0 },
+        { "name": "Salada de folhas com tomate", "portion": "à vontade", "kcal": 0, "p": 0, "c": 0, "f": 0 } ] },
+      { "slot": "lanche_tarde", "time": "16:00", "name": "Bowl proteico de iogurte, mamão e leite em pó", "code": "NL-404", "items": [ { "name": "Bowl proteico de iogurte, mamão e leite em pó", "portion": "1 porção", "code": "NL-404", "kcal": 270, "p": 33, "c": 28, "f": 3 } ] },
+      { "slot": "jantar", "time": "19:30", "name": "Salmão com purê rústico de couve-flor e alho", "code": "NL-079", "items": [ { "name": "Salmão com purê rústico de couve-flor e alho", "portion": "1 porção", "code": "NL-079", "kcal": 455, "p": 37, "c": 12, "f": 29 } ] },
+      { "slot": "ceia", "time": "21:30", "name": "Chá de camomila e 1 iogurte natural", "items": [
+        { "name": "Chá de camomila", "portion": "1 xícara", "kcal": 0, "p": 0, "c": 0, "f": 0 },
+        { "name": "Iogurte natural", "portion": "1 pote · 170 g", "kcal": 100, "p": 7, "c": 8, "f": 3 } ] }
+    ] },
+    { "weekday": 2, "meals": [
+      { "slot": "cafe", "time": "07:00", "name": "Overnight de morango com cheesecake", "code": "NL-024", "items": [ { "name": "Overnight de morango com cheesecake", "portion": "1 porção", "code": "NL-024", "kcal": 320, "p": 27, "c": 32, "f": 11 } ] },
+      { "slot": "lanche_manha", "time": "10:00", "name": "1 fruta da estação", "items": [ { "name": "Fruta da estação", "portion": "1 unidade", "kcal": 70, "p": 0, "c": 17, "f": 0 } ] },
+      { "slot": "almoco", "time": "12:30", "name": "Frango cremoso com leite de coco e curry, arroz integral e salada", "code": "NL-032", "items": [
+        { "name": "Frango cremoso com leite de coco e curry", "portion": "1 porção", "code": "NL-032", "kcal": 360, "p": 44, "c": 8, "f": 17 },
+        { "name": "Arroz integral cozido", "portion": "2 colheres de sopa", "grams": 50, "kcal": 62, "p": 1, "c": 13, "f": 0 },
+        { "name": "Salada de folhas com tomate", "portion": "à vontade", "kcal": 0, "p": 0, "c": 0, "f": 0 } ] },
+      { "slot": "lanche_tarde", "time": "16:00", "name": "Bowl proteico de iogurte, mamão e leite em pó", "code": "NL-404", "items": [ { "name": "Bowl proteico de iogurte, mamão e leite em pó", "portion": "1 porção", "code": "NL-404", "kcal": 270, "p": 33, "c": 28, "f": 3 } ] },
+      { "slot": "jantar", "time": "19:30", "name": "Salmão com purê rústico de couve-flor e alho", "code": "NL-079", "items": [ { "name": "Salmão com purê rústico de couve-flor e alho", "portion": "1 porção", "code": "NL-079", "kcal": 455, "p": 37, "c": 12, "f": 29 } ] },
+      { "slot": "ceia", "time": "21:30", "name": "Chá de camomila e 1 iogurte natural", "items": [
+        { "name": "Chá de camomila", "portion": "1 xícara", "kcal": 0, "p": 0, "c": 0, "f": 0 },
+        { "name": "Iogurte natural", "portion": "1 pote · 170 g", "kcal": 100, "p": 7, "c": 8, "f": 3 } ] }
+    ] },
+    { "weekday": 3, "meals": [
+      { "slot": "cafe", "time": "07:00", "name": "Panqueca de maçã com canela e creme de iogurte", "code": "NL-026", "items": [ { "name": "Panqueca de maçã com canela e creme de iogurte", "portion": "1 porção", "code": "NL-026", "kcal": 270, "p": 23, "c": 29, "f": 8 } ] },
+      { "slot": "lanche_manha", "time": "10:00", "name": "1 fruta da estação", "items": [ { "name": "Fruta da estação", "portion": "1 unidade", "kcal": 70, "p": 0, "c": 17, "f": 0 } ] },
+      { "slot": "almoco", "time": "12:30", "name": "Batata recheada com frango e muçarela e salada", "code": "NL-007", "items": [
+        { "name": "Batata recheada com frango e muçarela", "portion": "1 porção", "code": "NL-007", "kcal": 350, "p": 30, "c": 30, "f": 12 },
+        { "name": "Salada de folhas com tomate", "portion": "à vontade", "kcal": 0, "p": 0, "c": 0, "f": 0 } ] },
+      { "slot": "lanche_tarde", "time": "16:00", "name": "Creme proteico de maracujá da Nutri Lu", "code": "NL-020", "items": [ { "name": "Creme proteico de maracujá da Nutri Lu", "portion": "1 porção", "code": "NL-020", "kcal": 160, "p": 20, "c": 12, "f": 4 } ] },
+      { "slot": "jantar", "time": "19:30", "name": "Omelete caprese da Nutri Lu", "code": "NL-019", "items": [ { "name": "Omelete caprese da Nutri Lu", "portion": "1 porção", "code": "NL-019", "kcal": 270, "p": 19, "c": 4, "f": 20 } ] },
+      { "slot": "ceia", "time": "21:30", "name": "Chá de camomila e 1 iogurte natural", "items": [
+        { "name": "Chá de camomila", "portion": "1 xícara", "kcal": 0, "p": 0, "c": 0, "f": 0 },
+        { "name": "Iogurte natural", "portion": "1 pote · 170 g", "kcal": 100, "p": 7, "c": 8, "f": 3 } ] }
+    ] },
+    { "weekday": 4, "meals": [
+      { "slot": "cafe", "time": "07:00", "name": "Baked oats de cenoura com chocolate", "code": "NL-030", "items": [ { "name": "Baked oats de cenoura com chocolate", "portion": "1 porção", "code": "NL-030", "kcal": 315, "p": 27, "c": 35, "f": 8 } ] },
+      { "slot": "lanche_manha", "time": "10:00", "name": "1 fruta da estação", "items": [ { "name": "Fruta da estação", "portion": "1 unidade", "kcal": 70, "p": 0, "c": 17, "f": 0 } ] },
+      { "slot": "almoco", "time": "12:30", "name": "Salada de atum com batata, ovo e vagem", "code": "NL-083", "items": [ { "name": "Salada de atum com batata, ovo e vagem", "portion": "1 porção", "code": "NL-083", "kcal": 405, "p": 35, "c": 30, "f": 16 } ] },
+      { "slot": "lanche_tarde", "time": "16:00", "name": "Nuvem de claras com muçarela", "code": "NL-015", "items": [ { "name": "Nuvem de claras com muçarela", "portion": "1 porção", "code": "NL-015", "kcal": 112, "p": 15, "c": 2, "f": 5 } ] },
+      { "slot": "jantar", "time": "19:30", "name": "Creme de batata com alho-poró e frango", "code": "NL-134", "items": [ { "name": "Creme de batata com alho-poró e frango", "portion": "1 porção", "code": "NL-134", "kcal": 300, "p": 28, "c": 24, "f": 10 } ] },
+      { "slot": "ceia", "time": "21:30", "name": "Chá de camomila e 1 iogurte natural", "items": [
+        { "name": "Chá de camomila", "portion": "1 xícara", "kcal": 0, "p": 0, "c": 0, "f": 0 },
+        { "name": "Iogurte natural", "portion": "1 pote · 170 g", "kcal": 100, "p": 7, "c": 8, "f": 3 } ] }
+    ] },
+    { "weekday": 5, "meals": [
+      { "slot": "cafe", "time": "07:00", "name": "Overnight de morango com cheesecake", "code": "NL-024", "items": [ { "name": "Overnight de morango com cheesecake", "portion": "1 porção", "code": "NL-024", "kcal": 320, "p": 27, "c": 32, "f": 11 } ] },
+      { "slot": "lanche_manha", "time": "10:00", "name": "1 fruta da estação", "items": [ { "name": "Fruta da estação", "portion": "1 unidade", "kcal": 70, "p": 0, "c": 17, "f": 0 } ] },
+      { "slot": "almoco", "time": "12:30", "name": "Hambúrguer de quinoa com salada", "code": "NL-008", "items": [
+        { "name": "Hambúrguer de quinoa", "portion": "1 porção", "code": "NL-008", "kcal": 245, "p": 12, "c": 30, "f": 9 },
+        { "name": "Arroz integral cozido", "portion": "3 colheres de sopa", "grams": 75, "kcal": 93, "p": 2, "c": 19, "f": 1 },
+        { "name": "Salada de folhas com tomate", "portion": "à vontade", "kcal": 0, "p": 0, "c": 0, "f": 0 } ] },
+      { "slot": "lanche_tarde", "time": "16:00", "name": "Bowl proteico de iogurte, mamão e leite em pó", "code": "NL-404", "items": [ { "name": "Bowl proteico de iogurte, mamão e leite em pó", "portion": "1 porção", "code": "NL-404", "kcal": 270, "p": 33, "c": 28, "f": 3 } ] },
+      { "slot": "jantar", "time": "19:30", "name": "Salmão com purê rústico de couve-flor e alho", "code": "NL-079", "items": [ { "name": "Salmão com purê rústico de couve-flor e alho", "portion": "1 porção", "code": "NL-079", "kcal": 455, "p": 37, "c": 12, "f": 29 } ] },
+      { "slot": "ceia", "time": "21:30", "name": "Chá de camomila e 1 iogurte natural", "items": [
+        { "name": "Chá de camomila", "portion": "1 xícara", "kcal": 0, "p": 0, "c": 0, "f": 0 },
+        { "name": "Iogurte natural", "portion": "1 pote · 170 g", "kcal": 100, "p": 7, "c": 8, "f": 3 } ] }
+    ] },
+    { "weekday": 6, "meals": [
+      { "slot": "cafe", "time": "08:00", "name": "Omelete caprese da Nutri Lu", "code": "NL-019", "items": [ { "name": "Omelete caprese da Nutri Lu", "portion": "1 porção", "code": "NL-019", "kcal": 270, "p": 19, "c": 4, "f": 20 } ] },
+      { "slot": "almoco", "time": "13:00", "name": "Salada Janeiro com frango grelhado", "code": "NL-004", "items": [
+        { "name": "Salada Janeiro", "portion": "1 porção", "code": "NL-004", "kcal": 235, "p": 8, "c": 30, "f": 10 },
+        { "name": "Frango grelhado", "portion": "1 filé · 120 g", "grams": 120, "kcal": 190, "p": 36, "c": 0, "f": 4 } ] },
+      { "slot": "lanche_tarde", "time": "16:30", "name": "Bolo de maçã com aveia na air fryer", "code": "NL-018", "items": [ { "name": "Bolo de maçã com aveia na air fryer", "portion": "1 fatia", "code": "NL-018", "kcal": 255, "p": 7, "c": 40, "f": 8 } ] },
+      { "slot": "jantar", "time": "20:00", "name": "Creme de batata com alho-poró e frango", "code": "NL-134", "items": [ { "name": "Creme de batata com alho-poró e frango", "portion": "1 porção", "code": "NL-134", "kcal": 300, "p": 28, "c": 24, "f": 10 } ] }
+    ] },
+    { "weekday": 7, "meals": [
+      { "slot": "cafe", "time": "08:00", "name": "Panqueca de maçã com canela e creme de iogurte", "code": "NL-026", "items": [ { "name": "Panqueca de maçã com canela e creme de iogurte", "portion": "1 porção", "code": "NL-026", "kcal": 270, "p": 23, "c": 29, "f": 8 } ] },
+      { "slot": "almoco", "time": "13:00", "name": "Refeição livre com moderação", "items": [ { "name": "Refeição livre", "portion": "1 prato", "kcal": 700, "p": 35, "c": 70, "f": 30 } ] },
+      { "slot": "lanche_tarde", "time": "16:30", "name": "Creme proteico de maracujá da Nutri Lu", "code": "NL-020", "items": [ { "name": "Creme proteico de maracujá da Nutri Lu", "portion": "1 porção", "code": "NL-020", "kcal": 160, "p": 20, "c": 12, "f": 4 } ] },
+      { "slot": "jantar", "time": "20:00", "name": "Omelete caprese da Nutri Lu", "code": "NL-019", "items": [ { "name": "Omelete caprese da Nutri Lu", "portion": "1 porção", "code": "NL-019", "kcal": 270, "p": 19, "c": 4, "f": 20 } ] }
+    ] }
+  ]
+}

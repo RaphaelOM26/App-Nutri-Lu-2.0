@@ -81,3 +81,6 @@ Conteúdo/~$*.xlsx
 backups/
 *.json.gz
 backend/backup.log
+
+# build da area de membros (gerado por web/ via vite build)
+site/membros/

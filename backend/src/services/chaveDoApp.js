@@ -23,6 +23,7 @@
 // ligada por padrão.
 
 import crypto from 'node:crypto';
+import { verifySessionToken } from './auth.js';
 
 /** Compara sem vazar o tamanho nem o ponto da diferença pelo tempo de resposta. */
 function iguais(a, b) {
@@ -43,9 +44,28 @@ export function exigirChaveDoApp(req, res, next) {
   const recebida = req.get('x-api-key');
   if (recebida && iguais(recebida, esperada)) return next();
 
-  // 401 e não 403: o cliente não se identificou. E a mensagem é deliberadamente
-  // vaga — dizer "chave errada" versus "chave ausente" entrega informação de
-  // graça a quem está sondando.
+  // Área de membros WEB (15/09/2026): a página roda no navegador e uma chave
+  // fixa ali fica visível no código-fonte — não protege nada. Quem está logado
+  // já se identificou com a sessão (JWT nosso), que é prova melhor que a
+  // chave: é por pessoa, expira e pode ser revogada. Sessão válida passa.
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (token) {
+    return verifySessionToken(token)
+      .then((user) => {
+        req.user = req.user || user;
+        next();
+      })
+      .catch(() => negar(res));
+  }
+
+  return negar(res);
+}
+
+// 401 e não 403: o cliente não se identificou. E a mensagem é deliberadamente
+// vaga — dizer "chave errada" versus "chave ausente" entrega informação de
+// graça a quem está sondando.
+function negar(res) {
   return res.status(401).json({
     error: 'Requisição não autorizada.',
     code: 'CHAVE_INVALIDA',

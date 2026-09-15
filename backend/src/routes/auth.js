@@ -23,8 +23,88 @@ import {
   requireAuth,
 } from '../services/auth.js';
 import { getPool } from '../db.js';
+import { criarCodigo, conferirCodigo, emailValido } from '../services/loginPorEmail.js';
+import { enviarCodigoLogin } from '../services/email.js';
 
 const router = Router();
+
+// ─── Login por e-mail (área de membros web) ──────────────────────────────
+//
+// POST /auth/email/request { email }
+//   → { ok: true }  (sempre, exista ou não cliente com esse e-mail)
+// POST /auth/email/verify  { email, code }
+//   → { token, user }
+//
+// Por que não dizer "e-mail não cadastrado": a lista de clientes da nutri não
+// é pública. Quem não comprou recebe o código do mesmo jeito e, ao entrar, vê
+// a tela de ativação em vez do plano — o acesso é decidido por temAcesso().
+
+const pedidosPorIp = new Map();
+function ipExcedeu(ip) {
+  const agora = Date.now();
+  const r = pedidosPorIp.get(ip);
+  if (!r || agora - r.desde > 60 * 60 * 1000) {
+    pedidosPorIp.set(ip, { desde: agora, n: 1 });
+    return false;
+  }
+  r.n += 1;
+  return r.n > 30;
+}
+
+router.post('/email/request', async (req, res, next) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!emailValido(email)) {
+      return res.status(400).json({ error: 'Digite um e-mail válido.', code: 'BAD_REQUEST' });
+    }
+    if (ipExcedeu(req.ip)) {
+      return res.status(429).json({ error: 'Muitos pedidos. Tente mais tarde.', code: 'RATE_LIMITED' });
+    }
+    const { codigo } = await criarCodigo(email);
+    const { rows } = await getPool().query(
+      `SELECT display_name FROM users WHERE provider = 'email' AND provider_sub = $1`,
+      [email],
+    );
+    const envio = await enviarCodigoLogin({ para: email, codigo, nome: rows[0]?.display_name });
+    // Em dev sem SMTP o código volta na resposta pra dar pra testar o fluxo
+    // inteiro sem caixa de e-mail. Em produção nunca: exigiria SMTP ausente E
+    // ALLOW_DEV_LOGIN ligado ao mesmo tempo.
+    res.json({ ok: true, ...(envio.dev ? { dev_code: codigo } : {}) });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post('/email/verify', async (req, res, next) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!emailValido(email)) {
+      return res.status(400).json({ error: 'Digite um e-mail válido.', code: 'BAD_REQUEST' });
+    }
+    const r = await conferirCodigo(email, req.body?.code);
+    if (!r.ok) {
+      const mensagens = {
+        FORMATO_INVALIDO: 'O código tem 6 números.',
+        NAO_ENCONTRADO: 'Pede um código novo: esse não está mais valendo.',
+        EXPIRADO: 'Esse código venceu. Pede um novo.',
+        MUITAS_TENTATIVAS: 'Muitas tentativas com esse código. Pede um novo.',
+        CODIGO_ERRADO: 'Código errado. Confere o e-mail e tenta de novo.',
+      };
+      return res.status(400).json({ error: mensagens[r.motivo] || 'Código inválido.', code: r.motivo });
+    }
+    const user = await upsertUser({
+      provider: 'email',
+      sub: email,
+      displayName: (req.body?.display_name || '').trim().slice(0, 40) || email.split('@')[0],
+      email,
+      deviceId: req.body?.device_id,
+    });
+    const token = await issueSessionToken(user);
+    res.json({ token, user: { id: user.id, displayName: user.display_name, email: user.email } });
+  } catch (e) {
+    next(e);
+  }
+});
 
 router.post('/social', async (req, res, next) => {
   try {

@@ -98,7 +98,7 @@ export async function issueSessionToken(user) {
     .sign(jwtSecret());
 }
 
-async function verifySessionToken(token) {
+export async function verifySessionToken(token) {
   const { payload } = await jwtVerify(token, jwtSecret(), { algorithms: ['HS256'] });
   return { userId: payload.sub, name: payload.name };
 }

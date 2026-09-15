@@ -19,6 +19,8 @@ import generateRecipeImageRouter from './routes/generateRecipeImage.js';
 import authRouter from './routes/auth.js';
 import communityRouter from './routes/community.js';
 import billingRouter from './routes/billing.js';
+import clienteRouter from './routes/cliente.js';
+import { limparCodigosAntigos } from './services/loginPorEmail.js';
 
 const app = express();
 
@@ -33,10 +35,17 @@ const app = express();
 app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 3001;
+
+// CORS. O app nativo não manda Origin, então CORS só afeta o NAVEGADOR — e é
+// exatamente a área de membros web que precisa dele. Lista separada por
+// vírgula (produção + localhost de dev). Sem a env, aceita qualquer origem
+// (comportamento de antes), mas avisa.
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+const origens = CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean);
+if (CORS_ORIGIN === '*') console.warn('[cors] CORS_ORIGIN ausente — qualquer origem aceita');
 
 // Middleware
-app.use(cors({ origin: CORS_ORIGIN }));
+app.use(cors({ origin: origens.length === 1 && origens[0] === '*' ? '*' : origens }));
 // Limite alto pra acomodar imagens base64 (foto comum de celular ~2-4MB → base64 ~3-6MB)
 app.use(express.json({ limit: '15mb' }));
 
@@ -94,6 +103,8 @@ app.use('/generate-recipe-image', exigirChaveDoApp, generateRecipeImageRouter);
 app.use('/auth', authRouter);
 app.use('/community', communityRouter);
 app.use('/billing', billingRouter);
+// Área de membros web: tudo da cliente logada (diário, plano, peso, fotos…).
+app.use('/me', clienteRouter);
 
 // Handler de erro padrão (último na cadeia). Mensagem interna (pg, config,
 // libs) só vai pro log — cliente recebe genérica em 500; em 4xx a mensagem é
@@ -125,6 +136,8 @@ async function start() {
       // Migrações vêm DEPOIS do initSchema: as tabelas base existem primeiro,
       // as alterações entram por cima.
       await aplicarMigracoes(getPool());
+      // Códigos de login vencidos não servem pra nada: uma faxina por hora.
+      setInterval(limparCodigosAntigos, 60 * 60 * 1000).unref();
     } catch (e) {
       console.error('[boot] falha ao inicializar schema:', e.message);
     }

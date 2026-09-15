@@ -74,6 +74,72 @@ router.post('/redeem', requireAuth, async (req, res, next) => {
   }
 });
 
+// ─── Webhook da Hotmart ──────────────────────────────────────────────────
+//
+// POST /billing/hotmart — a Hotmart chama aqui a cada evento da venda.
+//
+// Validação: a Hotmart manda o "hottok" (token secreto da conta) no cabeçalho
+// X-HOTMART-HOTTOK (webhook 2.0) ou no corpo (1.0). Sem ele bater com
+// HOTMART_HOTTOK, o evento é ignorado com 401 — é isso que impede alguém de
+// POSTar "compra aprovada" e ganhar acesso.
+//
+// O que vira acesso: PURCHASE_APPROVED e PURCHASE_COMPLETE. O que derruba:
+// PURCHASE_REFUNDED, PURCHASE_CHARGEBACK, PURCHASE_CANCELED,
+// SUBSCRIPTION_CANCELLATION. Qualquer outro evento responde 200 e não faz nada
+// (a Hotmart reenvia o que não recebe 2xx).
+//
+// Validade: HOTMART_MESES_ACESSO (padrão 4) contados da aprovação. Assinatura
+// recorrente renova a cada PURCHASE_APPROVED novo da mesma assinatura.
+
+import { registrarCompra, atualizarStatusCompra } from '../services/billing.js';
+
+const EVENTOS_ATIVAM = new Set(['PURCHASE_APPROVED', 'PURCHASE_COMPLETE']);
+const EVENTOS_DERRUBAM = {
+  PURCHASE_REFUNDED: 'reembolsada',
+  PURCHASE_CHARGEBACK: 'reembolsada',
+  PURCHASE_CANCELED: 'cancelada',
+  SUBSCRIPTION_CANCELLATION: 'cancelada',
+  PURCHASE_EXPIRED: 'expirada',
+};
+
+router.post('/hotmart', async (req, res, next) => {
+  try {
+    const esperado = process.env.HOTMART_HOTTOK;
+    if (!esperado) {
+      console.warn('[hotmart] HOTMART_HOTTOK ausente — webhook ignorado');
+      return res.status(503).json({ error: 'Webhook não configurado', code: 'SERVER_MISCONFIGURED' });
+    }
+    const recebido = req.get('x-hotmart-hottok') || req.body?.hottok;
+    if (!recebido || String(recebido) !== esperado) {
+      return res.status(401).json({ error: 'Não autorizado', code: 'HOTTOK_INVALIDO' });
+    }
+
+    const body = req.body || {};
+    const evento = String(body.event || body.status || '').toUpperCase();
+    const data = body.data || body;
+    const email = data.buyer?.email || body.email || null;
+    const transacao = data.purchase?.transaction || body.transaction || null;
+    if (!transacao) return res.status(200).json({ ok: true, ignorado: 'sem transação' });
+
+    if (EVENTOS_ATIVAM.has(evento)) {
+      const meses = Number(process.env.HOTMART_MESES_ACESSO || 4);
+      const validoAte = new Date();
+      validoAte.setMonth(validoAte.getMonth() + meses);
+      const r = await registrarCompra({ source: 'hotmart', externalId: transacao, email, validoAte });
+      console.log(`[hotmart] ${evento} ${transacao} → compra ${r.purchaseId}${r.novo ? ' (nova)' : ''}`);
+      return res.json({ ok: true, purchase_id: r.purchaseId });
+    }
+    if (EVENTOS_DERRUBAM[evento]) {
+      const ok = await atualizarStatusCompra({ source: 'hotmart', externalId: transacao, status: EVENTOS_DERRUBAM[evento] });
+      console.log(`[hotmart] ${evento} ${transacao} → ${EVENTOS_DERRUBAM[evento]}${ok ? '' : ' (compra não encontrada)'}`);
+      return res.json({ ok: true, atualizada: ok });
+    }
+    res.json({ ok: true, ignorado: evento || 'evento desconhecido' });
+  } catch (e) {
+    next(e);
+  }
+});
+
 // Concessão de acesso para DESENVOLVIMENTO. Só existe quando ALLOW_DEV_LOGIN=1,
 // a mesma flag que libera o login fake — as duas juntas permitem testar o fluxo
 // completo pela API sem acesso ao banco. Nunca ligar em produção com clientes.
