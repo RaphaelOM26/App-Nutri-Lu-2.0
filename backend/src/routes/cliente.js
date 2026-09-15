@@ -499,7 +499,7 @@ router.put('/perfil', async (req, res, next) => {
 // Só a dona lê e escreve. Não entra em /me/dia, /me/perfil, IA nem WhatsApp.
 
 const CAMPOS_CLINICOS = new Set([
-  'doencas', 'historico_familiar', 'medicamentos', 'suplementos', 'alergias',
+  'doencas', 'historico_familiar', 'medicamentos_usa', 'medicamentos', 'suplementos_usa', 'suplementos', 'alergias',
   'perda_controle', 'perda_controle_quando', 'intestino', 'sintomas', 'alcool', 'exames',
 ]);
 
