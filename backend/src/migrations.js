@@ -197,6 +197,24 @@ export const MIGRACOES = [
       );
     `,
   },
+  {
+    id: '005-anamnese-clinica',
+    descricao: 'Anamnese clínica (dado de saúde) em tabela própria, fora do perfil',
+    // Fica separada de client_profiles de propósito: nenhuma rota de leitura
+    // geral (/me/dia, /me/perfil) devolve isto, e nada daqui entra em prompt
+    // de IA nem no bot do WhatsApp. Só a cliente (dona) e o painel da
+    // nutricionista leem. Base legal: tutela da saúde por profissional de
+    // saúde, com consentimento explícito registrado em consentimento_em.
+    sql: `
+      CREATE TABLE IF NOT EXISTS anamnese_clinica (
+        user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        data JSONB NOT NULL DEFAULT '{}',
+        consentimento_em TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `,
+  },
 ];
 
 /**

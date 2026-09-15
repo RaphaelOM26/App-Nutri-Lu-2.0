@@ -77,6 +77,23 @@ await chamar('POST', '/me/perguntas', { text: 'oi' }, 400);
 await chamar('GET', '/me/recados');
 await chamar('GET', '/me/materiais');
 
+// 6b. Onboarding web: campos novos do perfil, estimativa e anamnese clínica
+const ob = await chamar('PUT', '/me/perfil', { perfil: { objetivo: 'perder', atividade: 'moderada', barreiras: ['agenda'], estimativa: { kcal: [1550, 1950] }, onboarding_em: new Date().toISOString(), foto_key: 'outra-pessoa/perfil/x.jpg' } }, 400);
+await chamar('PUT', '/me/perfil', { perfil: { objetivo: 'perder', atividade: 'moderada', barreiras: ['agenda'], estimativa: { kcal: [1550, 1950] }, onboarding_em: new Date().toISOString() } });
+const diaOb = await chamar('GET', `/me/dia?date=${HOJE}`);
+if (!diaOb.onboarding_em || diaOb.estimativa?.kcal?.[0] !== 1550) { falhas++; console.log('✘ /me/dia deveria trazer onboarding_em e estimativa'); }
+const an0 = await chamar('GET', '/me/anamnese-clinica');
+if (an0.respondida !== false) { falhas++; console.log('✘ anamnese deveria começar não respondida'); }
+await chamar('PUT', '/me/anamnese-clinica', { data: { doencas: 'nenhuma' } }, 400); // sem consentimento
+await chamar('PUT', '/me/anamnese-clinica', { consentimento: true, data: { doencas: 'nenhuma', alergias: 'camarão', campo_invalido: 'x' } });
+const an1 = await chamar('GET', '/me/anamnese-clinica');
+if (!an1.respondida || an1.data.alergias !== 'camarão' || an1.data.campo_invalido) { falhas++; console.log('✘ anamnese não gravou como esperado'); }
+const diaSemClinico = await chamar('GET', `/me/dia?date=${HOJE}`);
+const perfilSemClinico = await chamar('GET', '/me/perfil');
+if (JSON.stringify(diaSemClinico).includes('camarão') || JSON.stringify(perfilSemClinico).includes('camarão')) { falhas++; console.log('✘ dado clínico vazou em /me/dia ou /me/perfil'); }
+await chamar('DELETE', '/me/anamnese-clinica');
+void ob;
+
 // 7. Sem sessão → 401
 token = null;
 await chamar('GET', `/me/dia?date=${HOJE}`, undefined, 401);

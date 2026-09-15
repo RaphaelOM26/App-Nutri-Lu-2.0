@@ -146,6 +146,8 @@ router.get('/dia', async (req, res, next) => {
         : null,
       suplementos: sup.rows.map((s) => ({ ...s, tomado: tomadosSet.has(s.id) })),
       peso: peso.rows[0] ? { date: peso.rows[0].date, kg: Number(peso.rows[0].kg) } : null,
+      estimativa: perfil.rows[0]?.data?.estimativa || null,
+      onboarding_em: perfil.rows[0]?.data?.onboarding_em || null,
       streak: streakDe(dias, date),
       semana: { week_start: ws, dias: semana },
       acesso,
@@ -282,7 +284,7 @@ router.post('/medidas', async (req, res, next) => {
 
 router.post('/fotos/upload-url', async (req, res, next) => {
   try {
-    const pasta = req.body?.pasta === 'prato' ? 'prato' : 'progresso';
+    const pasta = ['prato', 'perfil', 'progresso'].includes(req.body?.pasta) ? req.body.pasta : 'progresso';
     const key = novaChave(req.user.userId, pasta, req.body?.content_type);
     res.json(await urlDeUpload({ key, contentType: req.body.content_type, tamanho: Number(req.body?.size) || 0 }));
   } catch (e) { next(e); }
@@ -437,10 +439,21 @@ router.get('/evolucao', async (req, res, next) => {
 // ─── Perfil ───────────────────────────────────────────────────────────────
 
 const CAMPOS_PERFIL = new Set([
-  'nome', 'sexo', 'nascimento', 'altura_cm', 'meta_kg', 'objetivo', 'atividade', 'sono', 'refeicoes_por_dia',
-  'nao_gosta', 'restricoes', 'indispensavel', 'limitacoes', 'mais_fome', 'doces', 'agua_litros',
-  'lembretes', 'whatsapp',
+  'nome', 'sexo', 'nascimento', 'altura_cm', 'meta_kg', 'objetivo', 'atividade', 'sono', 'sono_horas', 'refeicoes_por_dia',
+  'nao_gosta', 'restricoes', 'indispensavel', 'limitacoes', 'dia_normal', 'mais_fome', 'doces', 'doces_quando', 'agua_litros',
+  'barreiras', 'motivacoes', 'lembretes', 'whatsapp',
+  // Onboarding web: quando terminou e a estimativa em faixa (referência até
+  // a nutricionista aprovar o plano). foto_key é a foto de perfil no R2.
+  'onboarding_em', 'estimativa', 'foto_key',
 ]);
+
+/** Perfil com a URL assinada da foto (a chave nunca sai crua pro navegador). */
+async function perfilComFoto(data) {
+  const p = { ...(data || {}) };
+  const key = p.foto_key; delete p.foto_key;
+  p.foto_url = key && r2Configurado() ? await urlDeLeitura(key).catch(() => null) : null;
+  return p;
+}
 
 router.get('/perfil', async (req, res, next) => {
   try {
@@ -454,7 +467,7 @@ router.get('/perfil', async (req, res, next) => {
     if (!u.rows[0]) return res.status(401).json({ error: 'Usuário não existe mais', code: 'AUTH_EXPIRED' });
     res.json({
       user: { id: u.rows[0].id, displayName: u.rows[0].display_name, email: u.rows[0].email, since: u.rows[0].created_at },
-      perfil: c.rows[0]?.data || {},
+      perfil: await perfilComFoto(c.rows[0]?.data),
       acesso: a,
       plano: plano ? { week_index: plano.week_index, week_total: plano.week_total, week_start: plano.week_start, targets: plano.targets } : null,
     });
@@ -467,6 +480,8 @@ router.put('/perfil', async (req, res, next) => {
     if (!dados || typeof dados !== 'object') throw erro('perfil obrigatório');
     const limpo = {};
     for (const [k, v] of Object.entries(dados)) if (CAMPOS_PERFIL.has(k)) limpo[k] = v;
+    if (limpo.foto_key != null && limpo.foto_key !== '' && !String(limpo.foto_key).startsWith(`${req.user.userId}/`)) throw erro('foto_key inválida');
+    if (limpo.foto_key === '') limpo.foto_key = null;
     if (typeof limpo.nome === 'string' && limpo.nome.trim()) {
       await getPool().query(`UPDATE users SET display_name = $2 WHERE id = $1`, [req.user.userId, limpo.nome.trim().slice(0, 40)]);
     }
@@ -476,7 +491,48 @@ router.put('/perfil', async (req, res, next) => {
        RETURNING data`,
       [req.user.userId, JSON.stringify(limpo)],
     );
-    res.json({ perfil: rows[0].data });
+    res.json({ perfil: await perfilComFoto(rows[0].data) });
+  } catch (e) { next(e); }
+});
+
+// ─── Anamnese clínica (dado de saúde) ─────────────────────────────────────
+// Só a dona lê e escreve. Não entra em /me/dia, /me/perfil, IA nem WhatsApp.
+
+const CAMPOS_CLINICOS = new Set([
+  'doencas', 'historico_familiar', 'medicamentos', 'suplementos', 'alergias',
+  'perda_controle', 'perda_controle_quando', 'intestino', 'sintomas', 'alcool', 'exames',
+]);
+
+router.get('/anamnese-clinica', async (req, res, next) => {
+  try {
+    const { rows } = await getPool().query(`SELECT data, consentimento_em, updated_at FROM anamnese_clinica WHERE user_id = $1`, [req.user.userId]);
+    res.json(rows[0]
+      ? { respondida: true, data: rows[0].data, consentimento_em: rows[0].consentimento_em, updated_at: rows[0].updated_at }
+      : { respondida: false, data: null, consentimento_em: null, updated_at: null });
+  } catch (e) { next(e); }
+});
+
+router.put('/anamnese-clinica', async (req, res, next) => {
+  try {
+    if (req.body?.consentimento !== true) throw erro('É preciso consentir com o uso dos dados de saúde.', 400, 'CONSENT_REQUIRED');
+    const dados = req.body?.data;
+    if (!dados || typeof dados !== 'object') throw erro('data obrigatório');
+    const limpo = {};
+    for (const [k, v] of Object.entries(dados)) if (CAMPOS_CLINICOS.has(k)) limpo[k] = typeof v === 'string' ? v.slice(0, 2000) : v;
+    const { rows } = await getPool().query(
+      `INSERT INTO anamnese_clinica (user_id, data, consentimento_em) VALUES ($1, $2, NOW())
+       ON CONFLICT (user_id) DO UPDATE SET data = anamnese_clinica.data || EXCLUDED.data, updated_at = NOW()
+       RETURNING data, consentimento_em`,
+      [req.user.userId, JSON.stringify(limpo)],
+    );
+    res.json({ respondida: true, data: rows[0].data, consentimento_em: rows[0].consentimento_em });
+  } catch (e) { next(e); }
+});
+
+router.delete('/anamnese-clinica', async (req, res, next) => {
+  try {
+    await getPool().query(`DELETE FROM anamnese_clinica WHERE user_id = $1`, [req.user.userId]);
+    res.json({ ok: true });
   } catch (e) { next(e); }
 });
 
