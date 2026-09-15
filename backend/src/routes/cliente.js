@@ -440,7 +440,7 @@ router.get('/evolucao', async (req, res, next) => {
 
 const CAMPOS_PERFIL = new Set([
   'nome', 'sexo', 'nascimento', 'altura_cm', 'meta_kg', 'objetivo', 'atividade', 'sono', 'sono_horas', 'refeicoes_por_dia',
-  'nao_gosta', 'restricoes', 'indispensavel', 'limitacoes', 'dia_normal', 'mais_fome', 'doces', 'doces_quando', 'agua_litros',
+  'nao_gosta', 'restricoes', 'alergias', 'indispensavel', 'limitacoes', 'dia_normal', 'mais_fome', 'doces', 'doces_quando', 'agua_litros',
   'barreiras', 'motivacoes', 'dor', 'desejo', 'urgencia', 'lembretes', 'whatsapp',
   // Onboarding web: quando terminou e a estimativa em faixa (referência até
   // a nutricionista aprovar o plano). foto_key é a foto de perfil no R2.
