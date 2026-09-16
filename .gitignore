@@ -84,3 +84,8 @@ backend/backup.log
 
 # build da area de membros (gerado por web/ via vite build)
 site/membros/
+
+# Saída do gerador de fotos do livro PRÁTICO (PR): bruta e 800px. As 800px
+# publicadas vivem no repo nutri-lu-membros (web/public/receitas).
+scripts/fotos/saida-pr/
+scripts/fotos/saida-pr-800/

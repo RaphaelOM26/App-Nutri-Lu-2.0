@@ -24,8 +24,19 @@ const OpenAI = openaiMod.default ?? openaiMod;
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.resolve(AQUI, '../..');
-const PLANILHA = path.join(RAIZ, 'Conteúdo', 'Receitas nutri Lu.xlsx');
-const SAIDA = path.join(RAIZ, 'scripts', 'fotos', 'saida');
+
+// Qual livro fotografar. Sem flags, o livro oficial (NL). O livro das receitas
+// práticas (PR) passa planilha, aba e saída próprias — as fotos não podem se
+// misturar na mesma pasta, senão o redimensionador não sabe qual é de quem:
+//   node --env-file=backend/.env scripts/fotos/gerar-fotos.mjs --estilo=B \
+//     --planilha="Conteúdo/Receitas simples Nutri Lu - completa.xlsx" --aba="Receitas PR" --saida=scripts/fotos/saida-pr
+const arg = (nome, padrao) => {
+  const a = process.argv.find((x) => x.startsWith(`--${nome}=`));
+  return a ? a.slice(nome.length + 3) : padrao;
+};
+const PLANILHA = path.resolve(RAIZ, arg('planilha', path.join('Conteúdo', 'Receitas nutri Lu.xlsx')));
+const ABA = arg('aba', 'Receitas_App');
+const SAIDA = path.resolve(RAIZ, arg('saida', path.join('scripts', 'fotos', 'saida')));
 
 // ─── Estilos em teste ──────────────────────────────────────────────────────
 // Variam SÓ o grau de "casual". O bloco de realismo abaixo é comum aos três,
@@ -48,6 +59,91 @@ const ESTILOS = {
     cena:
       'a casual phone snapshot taken right before eating, frame slightly tilted and off-center, ' +
       'ordinary mixed indoor lighting, the edge of a placemat and a glass cropped by the frame',
+  },
+  // D — "dia a dia" (set/26). O estilo B ficou com cara de IA no lote das
+  // receitas práticas: mesa de madeira rústica impecável, luz de janela e o
+  // MESMO pano de prato dobrado em toda foto. O que tira a cara de catálogo
+  // não é pedir "foto torta" (o C tentou e o modelo ignorou) — é trocar o
+  // MATERIAL da cena: toalha de plástico, louça comum gasta, luz de lâmpada,
+  // bagunça de casa cortada pela borda. Por isso D também sobrescreve o bloco
+  // de realismo, que é onde moravam a louça branca e a luz bonita.
+  D: {
+    nome: 'dia-a-dia',
+    cena:
+      'on a kitchen table covered with a slightly worn patterned plastic tablecloth in a simple Brazilian home, ' +
+      'ordinary household things partly cropped by the edge of the frame such as a glass of water, ' +
+      'a paper napkin and a plastic bottle, the everyday kitchen out of focus behind',
+    realismo:
+      'A quick photo taken with an older mobile phone just before eating, not a food photograph. ' +
+      'Indoor light from a ceiling bulb mixed with whatever comes from the window, a little uneven and slightly harsh, ' +
+      'imperfect white balance, mild digital noise, flat ordinary colors, straight out of the camera with no editing. ' +
+      'Everyday worn Brazilian dishware: a plain plate with a simple printed rim or a slightly scratched melamine plate, ' +
+      'ordinary mismatched cutlery. ' +
+      'The food was served to be eaten, not arranged: portions uneven, pieces overlapping and touching, ' +
+      'a small smear of sauce on the rim, a few crumbs on the tablecloth. ' +
+      'Nothing is centered, styled or wiped clean. Realistic photograph.',
+    negativo:
+      'Do not include: text, captions, watermarks, logos, brand names, hands, people, ' +
+      'studio seamless backdrop, heavy background blur or bokeh, glossy advertising look, ' +
+      'restaurant fine-dining plating, decorative garnish that is not part of the recipe, ' +
+      'food styling, arranged props, folded cloth napkin or dish towel, rustic wooden board, ' +
+      'raw ingredients scattered around the dish, warm golden cinematic light.',
+  },
+  // E — meio termo (set/26). O B ficou com cara de catálogo e o D pesou a mão:
+  // toalha de plástico estampada, luz de lâmpada amarela e granulado deixaram
+  // a foto escura e datada. E fica no meio: mantém do D a louça comum e a
+  // comida servida sem arrumar; devolve do B a luz de dia neutra e a mesa
+  // limpa. Sai a toalha estampada, sai a bagunça, sai o ruído.
+  E: {
+    nome: 'casa-simples',
+    cena:
+      'on a plain kitchen table in an ordinary home, a glass of water partly cropped at the edge of the frame, ' +
+      'the rest of the table empty, a simple kitchen wall softly out of focus behind',
+    realismo:
+      'A photo taken with a recent mobile phone right before eating, clean and in focus, but not a professional food photo. ' +
+      'Even indoor daylight from a window, neutral white balance, ordinary brightness, ' +
+      'no golden light, no dramatic shadows, no filter and no editing. ' +
+      'Everyday home dishware: a simple plain plate or bowl, ordinary stainless cutlery, ' +
+      'nothing artisanal or designer, nothing scratched or worn out. ' +
+      'The food was just served and not arranged: portions uneven, pieces touching and overlapping, ' +
+      'no pattern or symmetry, but the rim of the plate is clean. Realistic photograph.',
+    negativo:
+      'Do not include: text, captions, watermarks, logos, brand names, hands, people, ' +
+      'studio seamless backdrop, heavy background blur or bokeh, glossy advertising look, ' +
+      'restaurant fine-dining plating, decorative garnish that is not part of the recipe, ' +
+      'food styling, arranged props, folded cloth napkin or dish towel, rustic weathered wooden board, ' +
+      'raw ingredients scattered around the dish, warm golden cinematic light, ' +
+      'patterned plastic tablecloth, dark or yellow tungsten lighting, visible grain or noise.',
+  },
+  // F — meio termo, 2ª tentativa. O E errou pro outro lado: tirar a bagunça e
+  // pedir "mesa lisa + parede ao fundo" produziu FUNDO VAZIO, que é o fundo de
+  // estúdio — justamente a cara de banco de imagens que queríamos matar. O que
+  // dava realidade no D era o CONTEXTO (cozinha atrás, copo e guardanapo na
+  // borda); o que pesava era a toalha estampada, a luz de lâmpada amarela e o
+  // granulado. F fica com o contexto e tira os três. O negativo agora proíbe
+  // fundo vazio de propósito.
+  F: {
+    nome: 'casa-real',
+    cena:
+      'on an ordinary kitchen table in a simple Brazilian home, a glass of water and a paper napkin ' +
+      'partly cropped at the edge of the frame, the everyday kitchen visible out of focus behind ' +
+      'with its normal household things around',
+    realismo:
+      'A photo taken with a mobile phone right before eating, not a food photograph. ' +
+      'Ordinary daylight from the kitchen window, even and a little flat, neutral white balance, ' +
+      'normal brightness, clean and in focus, no filter and no editing. ' +
+      'Everyday home dishware: a simple plate or bowl with a thin plain rim, ordinary stainless cutlery, ' +
+      'nothing artisanal or designer. ' +
+      'The food was served to be eaten and not arranged: portions uneven, pieces touching and overlapping, ' +
+      'no symmetry and no pattern. Realistic photograph.',
+    negativo:
+      'Do not include: text, captions, watermarks, logos, brand names, hands, people, ' +
+      'studio seamless backdrop, empty plain background, bare wall behind the dish, ' +
+      'heavy background blur or bokeh, glossy advertising look, ' +
+      'restaurant fine-dining plating, decorative garnish that is not part of the recipe, ' +
+      'food styling, arranged props, folded cloth napkin or dish towel, rustic weathered wooden board, ' +
+      'raw ingredients scattered around the dish, warm golden cinematic light, ' +
+      'patterned plastic tablecloth, yellow tungsten lighting, visible grain or noise.',
   },
 };
 
@@ -83,6 +179,12 @@ const ENQUADRAMENTO = {
   mingau: 'in a cereal bowl with a spoon resting inside',
   sopa: 'in a deep soup bowl with a spoon resting inside, faint steam',
   bolo: 'one slice on a small plate, the rest of the cake out of frame',
+  // Livro das receitas práticas (PR, set/26): dois enquadramentos que o livro
+  // NL não precisava. Sem eles, 24 iogurtes e ~60 pães/sanduíches virariam
+  // "prato de jantar em louça branca vista de frente" — o mesmo erro que
+  // fotografou refresco como almoço no lote de agosto.
+  tigela: 'in an everyday bowl seen from slightly above, a spoon resting inside, nothing else on the table',
+  sanduiche: 'on a small plate, seen from a natural eye-level angle, the filling visible at the cut or open edge',
 };
 
 // Infere o enquadramento pelo nome da receita — os nomes da planilha são muito
@@ -108,6 +210,13 @@ function inferirTipo(receita) {
   if (/^(mingau|overnight|baked oats)\b/i.test(nome)) return 'mingau';
   if (/^(pudim|flan|sorvete|mousse)\b/i.test(nome)) return 'sobremesa';
   if (/^bolo\b/i.test(nome)) return 'bolo';
+  // Tigela: iogurte, coalhada e "bowl de…" são comidos de tigela, com colher.
+  // Vêm DEPOIS de creme/mousse de propósito — "Creme de iogurte com cacau" é
+  // sobremesa em taça, não café da manhã em tigela.
+  if (/^(iogurte|coalhada|bowl|tigela|a[çc]a[íi])\b/i.test(nome)) return 'tigela';
+  // Pão, sanduíche, torrada, wrap, tapioca e crepioca se comem na mão, num
+  // pratinho — não num prato raso de jantar.
+  if (/^(p[ãa]o|sandu[íi]che|mini sandu[íi]che|misto|torrada|torradas|wrap|bruschetta|tapioca|crepioca|cr[êe]pe|panqueca|beiju)\b/i.test(nome)) return 'sanduiche';
   if (/sobremesa/i.test(refeicao)) return 'sobremesa';
   if (/petisco|aperitivo/i.test(refeicao)) return 'petisco';
   return 'prato';
@@ -132,7 +241,9 @@ const TEMPLATE = /^Prato finalizado de .*, servido em louça clara e fotografado
 
 function lerPlanilha() {
   const wb = XLSX.readFile(PLANILHA);
-  return XLSX.utils.sheet_to_json(wb.Sheets['Receitas_App'], { defval: null });
+  const ws = wb.Sheets[ABA];
+  if (!ws) throw new Error(`aba "${ABA}" não existe em ${path.basename(PLANILHA)} (abas: ${wb.SheetNames.join(', ')})`);
+  return XLSX.utils.sheet_to_json(ws, { defval: null });
 }
 
 function ingredientesPrincipais(texto, n = 5) {
@@ -155,14 +266,17 @@ function montarPrompt(receita, tipo, estilo) {
   const dica = ingredientes.length ? ` Made with: ${ingredientes.join(', ')}.` : '';
   const enquadra = ENQUADRAMENTO[tipo] || ENQUADRAMENTO.prato;
 
+  // O estilo pode sobrescrever realismo e negativo (ver estilo D): em alguns
+  // casos o que precisa mudar não é a cena, é a louça e a luz.
+  const e = ESTILOS[estilo];
   return (
     `A home-cooked Brazilian dish called "${nome}", ${enquadra}.` +
     descricaoUtil +
     dica +
-    ` Scene: ${ESTILOS[estilo].cena}. ` +
-    REALISMO +
+    ` Scene: ${e.cena}. ` +
+    (e.realismo ?? REALISMO) +
     ' ' +
-    NEGATIVO
+    (e.negativo ?? NEGATIVO)
   );
 }
 
@@ -230,8 +344,20 @@ async function main() {
   const linhas = lerPlanilha();
   const porId = Object.fromEntries(linhas.map((r) => [r['ID'], r]));
 
+  // --ids=PR-001,PR-002 gera SÓ essas, no estilo pedido. É como se roda um
+  // piloto num livro novo: confere o enquadramento em algumas imagens reais
+  // antes de soltar o lote inteiro (geração é paga e não tem desfazer).
+  const idsPedidos = (arg('ids', '') || '').split(',').map((s) => s.trim()).filter(Boolean);
+
   const trabalhos = [];
-  if (argEstilo) {
+  if (idsPedidos.length) {
+    if (!ESTILOS[argEstilo]) throw new Error('--ids exige --estilo=A|B|C');
+    for (const id of idsPedidos) {
+      const l = porId[id];
+      if (!l) { console.warn(`  ! ${id} não existe na planilha`); continue; }
+      trabalhos.push({ id, tipo: inferirTipo(l), estilo: argEstilo });
+    }
+  } else if (argEstilo) {
     if (!ESTILOS[argEstilo]) throw new Error('estilo inválido: ' + argEstilo);
     for (const l of linhas) trabalhos.push({ id: l['ID'], tipo: inferirTipo(l), estilo: argEstilo });
   } else {
@@ -294,7 +420,7 @@ async function main() {
   });
 
   fs.writeFileSync(path.join(SAIDA, 'indice.json'), JSON.stringify(indice, null, 2));
-  console.log(`\nconcluído: ${indice.length} imagem(ns). Índice em saida/indice.json`);
+  console.log(`\nconcluído: ${indice.length} imagem(ns). Índice em ${path.relative(RAIZ, path.join(SAIDA, 'indice.json'))}`);
 }
 
 main().catch((e) => {
