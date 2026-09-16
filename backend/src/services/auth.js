@@ -118,6 +118,26 @@ export function requireAuth(req, res, next) {
     .catch(() => res.status(401).json({ error: 'Sessão expirada — entre de novo', code: 'AUTH_EXPIRED' }));
 }
 
+// Middleware do painel: exige sessão E um dos papéis listados.
+//
+// O papel vem do BANCO a cada pedido, não do token: o JWT dura 180 dias e um
+// papel gravado nele não poderia ser revogado nem concedido sem novo login.
+// Uma consulta por chave primária custa quase nada.
+//   router.get('/x', requirePapel('nutri', 'admin'), ...)
+export function requirePapel(...papeis) {
+  return (req, res, next) => requireAuth(req, res, async () => {
+    try {
+      const { rows } = await getPool().query('SELECT role FROM users WHERE id = $1', [req.user.userId]);
+      const role = rows[0]?.role || 'cliente';
+      if (!papeis.includes(role)) {
+        return res.status(403).json({ error: 'Esta área é só da equipe da Nutri Lu.', code: 'FORBIDDEN' });
+      }
+      req.user.role = role;
+      next();
+    } catch (e) { next(e); }
+  });
+}
+
 // Middleware: tenta autenticar mas segue sem user se não houver/for inválido.
 // Usado no feed: anônimo vê tudo; logado vê também a própria avaliação.
 export function optionalAuth(req, res, next) {

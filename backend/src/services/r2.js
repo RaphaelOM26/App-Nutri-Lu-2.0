@@ -77,9 +77,25 @@ export function novaChave(userId, pasta, contentType) {
   return `${userId}/${pasta}/${stamp}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
 }
 
+const ARQUIVOS = { 'application/pdf': 'pdf' };
+const ARQUIVO_MAX = 25 * 1024 * 1024;
+
+/**
+ * Chave nova pra um arquivo GLOBAL do painel (materiais em PDF). Fica fora
+ * das pastas por cliente de propósito: não é de ninguém, é da Lu.
+ */
+export function novaChaveArquivo(pasta, contentType, tamanho) {
+  const ext = ARQUIVOS[contentType];
+  if (!ext) throw Object.assign(new Error('Formato não aceito (envie um PDF)'), { status: 400, code: 'BAD_REQUEST' });
+  if (tamanho && tamanho > ARQUIVO_MAX) throw Object.assign(new Error('Arquivo grande demais (máximo 25 MB)'), { status: 400, code: 'BAD_REQUEST' });
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  return `${pasta}/${stamp}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
+}
+
 /** URL assinada pra o navegador fazer PUT do arquivo. Vale 10 minutos. */
 export async function urlDeUpload({ key, contentType, tamanho }) {
-  if (tamanho && tamanho > TAMANHO_MAX) {
+  const limite = ARQUIVOS[contentType] ? ARQUIVO_MAX : TAMANHO_MAX;
+  if (tamanho && tamanho > limite) {
     throw Object.assign(new Error('Imagem grande demais (máximo 8 MB)'), { status: 400, code: 'BAD_REQUEST' });
   }
   if (LOCAL_DIR) return { url: `${localBase()}/dev-fotos/${key}`, key };

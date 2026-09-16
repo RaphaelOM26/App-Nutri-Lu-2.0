@@ -102,7 +102,10 @@ router.post('/email/verify', async (req, res, next) => {
       deviceId: req.body?.device_id,
     });
     const token = await issueSessionToken(user);
-    res.json({ token, user: { id: user.id, displayName: user.display_name, email: user.email } });
+    // O papel (cliente/nutri/admin) vai junto pra web saber se mostra o
+    // painel; a autorização de verdade é sempre do servidor (requirePapel).
+    const { rows: papel } = await getPool().query('SELECT role FROM users WHERE id = $1', [user.id]);
+    res.json({ token, user: { id: user.id, displayName: user.display_name, email: user.email, role: papel[0]?.role || 'cliente' } });
   } catch (e) {
     next(e);
   }
@@ -132,7 +135,10 @@ router.post('/social', async (req, res, next) => {
       deviceId,
     });
     const token = await issueSessionToken(user);
-    res.json({ token, user: { id: user.id, displayName: user.display_name, email: user.email } });
+    // O papel (cliente/nutri/admin) vai junto pra web saber se mostra o
+    // painel; a autorização de verdade é sempre do servidor (requirePapel).
+    const { rows: papel } = await getPool().query('SELECT role FROM users WHERE id = $1', [user.id]);
+    res.json({ token, user: { id: user.id, displayName: user.display_name, email: user.email, role: papel[0]?.role || 'cliente' } });
   } catch (e) {
     next(e);
   }
@@ -141,11 +147,11 @@ router.post('/social', async (req, res, next) => {
 router.get('/me', requireAuth, async (req, res, next) => {
   try {
     const { rows } = await getPool().query(
-      'SELECT id, display_name, email FROM users WHERE id = $1',
+      'SELECT id, display_name, email, role FROM users WHERE id = $1',
       [req.user.userId]
     );
     if (!rows[0]) return res.status(401).json({ error: 'Usuário não existe mais', code: 'AUTH_EXPIRED' });
-    res.json({ user: { id: rows[0].id, displayName: rows[0].display_name, email: rows[0].email } });
+    res.json({ user: { id: rows[0].id, displayName: rows[0].display_name, email: rows[0].email, role: rows[0].role || 'cliente' } });
   } catch (e) {
     next(e);
   }

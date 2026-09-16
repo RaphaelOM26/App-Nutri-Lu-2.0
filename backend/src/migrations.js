@@ -215,6 +215,44 @@ export const MIGRACOES = [
       );
     `,
   },
+
+  // ─── Painel da Luciana (16/09/2026) ───────────────────────────────────────
+  //
+  // `users.role` é o papel da pessoa: 'cliente' (padrão), 'nutri' (a
+  // Luciana, vê tudo) ou 'admin' (sócios: dashboard e lista, sem anamnese
+  // clínica individual). Fica no BANCO e é lido a cada pedido — não vai pro
+  // JWT, porque as sessões duram 180 dias e um papel dentro do token não
+  // poderia ser revogado. Só o script scripts/definir-papel.mjs muda isso.
+  //
+  // `painel_cache` guarda a síntese de persona gerada por IA (1x/dia) e
+  // qualquer outro agregado caro. O texto clínico NÃO passa por IA: o
+  // dashboard classifica por dicionário, na hora (services/dashboard.js).
+  //
+  // `materials.file_key`: PDF guardado no R2 (a URL assinada nasce na leitura).
+  {
+    id: '006-painel-papeis',
+    descricao: 'Papel do usuário (nutri/admin), cache do painel, PDF no R2, published_at do plano',
+    sql: `
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'cliente';
+      ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+      ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('cliente', 'nutri', 'admin'));
+
+      ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ;
+
+      ALTER TABLE materials ADD COLUMN IF NOT EXISTS file_key TEXT;
+
+      CREATE TABLE IF NOT EXISTS painel_cache (
+        chave TEXT PRIMARY KEY,
+        data JSONB NOT NULL,
+        gerado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_lu_messages_perguntas
+        ON lu_messages(created_at DESC) WHERE kind = 'pergunta';
+      CREATE INDEX IF NOT EXISTS idx_meal_entries_user_logged
+        ON meal_entries(user_id, logged_at DESC);
+    `,
+  },
 ];
 
 /**

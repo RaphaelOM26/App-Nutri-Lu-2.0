@@ -23,6 +23,7 @@ import authRouter from './routes/auth.js';
 import communityRouter from './routes/community.js';
 import billingRouter from './routes/billing.js';
 import clienteRouter from './routes/cliente.js';
+import nutriRouter from './routes/nutri.js';
 import { limparCodigosAntigos } from './services/loginPorEmail.js';
 
 const app = express();
@@ -55,8 +56,9 @@ app.use(express.json({ limit: '15mb' }));
 // Fotos em disco (só desenvolvimento; ver services/r2.js). PUT grava, GET serve.
 if (fotosLocais()) {
   const dir = pastaLocal();
-  app.put('/dev-fotos/*chave', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
-    const chave = String(req.params.chave || '').replace(/../g, '');
+  // Express 4: o curinga `*` vira req.params[0] (o resto do caminho).
+  app.put('/dev-fotos/*', express.raw({ type: '*/*', limit: '30mb' }), async (req, res) => {
+    const chave = String(req.params[0] || '').replace(/\.\./g, '');
     const destino = path.join(dir, ...chave.split('/'));
     await fs.promises.mkdir(path.dirname(destino), { recursive: true });
     await fs.promises.writeFile(destino, req.body);
@@ -122,6 +124,8 @@ app.use('/community', communityRouter);
 app.use('/billing', billingRouter);
 // Área de membros web: tudo da cliente logada (diário, plano, peso, fotos…).
 app.use('/me', clienteRouter);
+// Painel da Luciana (papel nutri) e dos sócios (papel admin).
+app.use('/nutri', nutriRouter);
 
 // Handler de erro padrão (último na cadeia). Mensagem interna (pg, config,
 // libs) só vai pro log — cliente recebe genérica em 500; em 4xx a mensagem é

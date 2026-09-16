@@ -88,3 +88,36 @@ export async function enviarCodigoLogin({ para, codigo, nome }) {
   });
   return { enviado: true };
 }
+
+/**
+ * Avisa a cliente que o plano da semana foi publicado pela Luciana. É o
+ * aviso que o onboarding promete ("te aviso quando estiver pronto"); o de
+ * WhatsApp entra quando o bot existir. Sem SMTP, só registra no log e segue:
+ * publicar o plano nunca pode falhar por causa do e-mail.
+ */
+export async function enviarPlanoPronto({ para, nome, semana, link }) {
+  if (!emailConfigurado()) {
+    console.warn(`[email] SMTP ausente — aviso de plano pronto pra ${para} não enviado`);
+    return { enviado: false };
+  }
+  const from = process.env.MAIL_FROM || `Nutri Lu <${process.env.SMTP_USER}>`;
+  const oi = nome ? `Oi, ${nome}.` : 'Oi.';
+  const url = link || 'https://nutrilualves.com.br/membros/plano';
+  const texto = [
+    oi, '',
+    `Seu plano da semana${semana ? ` (${semana})` : ''} está pronto na área de membros.`,
+    'Entra com o mesmo e-mail e vê refeição por refeição, com as porções e os horários.', '',
+    url, '',
+    'Qualquer dúvida, me chama por lá.', 'Lu Alves · Nutri Lu',
+  ].join('\n');
+  const html = `
+    <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #1B1B1B;">
+      <p style="font-size: 16px; margin: 0 0 16px;">${escapar(oi)}</p>
+      <p style="font-size: 16px; margin: 0 0 16px;">Seu plano da semana${semana ? ` (${escapar(semana)})` : ''} está pronto na área de membros. Entra com o mesmo e-mail e vê refeição por refeição, com as porções e os horários.</p>
+      <p style="margin: 0 0 24px;"><a href="${escapar(url)}" style="display: inline-block; background: #6F8C68; color: #fff; text-decoration: none; font-weight: 700; padding: 12px 20px; border-radius: 100px;">Ver meu plano</a></p>
+      <p style="font-size: 14px; color: #555; margin: 0 0 8px;">Qualquer dúvida, me chama por lá.</p>
+      <p style="font-size: 14px; margin: 0;">Lu Alves · Nutri Lu</p>
+    </div>`;
+  await getTransporter().sendMail({ from, to: para, subject: 'Seu plano da semana está pronto', text: texto, html });
+  return { enviado: true };
+}
