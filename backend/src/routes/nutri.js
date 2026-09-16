@@ -22,6 +22,7 @@ import {
   SLOTS, erro, normalizarItens, montarDia, montarEvolucao, planoDaData, planoResumido, perfilComFoto,
 } from '../services/diario.js';
 import { montarDashboard, gerarSintese } from '../services/dashboard.js';
+import { gerarRascunho } from '../services/triagem.js';
 
 const router = Router();
 const equipe = requirePapel('nutri', 'admin');
@@ -80,6 +81,11 @@ const FILTROS_PACIENTES = {
   engajadas: 'engajada',
   incompletas: 'sem_onboarding',
   em_dia: '(cadastro_ok AND NOT precisa)',
+  sem_registro: '(cadastro_ok AND sem_registro)',
+  // Tela "Plano alimentar": tudo que pede a nutri montar/publicar um mês.
+  planos: '(aguardando_plano OR plano_vencendo OR rascunhos > 0)',
+  vencendo: 'plano_vencendo',
+  rascunho: '(rascunhos > 0)',
 };
 
 router.get('/pacientes', equipe, async (req, res, next) => {
@@ -118,7 +124,8 @@ router.get('/pacientes', equipe, async (req, res, next) => {
       ), rasc AS (
         SELECT user_id, COUNT(*)::int AS n FROM meal_plans WHERE status = 'rascunho' GROUP BY user_id
       ), anam AS (
-        SELECT DISTINCT user_id FROM anamnese_clinica
+        -- 'caneta' é dado clínico: só vai na resposta pra nutri (ver abaixo).
+        SELECT user_id, (data->>'caneta_usa') = 'sim' AS caneta FROM anamnese_clinica
       ), base AS (
         SELECT u.id, u.display_name, u.email, u.created_at, c.data AS perfil,
                COALESCE(c.data ? 'onboarding_em', FALSE) AS cadastro_ok, -- sem linha de perfil = cadastro incompleto
@@ -129,6 +136,7 @@ router.get('/pacientes', equipe, async (req, res, next) => {
                (prox.user_id IS NOT NULL) AS tem_proxima,
                COALESCE(rasc.n, 0) AS rascunhos,
                (anam.user_id IS NOT NULL) AS anamnese_respondida,
+               COALESCE(anam.caneta, FALSE) AS caneta,
                EXISTS (
                  SELECT 1 FROM purchases p
                   WHERE p.status = 'ativa' AND (p.valido_ate IS NULL OR p.valido_ate > NOW())
@@ -181,6 +189,10 @@ router.get('/pacientes', equipe, async (req, res, next) => {
                 COUNT(*) FILTER (WHERE engajada)::int AS engajadas,
                 COUNT(*) FILTER (WHERE sem_onboarding)::int AS incompletas,
                 COUNT(*) FILTER (WHERE cadastro_ok AND NOT precisa)::int AS em_dia,
+                COUNT(*) FILTER (WHERE cadastro_ok AND sem_registro)::int AS sem_registro,
+                COUNT(*) FILTER (WHERE aguardando_plano OR plano_vencendo OR rascunhos > 0)::int AS planos,
+                COUNT(*) FILTER (WHERE plano_vencendo)::int AS vencendo,
+                COUNT(*) FILTER (WHERE rascunhos > 0)::int AS rascunho,
                 COUNT(*) FILTER (WHERE ${filtroSql} AND ${busca})::int AS total,
                 COUNT(*) FILTER (WHERE ${filtroSql} AND ${busca} AND precisa)::int AS f_precisam,
                 COUNT(*) FILTER (WHERE ${filtroSql} AND ${busca} AND cadastro_ok AND NOT precisa)::int AS f_em_dia,
@@ -204,6 +216,8 @@ router.get('/pacientes', equipe, async (req, res, next) => {
         foto_url: p.foto_key && r2Configurado() ? await urlDeLeitura(p.foto_key).catch(() => null) : null,
         objetivo: p.objetivo || null, meta_kg: p.meta_kg ?? null, peso_kg: r.peso_kg != null ? Number(r.peso_kg) : null,
         onboarding_em: p.onboarding_em || null, acesso: r.acesso, anamnese_respondida: r.anamnese_respondida,
+        // Etiqueta "caneta emagrecedora" (anamnese clínica): só a nutri vê, o sócio não.
+        ...(req.user.role === 'nutri' ? { caneta: r.caneta } : {}),
         ultimo_registro: r.ultimo_registro, dias_semana: r.dias_semana, duvidas_pendentes: r.duvidas_pendentes,
         plano_semana: r.plano_semana, tem_proxima: r.tem_proxima, rascunhos: r.rascunhos, situacoes,
       };
@@ -211,7 +225,7 @@ router.get('/pacientes', equipe, async (req, res, next) => {
     const c = cont.rows[0];
     res.json({
       pacientes, total: c.total, pagina, limite,
-      contagens: { todas: c.todas, precisam: c.precisam, plano: c.plano, duvidas: c.duvidas, engajadas: c.engajadas, incompletas: c.incompletas, em_dia: c.em_dia },
+      contagens: { todas: c.todas, precisam: c.precisam, plano: c.plano, duvidas: c.duvidas, engajadas: c.engajadas, incompletas: c.incompletas, em_dia: c.em_dia, sem_registro: c.sem_registro, planos: c.planos, vencendo: c.vencendo, rascunho: c.rascunho },
       secoes: { precisam: c.f_precisam, em_dia: c.f_em_dia, incompletas: c.f_incompletas },
       hoje, week_start: ws,
     });
@@ -233,7 +247,7 @@ router.get('/pacientes/:id', equipe, async (req, res, next) => {
       p.query(`SELECT id, name, dose, time, with_meal, sort FROM supplements WHERE user_id = $1 AND active ORDER BY sort, time NULLS LAST`, [u.id]),
       p.query(`SELECT COUNT(*)::int AS n FROM lu_messages q WHERE q.user_id = $1 AND q.kind = 'pergunta' AND NOT EXISTS (SELECT 1 FROM lu_messages r WHERE r.reply_to = q.id)`, [u.id]),
       p.query(`SELECT MAX(date) AS date FROM meal_entries WHERE user_id = $1`, [u.id]),
-      p.query(`SELECT consentimento_em, updated_at FROM anamnese_clinica WHERE user_id = $1`, [u.id]),
+      p.query(`SELECT consentimento_em, updated_at, (data->>'caneta_usa') = 'sim' AS caneta FROM anamnese_clinica WHERE user_id = $1`, [u.id]),
     ]);
     res.json({
       user: { id: u.id, displayName: u.display_name, email: u.email, since: u.created_at },
@@ -247,7 +261,8 @@ router.get('/pacientes/:id', equipe, async (req, res, next) => {
       duvidas_pendentes: duvidas.rows[0].n,
       ultimo_registro: ultimo.rows[0].date,
       // Só o FATO de a anamnese existir; o conteúdo é rota própria, só nutri.
-      anamnese: anam.rows[0] ? { respondida: true, consentimento_em: anam.rows[0].consentimento_em, updated_at: anam.rows[0].updated_at } : { respondida: false },
+      // `caneta` (usa caneta emagrecedora) é clínico: só a nutri recebe.
+      anamnese: anam.rows[0] ? { respondida: true, consentimento_em: anam.rows[0].consentimento_em, updated_at: anam.rows[0].updated_at, ...(req.user.role === 'nutri' ? { caneta: anam.rows[0].caneta === true } : {}) } : { respondida: false },
       hoje,
     });
   } catch (e) { next(e); }
@@ -611,18 +626,31 @@ router.post('/pacientes/:id/recados', equipe, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// Caixa de entrada: todas as perguntas, com a resposta (se houver).
+// Caixa de entrada: todas as perguntas, com a resposta (se houver) e a
+// triagem da Luna (rascunho pra aprovar, ou "precisa de você").
 router.get('/duvidas', equipe, async (req, res, next) => {
   try {
     const todas = req.query.todas === '1';
     const { rows } = await getPool().query(
       `SELECT q.id, q.user_id, u.display_name AS nome, q.text, q.created_at,
+              q.triagem, q.rascunho, q.rascunho_motivo, q.rascunho_em,
               (SELECT json_build_object('id', r.id, 'text', r.text, 'created_at', r.created_at)
                  FROM lu_messages r WHERE r.reply_to = q.id ORDER BY r.created_at DESC LIMIT 1) AS resposta
          FROM lu_messages q JOIN users u ON u.id = q.user_id
         WHERE q.kind = 'pergunta' ${todas ? '' : `AND NOT EXISTS (SELECT 1 FROM lu_messages r WHERE r.reply_to = q.id)`}
         ORDER BY q.created_at DESC LIMIT 300`);
     res.json({ duvidas: rows });
+  } catch (e) { next(e); }
+});
+
+// (Re)gera a triagem e o rascunho de uma pergunta na hora. Serve pras
+// perguntas antigas (antes da triagem existir) e pra "tentar de novo".
+router.post('/duvidas/:id/rascunho', soNutri, async (req, res, next) => {
+  try {
+    if (!uuid(req.params.id)) throw erro('id inválido');
+    const d = await gerarRascunho(req.params.id);
+    if (!d) throw erro('Pergunta não encontrada.', 404, 'NOT_FOUND');
+    res.json({ duvida: d });
   } catch (e) { next(e); }
 });
 

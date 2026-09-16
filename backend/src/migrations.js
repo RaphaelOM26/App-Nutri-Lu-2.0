@@ -253,6 +253,22 @@ export const MIGRACOES = [
         ON meal_entries(user_id, logged_at DESC);
     `,
   },
+
+  // ─── Triagem das dúvidas pela Luna (17/09/2026) ───────────────────────────
+  // Cada pergunta ganha uma triagem ('ia' = rascunho pronto pra Luciana
+  // aprovar; 'nutri' = precisa dela) e o rascunho em si. Só ADD COLUMN.
+  {
+    id: '007-triagem-duvidas',
+    descricao: 'Triagem e rascunho da Luna nas perguntas pra nutricionista',
+    sql: `
+      ALTER TABLE lu_messages ADD COLUMN IF NOT EXISTS triagem TEXT;
+      ALTER TABLE lu_messages DROP CONSTRAINT IF EXISTS lu_messages_triagem_check;
+      ALTER TABLE lu_messages ADD CONSTRAINT lu_messages_triagem_check CHECK (triagem IS NULL OR triagem IN ('ia', 'nutri'));
+      ALTER TABLE lu_messages ADD COLUMN IF NOT EXISTS rascunho TEXT;
+      ALTER TABLE lu_messages ADD COLUMN IF NOT EXISTS rascunho_motivo TEXT;
+      ALTER TABLE lu_messages ADD COLUMN IF NOT EXISTS rascunho_em TIMESTAMPTZ;
+    `,
+  },
 ];
 
 /**

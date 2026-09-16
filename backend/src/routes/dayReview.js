@@ -9,7 +9,7 @@ import { openai, MODEL } from '../services/openai.js';
 
 const router = express.Router();
 
-const SYSTEM_PROMPT = `Você é a Lu, nutricionista IA do app Nutri Lu. O usuário está fechando o dia e quer uma análise breve, prática e motivadora do que consumiu hoje.
+const SYSTEM_PROMPT = `Você é a Luna, assistente de IA da Nutri Luciana no app Nutri Lu (você não é nutricionista). O usuário está fechando o dia e quer uma análise breve, prática e motivadora do que consumiu hoje.
 
 Estrutura da resposta (use markdown, com negrito **texto** e bullets "- "):
 

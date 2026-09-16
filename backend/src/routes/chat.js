@@ -9,23 +9,32 @@ import express from 'express';
 import { teto } from '../services/limites.js';
 import { requirePremium } from '../services/billing.js';
 import { openai, MODEL } from '../services/openai.js';
+import { motivoClinico } from '../services/triagem.js';
 
 const router = express.Router();
 
-const SYSTEM_PROMPT = `Você é a Lu, nutricionista IA do app Nutri Lu. Conversa em português brasileiro, de forma calorosa, direta e prática.
+// Nomes decididos em 17/09/2026: a IA é a LUNA; a profissional é a NUTRI
+// LUCIANA. A Luna nunca se apresenta como nutricionista.
+const SYSTEM_PROMPT = `Você é a Luna, assistente de IA da Nutri Luciana (Luciana Alves, nutricionista) no app Nutri Lu. Conversa em português brasileiro, de forma calorosa, direta e prática. Você NÃO é nutricionista e nunca diz que é.
 
 Sua função:
-- Responder dúvidas sobre nutrição, dieta, refeições e progresso.
-- Sugerir ajustes nos macros do dia com base nos dados que o usuário já comeu.
-- Sugerir receitas, SEMPRE escolhendo da lista "Receitas disponíveis" do contexto.
-- Comentar progresso de forma motivadora, mas sem puxar saco.
+- Tirar dúvidas de uso da plataforma (registrar refeição, trocar uma refeição do plano, ver o plano, materiais, evolução).
+- Responder dúvidas sobre substituições simples de ingredientes e de refeições, e sobre o que está no plano dela.
+- Sugerir ajustes no dia com base no que ela já comeu, e sugerir receitas SEMPRE da lista "Receitas disponíveis" do contexto.
+- Comentar progresso de forma motivadora, sem puxar saco.
+- Você conhece o perfil, o objetivo e as metas dela (contexto): use isso.
 
 Regras:
 - Respostas curtas (1-3 parágrafos no máximo) e diretas.
 - Use os dados do "Contexto do dia" pra personalizar respostas — referencie macros, refeições registradas, etc.
 - NUNCA invente dados de macros — use só o que está no contexto.
-- Se receber pergunta que pareça saúde séria (ex: "tenho diabetes, posso comer X?"), recomende consultar nutricionista de verdade.
 - Pode usar emojis com moderação (1-2 por resposta).
+
+QUANDO ENCAMINHAR PRA NUTRI LUCIANA (campo "encaminhar" = true):
+- Saúde: doença, remédio, suplemento, exame, gestação, sintoma. Não responda o mérito: diga em uma frase que isso é com a Nutri Luciana e ofereça mandar a pergunta pra ela.
+- Mudança de metas, de calorias ou da prescrição do plano (só ela decide).
+- Qualquer coisa que você não sabe responder com o que está no contexto.
+Nesses casos a resposta é curta, "receitas" fica vazio e "encaminhar" é true. Em todos os outros, "encaminhar" é false.
 
 SOBRE RECEITAS — leia com atenção:
 - Existem DOIS livros. As receitas marcadas "pratica" são simples, do dia a dia
@@ -64,7 +73,7 @@ const RESPOSTA_SCHEMA = {
   schema: {
     type: 'object',
     additionalProperties: false,
-    required: ['reply', 'receitas'],
+    required: ['reply', 'receitas', 'encaminhar'],
     properties: {
       reply: { type: 'string', description: 'A resposta pra cliente, em português, sem códigos de receita no meio do texto.' },
       receitas: {
@@ -72,6 +81,7 @@ const RESPOSTA_SCHEMA = {
         description: 'Códigos das receitas sugeridas (no máximo 3), escolhidos SOMENTE da lista do contexto. Vazio quando não está sugerindo receita.',
         items: { type: 'string' },
       },
+      encaminhar: { type: 'boolean', description: 'true quando a dúvida é pra Nutri Luciana (saúde, metas, ou você não sabe). A tela oferece o botão de mandar pra ela.' },
     },
   },
 };
@@ -134,6 +144,18 @@ router.post('/', requirePremium, teto('chat-lu', { gratis: 15, assinante: 60, as
       return res.status(400).json({ error: 'Faltam mensagens', code: 'BAD_REQUEST' });
     }
 
+    // Regra dura, no código: assunto de saúde nunca é respondido pela Luna,
+    // nem chega ao modelo. Vai pra Nutri Luciana. (Também economiza a chamada.)
+    const ultima = [...messages].reverse().find((m) => m.role !== 'lu');
+    const clinico = ultima ? motivoClinico(String(ultima.text || '')) : null;
+    if (clinico) {
+      return res.json({
+        reply: 'Essa pergunta envolve saúde, e isso é com a Nutri Luciana, não comigo. Quer que eu mande a sua pergunta pra ela? Ela responde pessoalmente, em até 1 dia útil.',
+        receitas: [],
+        encaminhar: true,
+      });
+    }
+
     const chatMessages = [{ role: 'system', content: SYSTEM_PROMPT }];
     const ctxMsg = buildContextMessage(context);
     if (ctxMsg) chatMessages.push({ role: 'system', content: ctxMsg });
@@ -163,7 +185,7 @@ router.post('/', requirePremium, teto('chat-lu', { gratis: 15, assinante: 60, as
       .filter((c) => permitidos.has(c))
       .slice(0, 3);
 
-    res.json({ reply: String(dados.reply || '').trim(), receitas });
+    res.json({ reply: String(dados.reply || '').trim(), receitas, encaminhar: dados.encaminhar === true });
   } catch (err) {
     next(err);
   }

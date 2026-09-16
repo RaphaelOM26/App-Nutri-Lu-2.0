@@ -20,6 +20,7 @@ import { requireAuth } from '../services/auth.js';
 import { temAcesso } from '../services/billing.js';
 import { novaChave, urlDeUpload, urlDeLeitura, apagar, r2Configurado } from '../services/r2.js';
 import { exigirData, mesValido } from '../utils/datas.js';
+import { agendarRascunho } from '../services/triagem.js';
 import {
   SLOTS, FONTES, erro, normalizarItens, exigirSlot, comFotoUrl, numeros,
   planoDaData, planoResumido, montarDia, montarEvolucao,
@@ -391,6 +392,9 @@ router.post('/perguntas', async (req, res, next) => {
       `INSERT INTO lu_messages (user_id, kind, author, text) VALUES ($1, 'pergunta', 'cliente', $2) RETURNING id, created_at`,
       [req.user.userId, text],
     );
+    // A Luna tria e escreve o rascunho pra Luciana em segundo plano; a
+    // cliente recebe o "enviado" na hora.
+    agendarRascunho(rows[0].id);
     res.status(201).json({ id: rows[0].id, created_at: rows[0].created_at });
   } catch (e) { next(e); }
 });

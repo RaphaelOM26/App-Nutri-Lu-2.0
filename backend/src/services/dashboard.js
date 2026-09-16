@@ -43,8 +43,10 @@ const FAIXA_SONO = [['menos_6', 6], ['6_7', 7.01], ['7_8', 8.01], ['8_mais', Inf
 
 // ─── Classificação clínica por dicionário (nunca IA) ──────────────────────
 
-const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-const DOENCAS = [
+// Exportados também pra triagem das dúvidas (services/triagem.js): a mesma
+// lista decide o que é assunto de saúde e vai direto pra Nutri Luciana.
+export const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+export const DOENCAS = [
   ['tireoide', ['tireoid', 'hashimoto', 'hipotireo', 'hipertireo']],
   ['diabetes_insulina', ['diabet', 'resistencia a insulina', 'resistencia insulinica', 'pre-diabet', 'pre diabet', 'glicemia']],
   ['pressao_alta', ['pressao alta', 'hipertens']],
@@ -59,7 +61,7 @@ const DOENCAS = [
   ['enxaqueca', ['enxaqueca', 'cefaleia']],
   ['anemia', ['anemia', 'ferritina baixa', 'ferro baixo']],
 ];
-const MEDICAMENTOS = [
+export const MEDICAMENTOS = [
   ['hormonio_tireoide', ['levotirox', 'puran', 'euthyrox', 'synthroid']],
   ['antidepressivo_ansiolitico', ['sertralin', 'escitalopram', 'fluoxetin', 'venlafax', 'desvenlafax', 'clonazepam', 'rivotril', 'alprazolam', 'bupropion', 'antidepress', 'ansiolit', 'paroxetin', 'duloxetin']],
   ['anticoncepcional', ['anticoncep', 'pilula', 'diu', 'yasmin', 'ciclo 21', 'implanon']],
@@ -70,7 +72,7 @@ const MEDICAMENTOS = [
   ['omeprazol_gastrico', ['omeprazol', 'pantoprazol', 'esomeprazol']],
   ['vitaminas_suplementos', ['vitamina', 'omega', 'whey', 'creatina', 'ferro', 'polivitamin', 'suplemento', 'magnesio']],
 ];
-const SINTOMAS = [
+export const SINTOMAS = [
   ['estufamento_gases', ['estufa', 'inchaç', 'inchac', 'gases', 'distens', 'barriga inchada']],
   ['azia_refluxo', ['azia', 'refluxo', 'queimac']],
   ['cansaco', ['cansa', 'fadiga', 'sem energia', 'sonolen']],
@@ -247,6 +249,7 @@ async function calcularDashboard() {
     clinico = {
       respondidas,
       medicamentos_usa: contar(a.map((x) => x.medicamentos_usa), { minimo: MINIMO }),
+      caneta: contar(a.map((x) => x.caneta_usa), { minimo: MINIMO }),
       suplementos_usa: contar(sup.map((x) => x.usa), { minimo: MINIMO }),
       alcool: contar(a.map((x) => x.alcool), { minimo: MINIMO }),
       intestino: contar(a.map((x) => x.intestino), { minimo: MINIMO }),

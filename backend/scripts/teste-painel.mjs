@@ -44,8 +44,10 @@ const tCli = cli.token;
 check(cli.user.role === 'cliente', 'verify devolve role cliente');
 await chamar(tCli, 'PUT', '/me/perfil', { perfil: { nome: 'Cliente Teste', sexo: 'feminino', nascimento: '1990-05-10', altura_cm: 165, objetivo: 'perder', meta_kg: 62, atividade: 'leve', restricoes: ['sem-lactose'], dor: 'Como bem na semana e perco no fim de semana.', desejo: 'Ter energia e caber no jeans.', urgencia: 'Cansaço depois do almoço.', onboarding_em: new Date().toISOString() } });
 await chamar(tCli, 'POST', '/me/peso', { date: HOJE, kg: 70 });
-await chamar(tCli, 'PUT', '/me/anamnese-clinica', { consentimento: true, data: { doencas: 'hipotireoidismo', medicamentos_usa: 'sim', medicamentos: 'levotiroxina', intestino: 'preso', alcool: 'social', perda_controle: 'as-vezes', sintomas: 'estufamento', suplementacao: { usa: 'nao', cansaco: 'sim', pouco_sol: 'sim' } } });
+await chamar(tCli, 'PUT', '/me/anamnese-clinica', { consentimento: true, data: { doencas: 'hipotireoidismo', medicamentos_usa: 'sim', medicamentos: 'levotiroxina', intestino: 'preso', alcool: 'social', perda_controle: 'as-vezes', sintomas: 'estufamento', caneta_usa: 'sim', caneta_qual: 'Ozempic', caneta_tempo: '3 meses', caneta_dose: '0,5 mg/semana', caneta_ultima_dose: HOJE, suplementacao: { usa: 'nao', cansaco: 'sim', pouco_sol: 'sim' } } });
 const perg = await chamar(tCli, 'POST', '/me/perguntas', { text: 'Posso trocar o jantar de sexta?' }, 201);
+// Pergunta de SAÚDE: a triagem por dicionário manda direto pra nutri, sem IA.
+const pergSaude = await chamar(tCli, 'POST', '/me/perguntas', { text: 'Tomo levotiroxina de manhã, posso comer brócolis à noite?' }, 201);
 // Cliente NÃO entra no painel
 await chamar(tCli, 'GET', '/nutri/pacientes', null, 403);
 await chamar(tCli, 'GET', '/nutri/dashboard', null, 403);
@@ -73,6 +75,13 @@ const soDuvidas = await chamar(tN, 'GET', '/nutri/pacientes?filtro=duvidas&limit
 check(soDuvidas.pacientes.length === soDuvidas.contagens.duvidas && soDuvidas.pacientes.every((p) => p.situacoes.includes('duvida_pendente')), 'filtro=duvidas devolve só quem tem dúvida, no total do chip');
 const ficha = await chamar(tA, 'GET', `/nutri/pacientes/${pac.id}`);
 check(ficha.perfil.dor && ficha.evolucao.pesos.length === 1 && ficha.anamnese.respondida === true && ficha.plano_atual === null, 'ficha (admin) traz perfil, evolução e o FATO da anamnese');
+const listaA = await chamar(tA, 'GET', `/nutri/pacientes?q=${encodeURIComponent(CLIENTE)}`);
+check(ficha.anamnese.caneta === undefined && listaA.pacientes[0]?.caneta === undefined, 'admin NÃO recebe a etiqueta de caneta (dado clínico)');
+const fichaN = await chamar(tN, 'GET', `/nutri/pacientes/${pac.id}`);
+const listaN = await chamar(tN, 'GET', `/nutri/pacientes?q=${encodeURIComponent(CLIENTE)}`);
+check(fichaN.anamnese.caneta === true && listaN.pacientes[0]?.caneta === true, 'nutri recebe a etiqueta de caneta na ficha e na lista');
+const soPlanos = await chamar(tN, 'GET', '/nutri/pacientes?filtro=planos&limite=200');
+check(soPlanos.pacientes.some((p) => p.id === pac.id) && soPlanos.contagens.planos === soPlanos.total, 'filtro=planos (tela Plano alimentar) inclui quem espera plano');
 await chamar(tA, 'GET', `/nutri/pacientes/${pac.id}/anamnese-clinica`, null, 403);
 const anam = await chamar(tN, 'GET', `/nutri/pacientes/${pac.id}/anamnese-clinica`);
 check(anam.data.doencas === 'hipotireoidismo', 'anamnese clínica (nutri) vem inteira');
@@ -142,6 +151,14 @@ check(recMes.mensagens.some((m) => m.text === 'Mês no ar!'), 'recado do mês ch
 // 5. Recados e dúvidas
 const duv = await chamar(tA, 'GET', '/nutri/duvidas');
 check(duv.duvidas.some((q) => q.id === perg.id && q.resposta === null), 'dúvida pendente aparece na caixa de entrada');
+// Triagem da Luna (roda em segundo plano ao receber a pergunta): espera até 5 s.
+let triada = null;
+for (let i = 0; i < 10 && !triada; i++) { const d = await chamar(tA, 'GET', '/nutri/duvidas'); const s = d.duvidas.find((q) => q.id === pergSaude.id); if (s?.triagem) triada = s; else await new Promise((r) => setTimeout(r, 500)); }
+check(triada?.triagem === 'nutri' && triada.rascunho === null && /saúde/i.test(triada.rascunho_motivo || ''), 'pergunta de saúde vai pra nutri sem rascunho (dicionário, sem IA)');
+const triagemComum = await chamar(tN, 'POST', `/nutri/duvidas/${perg.id}/rascunho`, {});
+check(['ia', 'nutri'].includes(triagemComum.duvida.triagem) && (triagemComum.duvida.triagem === 'nutri' || String(triagemComum.duvida.rascunho || '').length > 10), 'rascunho sob demanda devolve triagem (ia com texto, ou nutri com motivo)');
+console.log(`   → triagem da pergunta comum: ${triagemComum.duvida.triagem} · ${(triagemComum.duvida.rascunho || triagemComum.duvida.rascunho_motivo || '').slice(0, 120)}`);
+await chamar(tA, 'POST', `/nutri/duvidas/${perg.id}/rascunho`, {}, 403); // admin não pede rascunho
 await chamar(tA, 'POST', `/nutri/pacientes/${pac.id}/recados`, { text: 'Pode sim, duas fatias.', reply_to: perg.id }, 201);
 const duv2 = await chamar(tA, 'GET', '/nutri/duvidas');
 check(!duv2.duvidas.some((q) => q.id === perg.id), 'depois de respondida sai das pendentes');

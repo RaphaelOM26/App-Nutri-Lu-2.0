@@ -83,7 +83,7 @@ export function planoResumido(plano) {
     const data = somarDias(ws, Number(d.weekday) - 1);
     return { ...diaDoPlano(plano, data), date: data };
   });
-  return { id: plano.id, week_start: ws, week_index: plano.week_index, week_total: plano.week_total, targets: plano.targets, note: plano.note, status: plano.status, dias };
+  return { id: plano.id, week_start: ws, week_index: plano.week_index, week_total: plano.week_total, targets: plano.targets, note: plano.note, status: plano.status, published_at: plano.published_at || null, dias };
 }
 
 // ─── Streak e adesão ──────────────────────────────────────────────────────
@@ -199,6 +199,8 @@ export const CAMPOS_PERFIL = new Set([
 export const CAMPOS_CLINICOS = new Set([
   'doencas', 'historico_familiar', 'medicamentos_usa', 'medicamentos', 'suplementos_usa', 'suplementos', 'alergias',
   'perda_controle', 'perda_controle_quando', 'intestino', 'sintomas', 'alcool', 'exames',
+  // Caneta emagrecedora (pedido do Raphael, 17/09): usa? qual? há quanto tempo? dose? última dose?
+  'caneta_usa', 'caneta_qual', 'caneta_tempo', 'caneta_dose', 'caneta_ultima_dose',
   // Rastreio de suplementação: objeto { usa, quais, <id da pergunta>: 'sim'|'nao' }
   'suplementacao',
 ]);

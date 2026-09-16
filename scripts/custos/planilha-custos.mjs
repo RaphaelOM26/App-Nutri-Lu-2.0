@@ -44,15 +44,18 @@ param('semanas_mes', 'Semanas por mês', 4.33, 'semanas', 'Média do ano.');
 grupo('OpenAI (modelo gpt-5.4-mini, o que o backend usa)');
 param('in_1m', 'Preço por 1 milhão de tokens de ENTRADA', 0.75, 'US$', 'developers.openai.com/api/docs/pricing (17/09/2026).');
 param('out_1m', 'Preço por 1 milhão de tokens de SAÍDA', 4.5, 'US$', 'Idem.');
-param('chat_msgs', 'Chat da Lu: mensagens por paciente por mês', 20, 'msgs', 'Estimativa. Teto atual no backend: 60/dia e 600/mês por conta (limites.js).');
-param('chat_in', 'Chat da Lu: tokens de entrada por mensagem', 3000, 'tokens', 'Estimativa: prompt do sistema + contexto (perfil, plano, 40 receitas candidatas) + histórico.');
-param('chat_out', 'Chat da Lu: tokens de saída por mensagem', 250, 'tokens', 'Estimativa (resposta curta em JSON).');
+param('chat_msgs', 'Chat da Luna: mensagens por paciente por mês', 20, 'msgs', 'Estimativa. Teto atual no backend: 60/dia e 600/mês por conta (limites.js).');
+param('chat_in', 'Chat da Luna: tokens de entrada por mensagem', 3000, 'tokens', 'Estimativa: prompt do sistema + contexto (perfil, plano, 40 receitas candidatas) + histórico.');
+param('chat_out', 'Chat da Luna: tokens de saída por mensagem', 250, 'tokens', 'Estimativa (resposta curta em JSON).');
 param('foto_n', 'Foto do prato por IA: análises por paciente por mês', 30, 'fotos', 'Estimativa: 1/dia. Teto atual: 30/dia e 400/mês.');
 param('foto_in', 'Foto: tokens de entrada por análise', 1500, 'tokens', 'Estimativa: imagem (~1.000) + prompt.');
 param('foto_out', 'Foto: tokens de saída por análise', 300, 'tokens', 'Estimativa (JSON com itens e macros).');
 param('resumo_n', 'Resumo do dia / insight por IA: por paciente por mês', 0, 'chamadas', 'Só existe no app de celular, que ninguém vai usar. Deixe 0; se a web ganhar isso, use 30.');
 param('resumo_in', 'Resumo do dia: tokens de entrada', 2000, 'tokens', 'Estimativa.');
 param('resumo_out', 'Resumo do dia: tokens de saída', 300, 'tokens', 'Estimativa.');
+param('rasc_n', 'Rascunho de resposta pra Luciana (Luna): por paciente por mês', 2, 'rascunhos', 'Estimativa: = dúvidas por paciente por mês. Uma chamada por dúvida não clínica (services/triagem.js). Dúvida de saúde não chama IA.');
+param('rasc_in', 'Rascunho: tokens de entrada', 2500, 'tokens', 'Estimativa: prompt + perfil não clínico + plano da semana + pergunta.');
+param('rasc_out', 'Rascunho: tokens de saída', 250, 'tokens', 'Estimativa (2 a 5 frases + motivo).');
 param('sintese_dia', 'Síntese do dashboard: chamadas por dia (custo global, não por paciente)', 1, 'chamadas', '1x/dia com cache (dashboard.js).');
 param('sintese_in', 'Síntese: tokens de entrada por chamada', 20000, 'tokens', 'Estimativa: amostra das respostas abertas não clínicas.');
 param('sintese_out', 'Síntese: tokens de saída por chamada', 1000, 'tokens', 'Estimativa.');
@@ -109,9 +112,10 @@ const item = (chave, rotulo, formula, valor, como) => {
   por[chave] = `'Por paciente'!$B$${lc}`; porVal[chave] = valor; lc += 1;
 };
 const tok = (n, i, o) => n * (i * val.in_1m + o * val.out_1m) / 1e6;
-item('chat', 'Chat da Lu (IA)', `${prem.chat_msgs}*(${prem.chat_in}*${prem.in_1m}+${prem.chat_out}*${prem.out_1m})/1000000`, tok(val.chat_msgs, val.chat_in, val.chat_out), 'msgs × (entrada × preço + saída × preço)');
+item('chat', 'Chat da Luna (IA)', `${prem.chat_msgs}*(${prem.chat_in}*${prem.in_1m}+${prem.chat_out}*${prem.out_1m})/1000000`, tok(val.chat_msgs, val.chat_in, val.chat_out), 'msgs × (entrada × preço + saída × preço)');
 item('foto', 'Foto do prato (IA)', `${prem.foto_n}*(${prem.foto_in}*${prem.in_1m}+${prem.foto_out}*${prem.out_1m})/1000000`, tok(val.foto_n, val.foto_in, val.foto_out), 'análises × (entrada × preço + saída × preço)');
 item('resumo', 'Resumo do dia (IA, só app)', `${prem.resumo_n}*(${prem.resumo_in}*${prem.in_1m}+${prem.resumo_out}*${prem.out_1m})/1000000`, tok(val.resumo_n, val.resumo_in, val.resumo_out), 'idem');
+item('rasc', 'Rascunho de resposta pra Luciana (IA)', `${prem.rasc_n}*(${prem.rasc_in}*${prem.in_1m}+${prem.rasc_out}*${prem.out_1m})/1000000`, tok(val.rasc_n, val.rasc_in, val.rasc_out), 'dúvidas × (entrada × preço + saída × preço)');
 const r2GB = (val.r2_fotos * val.r2_kb * val.r2_meses) / 1024 / 1024;
 item('r2_storage', 'R2: fotos guardadas', `(${prem.r2_fotos}*${prem.r2_kb}*${prem.r2_meses}/1024/1024)*${prem.r2_gb}`, r2GB * val.r2_gb, 'fotos/mês × KB × meses de retenção → GB × preço');
 item('r2_ops', 'R2: uploads e leituras', `${prem.r2_fotos}*(${prem.r2_a}+${prem.r2_leituras}*${prem.r2_b})/1000000`, val.r2_fotos * (val.r2_a + val.r2_leituras * val.r2_b) / 1e6, 'fotos × (classe A + leituras × classe B)');
@@ -119,8 +123,8 @@ item('email_extra', 'E-mail acima do plano (só quando passa de 100 mil/mês)', 
 item('wa', 'WhatsApp (quando existir)', `${prem.wa_msgs}*${prem.wa_preco}`, val.wa_msgs * val.wa_preco, 'msgs × preço');
 lc += 1;
 C.getCell(lc, 1).value = 'TOTAL variável por paciente (sem o e-mail extra)'; C.getCell(lc, 1).font = negrito;
-const totalVar = porVal.chat + porVal.foto + porVal.resumo + porVal.r2_storage + porVal.r2_ops + porVal.wa;
-C.getCell(lc, 2).value = { formula: `${por.chat}+${por.foto}+${por.resumo}+${por.r2_storage}+${por.r2_ops}+${por.wa}`, result: totalVar }; C.getCell(lc, 2).numFmt = '0.0000'; C.getCell(lc, 2).font = negrito;
+const totalVar = porVal.chat + porVal.foto + porVal.resumo + porVal.rasc + porVal.r2_storage + porVal.r2_ops + porVal.wa;
+C.getCell(lc, 2).value = { formula: `${por.chat}+${por.foto}+${por.resumo}+${por.rasc}+${por.r2_storage}+${por.r2_ops}+${por.wa}`, result: totalVar }; C.getCell(lc, 2).numFmt = '0.0000'; C.getCell(lc, 2).font = negrito;
 C.getCell(lc, 3).value = { formula: `B${lc}*${prem.cambio}`, result: totalVar * val.cambio }; C.getCell(lc, 3).numFmt = '0.00'; C.getCell(lc, 3).font = negrito;
 const TOTAL_VAR = `'Por paciente'!$B$${lc}`;
 lc += 2;
@@ -217,8 +221,9 @@ Regenerar: \`node <scratchpad>/planilha-custos.mjs\` (script fica fora do repo; 
 
 | Item | US$ | R$ |
 |---|---:|---:|
-| Chat da Lu (IA, ${val.chat_msgs} msgs) | ${porVal.chat.toFixed(4)} | ${(porVal.chat * val.cambio).toFixed(2)} |
+| Chat da Luna (IA, ${val.chat_msgs} msgs) | ${porVal.chat.toFixed(4)} | ${(porVal.chat * val.cambio).toFixed(2)} |
 | Foto do prato (IA, ${val.foto_n} fotos) | ${porVal.foto.toFixed(4)} | ${(porVal.foto * val.cambio).toFixed(2)} |
+| Rascunho de resposta pra Luciana (IA, ${val.rasc_n} dúvidas) | ${porVal.rasc.toFixed(4)} | ${(porVal.rasc * val.cambio).toFixed(2)} |
 | R2 (fotos guardadas + operações) | ${(porVal.r2_storage + porVal.r2_ops).toFixed(4)} | ${((porVal.r2_storage + porVal.r2_ops) * val.cambio).toFixed(2)} |
 | WhatsApp (0 até existir) | ${porVal.wa.toFixed(4)} | ${(porVal.wa * val.cambio).toFixed(2)} |
 | **Total variável** | **${totalVar.toFixed(4)}** | **${(totalVar * val.cambio).toFixed(2)}** |

@@ -7,20 +7,21 @@ Regenerar: `node <scratchpad>/planilha-custos.mjs` (script fica fora do repo; co
 
 | Item | US$ | R$ |
 |---|---:|---:|
-| Chat da Lu (IA, 20 msgs) | 0.0675 | 0.37 |
+| Chat da Luna (IA, 20 msgs) | 0.0675 | 0.37 |
 | Foto do prato (IA, 30 fotos) | 0.0742 | 0.41 |
+| Rascunho de resposta pra Luciana (IA, 2 dúvidas) | 0.0060 | 0.03 |
 | R2 (fotos guardadas + operações) | 0.0006 | 0.00 |
 | WhatsApp (0 até existir) | 0.0000 | 0.00 |
-| **Total variável** | **0.1424** | **0.78** |
+| **Total variável** | **0.1484** | **0.82** |
 
 ## Cenários (US$/mês → R$/mês)
 
 | Pacientes | IA+R2 | E-mail | Railway | Total US$ | Total R$ | R$/paciente | Horas de nutri | Nutris |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1.000 | US$ 142,38 | US$ 20,00 | US$ 92,25 | US$ 255,21 | R$ 1.403,68 | R$ 1,40 | 200 | 1.4 |
-| 5.000 | US$ 711,90 | US$ 20,00 | US$ 168,25 | US$ 900,73 | R$ 4.954,02 | R$ 0,99 | 1000 | 7.1 |
-| 10.000 | US$ 1.423,79 | US$ 90,00 | US$ 237,00 | US$ 1.751,38 | R$ 9.632,58 | R$ 0,96 | 2000 | 14.3 |
-| 30.000 | US$ 4.271,38 | US$ 189,00 | US$ 467,00 | US$ 4.927,96 | R$ 27.103,79 | R$ 0,90 | 6000 | 42.9 |
+| 1.000 | US$ 148,38 | US$ 20,00 | US$ 92,25 | US$ 261,21 | R$ 1.436,68 | R$ 1,44 | 200 | 1.4 |
+| 5.000 | US$ 741,90 | US$ 20,00 | US$ 168,25 | US$ 930,73 | R$ 5.119,02 | R$ 1,02 | 1000 | 7.1 |
+| 10.000 | US$ 1.483,79 | US$ 90,00 | US$ 237,00 | US$ 1.811,38 | R$ 9.962,58 | R$ 1,00 | 2000 | 14.3 |
+| 30.000 | US$ 4.451,38 | US$ 189,00 | US$ 467,00 | US$ 5.107,96 | R$ 28.093,79 | R$ 0,94 | 6000 | 42.9 |
 
 ## O que os números dizem
 
