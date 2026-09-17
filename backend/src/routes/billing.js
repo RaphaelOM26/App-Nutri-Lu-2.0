@@ -92,6 +92,7 @@ router.post('/redeem', requireAuth, async (req, res, next) => {
 // recorrente renova a cada PURCHASE_APPROVED novo da mesma assinatura.
 
 import { registrarCompra, atualizarStatusCompra } from '../services/billing.js';
+import { convidarCompradora } from '../services/whatsapp/convites.js';
 
 const EVENTOS_ATIVAM = new Set(['PURCHASE_APPROVED', 'PURCHASE_COMPLETE']);
 const EVENTOS_DERRUBAM = {
@@ -127,6 +128,16 @@ router.post('/hotmart', async (req, res, next) => {
       validoAte.setMonth(validoAte.getMonth() + meses);
       const r = await registrarCompra({ source: 'hotmart', externalId: transacao, email, validoAte });
       console.log(`[hotmart] ${evento} ${transacao} → compra ${r.purchaseId}${r.novo ? ' (nova)' : ''}`);
+      // Boas-vindas pelo WhatsApp (só compra NOVA, só com WHATSAPP_BOAS_VINDAS=1).
+      // É o ÚNICO ponto de contato desta rota com a função: tirar esta chamada,
+      // ou desligar a variável, e a venda segue liberando acesso igual. O
+      // telefone é o do checkout (2.0: DDD em checkout_phone_code).
+      if (r.novo) {
+        convidarCompradora({
+          purchaseId: r.purchaseId, email, nome: data.buyer?.first_name || data.buyer?.name || null,
+          ddd: data.buyer?.checkout_phone_code, telefone: data.buyer?.checkout_phone || data.buyer?.phone || body.phone_checkout_number,
+        });
+      }
       return res.json({ ok: true, purchase_id: r.purchaseId });
     }
     if (EVENTOS_DERRUBAM[evento]) {

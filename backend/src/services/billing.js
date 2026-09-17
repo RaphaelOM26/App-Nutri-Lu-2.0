@@ -18,6 +18,9 @@ import { requireAuth } from './auth.js';
 // o app ter a tela de ativação pronta. Liga com ENFORCE_PREMIUM=1 no Railway.
 const ENFORCE = process.env.ENFORCE_PREMIUM === '1';
 
+/** A trava está ligada? O bot de WhatsApp aplica a mesma regra das rotas de IA, sem passar por middleware. */
+export const premiumObrigatorio = () => ENFORCE;
+
 // Alfabeto sem os caracteres que as pessoas confundem ao digitar: 0/O e 1/I/L.
 // Erro de digitação em código de acesso não vira erro de digitação — vira
 // mensagem no WhatsApp do Raphael.

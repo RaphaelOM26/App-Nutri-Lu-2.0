@@ -37,6 +37,35 @@ export function inicioDaSemana(s) {
   return somarDias(s, 1 - diaDaSemana(s));
 }
 
+// ─── Fuso da cliente quando NÃO há navegador (bot de WhatsApp, jobs) ──────
+// Na web a data vem pronta do navegador. No WhatsApp só existe o instante da
+// mensagem, então o dia civil é calculado aqui, no fuso de Brasília.
+
+const FUSO = 'America/Sao_Paulo';
+const fmtData = new Intl.DateTimeFormat('en-CA', { timeZone: FUSO, year: 'numeric', month: '2-digit', day: '2-digit' });
+const fmtHora = new Intl.DateTimeFormat('en-GB', { timeZone: FUSO, hour: '2-digit', minute: '2-digit', hour12: false });
+
+/** 'YYYY-MM-DD' do instante dado, no fuso de Brasília. */
+export function dataBR(instante = new Date()) {
+  return fmtData.format(instante);
+}
+
+/** Minutos desde a meia-noite, no fuso de Brasília. */
+export function minutosBR(instante = new Date()) {
+  const [h, m] = fmtHora.format(instante).split(':').map(Number);
+  return (h % 24) * 60 + m;
+}
+
+// Mesma tabela e mesma regra de web/src/lib/slots.ts (slotAgora): a refeição
+// "da vez" é a primeira cujo horário ainda não passou há mais de 2 h.
+const SLOT_HORA = [['cafe', 420], ['lanche_manha', 600], ['almoco', 750], ['lanche_tarde', 960], ['jantar', 1170], ['ceia', 1290]];
+
+export function slotPelaHora(instante = new Date()) {
+  const min = minutosBR(instante);
+  for (const [slot, inicio] of SLOT_HORA) if (min < inicio + 120) return slot;
+  return 'ceia';
+}
+
 /** Competência 'YYYY-MM' válida? */
 export function mesValido(s) {
   return typeof s === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(s);

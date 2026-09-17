@@ -1,0 +1,161 @@
+# Bot de WhatsApp do Nutri Lu
+
+Um número só (Cloud API da Meta, sem intermediário) atende todas as pacientes:
+a **Luna** (IA), o registro de refeição por **foto e áudio**, os avisos da
+**Nutri Luciana** e o **time de suporte**, que responde pelo painel.
+
+Construído em 17/09/2026. Tudo abaixo roda hoje em **modo simulado** (sem
+falar com a Meta) e está coberto por `backend/scripts/teste-whatsapp.mjs`.
+
+## Como a paciente chega no WhatsApp
+
+Dois caminhos, que convivem:
+
+1. **Pela compra (automático).** A Hotmart manda o telefone do checkout junto
+   com a compra aprovada. A compradora recebe o modelo `boas_vindas` com o
+   botão **Começar**; ao tocar, o número fica ligado à conta do e-mail da
+   compra (a conta é criada se ela ainda não entrou na área de membros) e a
+   Luna manda as boas-vindas e o primeiro passo (entrar e responder o
+   questionário). O telefone do checkout **sozinho não vincula nada**: pode
+   estar errado ou ser de quem pagou. É o toque no botão que vincula.
+2. **Pelo código (manual).** Perfil → Vincular WhatsApp gera um código de 30
+   minutos; ela manda pro número e pronto. É o plano B pra telefone errado no
+   checkout, troca de celular ou compra feita por outra pessoa.
+
+### Desligar ou trocar por uma ferramenta
+
+As boas-vindas pela compra moram inteiras em
+`backend/src/services/whatsapp/convites.js` e só rodam com
+`WHATSAPP_BOAS_VINDAS=1`. Pra trocar por uma ferramenta externa: tirar a
+variável no Railway (sem deploy) e apontar o webhook da Hotmart **também** pra
+ferramenta (a Hotmart aceita várias URLs; o nosso continua liberando o acesso).
+Atenção: um número da API só fica ligado a UM sistema. Ferramenta no MESMO
+número tira a Luna do ar; o normal é a ferramenta usar outro número.
+
+Na Hotmart: telefone **obrigatório** no checkout e a frase de consentimento na
+página ("Ao comprar, você aceita receber no WhatsApp as orientações do seu
+acompanhamento").
+
+## O que a paciente faz por lá
+
+| Ela manda | O que acontece | Custa IA? |
+|---|---|---|
+| Código de vínculo | O número fica ligado à conta; a Luna dá as boas-vindas | não |
+| Foto | Pergunta "Refeição ou Evolução?" **antes de qualquer IA**. Refeição → IA → diário (com botões pra mudar de refeição ou apagar). Evolução → guarda em Evolução, sem IA | só refeição |
+| Áudio | Transcreve. Se descreve comida, registra; se é pergunta, segue como texto | sim |
+| `macros` | Resumo do dia contra a meta | não |
+| `o que como hoje` / `amanhã` | O plano do dia, com as trocas | não |
+| `peso 72,4` | Registra o peso | não |
+| `materiais` | Lista; PDF vai como arquivo, vídeo como link | não |
+| `dúvida pra nutri` | A próxima mensagem vira pergunta na caixa da Luciana (mesma triagem da web) | não |
+| Algo de saúde | Por **dicionário**, sem modelo: oferece mandar pra Nutri Luciana | não |
+| `atendente` | A Luna se cala; a conversa vai pro painel de Atendimento | não |
+| `PARAR` / `AVISOS` | Desliga / religa os avisos por modelo | não |
+| Qualquer outra coisa | Luna, com o dia e o plano dela no contexto | sim |
+
+Os tetos de IA são **os mesmos contadores da web** (30 fotos, 30 áudios, 60
+mensagens por dia pra assinante): o teto é da conta, não do canal.
+
+## Regras que o código garante
+
+- **Anamnese clínica nunca é lida** pelo bot nem entra em prompt.
+- **Foto de corpo nunca vai pra IA**: sem legenda clara, o bot pergunta antes.
+- **Saúde não chega em modelo**: `services/triagem.js` (dicionário) decide.
+- **Suporte não vê saúde**: mensagem marcada como saúde aparece oculta pra
+  quem não é `nutri`; o papel `suporte` só vê a conversa durante o
+  atendimento humano, nunca o que a paciente falou com a Luna.
+- **O conteúdo só sai dentro da janela de 24 h.** Fora dela sai um modelo
+  curto e genérico; a resposta da Luciana nunca viaja dentro de um modelo.
+- **Um modelo por pessoa a cada 20 h**, no máximo.
+- **Um convite por compra**, nunca reenviado. Se a Meta recusar por limite
+  diário, o convite volta pra fila e tenta de hora em hora por até 3 dias.
+- **Webhook só grava e responde 200**; IA e envio rodam no trabalhador da
+  fila (`services/whatsapp/fila.js`), até 6 em paralelo.
+
+## Conta em 10 mil pacientes
+
+- Mensagens: ~6 por paciente por dia → ~60 mil webhooks/dia, ~120 mil linhas
+  de histórico/dia (retenção de 90 dias, fora do backup diário).
+- Pico do almoço: ~6 mil fotos em 2 h ≈ 0,8 foto/s × 8 s de IA ≈ 7 análises
+  simultâneas. Cabe na concorrência padrão (6) com fila de segundos; subir
+  `WHATSAPP_CONCORRENCIA` ou separar o trabalhador (`npm run worker` +
+  `WHATSAPP_WORKER=0` no serviço web) quando o site começar a disputar CPU.
+- Custo da Meta: responder quem escreveu é grátis. Modelos de utilidade
+  ~R$ 0,05 (valor de guias de terceiros, confirmar na tabela oficial): plano
+  pronto 1×/mês + ~2 respostas da Luciana/mês ≈ R$ 0,15/paciente/mês ≈
+  **R$ 1.500/mês em 10 mil**, mais ~R$ 0,05 do convite por compra (~R$ 500 nos
+  primeiros 10 mil). IA já está na planilha de custos (os mesmos
+  tetos da web).
+- Limite da Meta: o portfólio começa em 250 pessoas/dia pra mensagens
+  iniciadas pela empresa; com a verificação do negócio, 2 mil; depois sobe
+  sozinho. Só conta modelo fora da janela. **O convite da compra conta**: num
+  lançamento com milhares de vendas no dia, sem a verificação do negócio os
+  convites saem em fila de dias (o e-mail de acesso não depende disso).
+
+## Ligar de verdade (passo a passo)
+
+1. **Meta** (`developers.facebook.com` → app → WhatsApp → Configuração da API):
+   anotar o *Phone Number ID* e o *WABA ID*; em Configurações do negócio →
+   Usuários do sistema, criar um admin com as permissões
+   `whatsapp_business_messaging` e `whatsapp_business_management` e gerar o
+   **token permanente**. Em Configurações do app → Básico, copiar a **chave
+   secreta do app**.
+2. **Railway → Variables** (colar lá, nunca no chat nem no repositório):
+
+   | Variável | O que é |
+   |---|---|
+   | `WHATSAPP_TOKEN` | token permanente do usuário do sistema |
+   | `WHATSAPP_PHONE_ID` | Phone Number ID |
+   | `WHATSAPP_WABA_ID` | id da conta do WhatsApp Business (informativo) |
+   | `WHATSAPP_APP_SECRET` | chave secreta do app (valida a assinatura do webhook) |
+   | `WHATSAPP_VERIFY_TOKEN` | um texto qualquer, inventado por nós |
+   | `WHATSAPP_NUMERO` | o número público, só dígitos (`5521…`): vira o link `wa.me` |
+   | `WHATSAPP_TEMPLATES` | modelos **já aprovados**, separados por vírgula |
+   | `WHATSAPP_BOAS_VINDAS` | `1` liga o convite pela compra na Hotmart |
+   | `MEMBROS_URL` | `https://nutrilualves.com.br/membros` |
+
+   Opcionais: `WHATSAPP_CONCORRENCIA` (6), `WHATSAPP_RETENCAO_DIAS` (90),
+   `WHATSAPP_WORKER` (`0` desliga o trabalhador neste serviço),
+   `WHATSAPP_API_VERSION` (`v25.0`).
+3. **Webhook** (app → WhatsApp → Configuração): URL
+   `https://app-nutri-lu-20-production.up.railway.app/whatsapp/webhook`, o
+   mesmo `WHATSAPP_VERIFY_TOKEN`, e assinar o campo **`messages`**.
+4. **Modelos** (WhatsApp Manager → Modelos de mensagem → Criar). Categoria
+   **Utilidade**, idioma **Português (BR)**, corpo com 1 variável (exemplo:
+   `Mariana`) e **um botão de resposta rápida**:
+
+   | Nome | Corpo | Botão |
+   |---|---|---|
+   | `plano_pronto` | Oi, {{1}}! A Nutri Luciana terminou e publicou o seu plano alimentar. Toque no botão abaixo pra ver os detalhes aqui mesmo. | Ver meu plano |
+   | `resposta_nutri` | Oi, {{1}}! A Nutri Luciana respondeu a dúvida que você enviou. Toque no botão abaixo pra ler a resposta. | Ver resposta |
+   | `boas_vindas` | Oi, {{1}}! Aqui é a Luna, assistente da Nutri Luciana. Sua compra do acompanhamento Nutri Lu foi confirmada. Toque no botão abaixo pra começar por aqui. | Começar |
+   | `mensagem_equipe` | Oi, {{1}}! O time do Nutri Lu respondeu o seu atendimento. Toque no botão abaixo pra ler a mensagem. | Ver mensagem |
+
+   Só depois de aprovado o nome entra em `WHATSAPP_TEMPLATES`. Modelo fora da
+   lista não é nem tentado (e o conteúdo chega quando a paciente escrever).
+5. **Time de suporte**: `node scripts/definir-papel.mjs --email ana@… --papel suporte`.
+   A pessoa entra na área de membros com esse e-mail e cai direto em
+   Painel → WhatsApp.
+
+## Testar sem a Meta
+
+```bash
+node scripts/dev-local.mjs                  # servidor local, modo simulado
+node scripts/teste-whatsapp.mjs             # 66 verificações, sem custo
+node scripts/teste-whatsapp.mjs --ia        # 76 verificações: + foto real → IA → diário (~US$ 0,02)
+node scripts/seed-whatsapp-demo.mjs         # conversas de mentira pra ver o painel
+```
+
+O servidor local **nunca** fala com a Meta, mesmo com o token no `.env`
+(`WHATSAPP_REAL=1` libera, pra testar contra o número de teste de propósito).
+
+## O que ficou pra depois
+
+- Envio de **sexta com a lista de compras** (precisa dos ingredientes do livro
+  PR no servidor; hoje a lista é calculada no navegador).
+- **Lembretes** de refeição/água/peso (os botões já existem no Perfil).
+- **Comunicado em lote** com tela no painel (hoje o "recado pra todas" chega
+  no WhatsApp de cada uma quando ela escrever, sem disparo em massa).
+- A Luna **sugerir receita** pelo WhatsApp (precisa do livro no servidor, com
+  o filtro duro de restrição e alergia).
+- Número de **venda** separado (outro portfólio), fora deste bot.

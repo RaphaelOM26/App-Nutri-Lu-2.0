@@ -95,13 +95,42 @@ async function contarNoMes(chave, maximo) {
  *   <PREFIXO>_MES_ASSIN    teto mensal do assinante
  * `0` em qualquer uma desliga aquele teto.
  */
+const num = (env, padrao) => {
+  const v = process.env[env];
+  return v === undefined ? padrao : Number(v);
+};
+
+// Os números de cada rota paga, num lugar só: a rota HTTP e o bot de WhatsApp
+// contam no MESMO contador (`<nome>:<userId>`), então o teto é da conta, não
+// do canal. Mandar 30 fotos pelo site e mais 30 pelo WhatsApp não dobra a cota.
+export const TETOS = {
+  'foto-ia': { limites: { gratis: 8, assinante: 30, assinanteMes: 400 }, env: 'LIMITE_FOTO_IA' },
+  voz: { limites: { gratis: 8, assinante: 30, assinanteMes: 400 }, env: 'LIMITE_VOZ' },
+  'chat-lu': { limites: { gratis: 15, assinante: 60, assinanteMes: 600 }, env: 'LIMITE_CHAT' },
+};
+
+/**
+ * O mesmo teto do middleware, pra quem não tem `req` (o bot de WhatsApp roda
+ * num trabalhador em segundo plano). Sem IP: no WhatsApp a identidade é a
+ * conta vinculada, que a Meta já autenticou pelo número.
+ *
+ * @returns {{ ok: true } | { ok: false, motivo: 'dia' | 'mes', limite: number }}
+ */
+export async function consumirTeto(nome, userId) {
+  const t = TETOS[nome];
+  if (!t || !userId) return { ok: true };
+  let assinante = false;
+  try { assinante = (await temAcesso(userId)).acesso === true; } catch { /* erra pro teto menor */ }
+  const maxDia = assinante ? num(`${t.env}_DIA_ASSIN`, t.limites.assinante) : num(`${t.env}_DIA`, t.limites.gratis);
+  const maxMes = assinante ? num(`${t.env}_MES_ASSIN`, t.limites.assinanteMes) : 0;
+  if (Number.isFinite(maxDia) && maxDia > 0 && contarNaMemoria(`${nome}:${userId}`, maxDia).estourou) return { ok: false, motivo: 'dia', limite: maxDia };
+  if (maxMes > 0 && (await contarNoMes(`${nome}:${userId}`, maxMes)).estourou) return { ok: false, motivo: 'mes', limite: maxMes };
+  return { ok: true };
+}
+
 export function teto(nome, limites, envPrefix) {
   return async (req, res, next) => {
     try {
-      const num = (env, padrao) => {
-        const v = process.env[env];
-        return v === undefined ? padrao : Number(v);
-      };
 
       // Nível. Sem usuário autenticado é sempre gratuito — e é o caso da maioria,
       // porque o app roda anônimo por padrão.

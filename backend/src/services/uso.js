@@ -35,6 +35,16 @@ export function contextoDeUso(req, res, next) {
   contexto.run({ rota: req.path, req }, () => next());
 }
 
+/**
+ * O mesmo contexto pra quem não tem requisição HTTP: o bot de WhatsApp chama a
+ * IA de dentro do trabalhador da fila. Sem isto as chamadas dele cairiam em
+ * ai_usage como rota 'desconhecida' e sem usuária — e o custo por paciente do
+ * canal WhatsApp ficaria invisível.
+ */
+export function comContextoDeUso({ rota, userId }, fn) {
+  return contexto.run({ rota, req: { user: userId ? { userId } : undefined, body: {} } }, fn);
+}
+
 const inteiro = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : null);
 
 // A OpenAI usa nomes diferentes por família de API: chat devolve

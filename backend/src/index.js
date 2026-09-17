@@ -24,6 +24,13 @@ import communityRouter from './routes/community.js';
 import billingRouter from './routes/billing.js';
 import clienteRouter from './routes/cliente.js';
 import nutriRouter from './routes/nutri.js';
+import whatsappRouter from './routes/whatsapp.js';
+import atendimentoRouter from './routes/atendimento.js';
+import { registrarExecutor, iniciarTrabalhador } from './services/whatsapp/fila.js';
+import { processarMensagem, avisarFalha } from './services/whatsapp/bot.js';
+import { executarAviso } from './services/whatsapp/avisos.js';
+import { executarConvite, marcarConviteFalho } from './services/whatsapp/convites.js';
+import { whatsappConfigurado } from './services/whatsapp/api.js';
 import { limparCodigosAntigos } from './services/loginPorEmail.js';
 
 const app = express();
@@ -51,7 +58,13 @@ if (CORS_ORIGIN === '*') console.warn('[cors] CORS_ORIGIN ausente — qualquer o
 // Middleware
 app.use(cors({ origin: origens.length === 1 && origens[0] === '*' ? '*' : origens }));
 // Limite alto pra acomodar imagens base64 (foto comum de celular ~2-4MB → base64 ~3-6MB)
-app.use(express.json({ limit: '15mb' }));
+// `verify` guarda o corpo CRU só do webhook do WhatsApp: a assinatura da Meta
+// (X-Hub-Signature-256) é calculada sobre os bytes exatos que ela mandou, e o
+// JSON já interpretado não serve pra conferir.
+app.use(express.json({
+  limit: '15mb',
+  verify: (req, res, buf) => { if (req.originalUrl.startsWith('/whatsapp/')) req.rawBody = buf; },
+}));
 
 // Fotos em disco (só desenvolvimento; ver services/r2.js). PUT grava, GET serve.
 if (fotosLocais()) {
@@ -126,6 +139,9 @@ app.use('/billing', billingRouter);
 app.use('/me', clienteRouter);
 // Painel da Luciana (papel nutri) e dos sócios (papel admin).
 app.use('/nutri', nutriRouter);
+// Bot de WhatsApp: o webhook da Meta e o painel onde o time responde.
+app.use('/whatsapp', whatsappRouter);
+app.use('/atendimento', atendimentoRouter);
 
 // Handler de erro padrão (último na cadeia). Mensagem interna (pg, config,
 // libs) só vai pro log — cliente recebe genérica em 500; em 4xx a mensagem é
@@ -159,6 +175,14 @@ async function start() {
       await aplicarMigracoes(getPool());
       // Códigos de login vencidos não servem pra nada: uma faxina por hora.
       setInterval(limparCodigosAntigos, 60 * 60 * 1000).unref();
+      // Trabalhador da fila do WhatsApp (IA e envio fora do request). Roda
+      // neste processo por padrão; WHATSAPP_WORKER=0 desliga, pra quando a
+      // fila ganhar um serviço só dela no Railway (node src/worker.js).
+      registrarExecutor('mensagem', processarMensagem, avisarFalha);
+      registrarExecutor('aviso', executarAviso);
+      registrarExecutor('convite', executarConvite, marcarConviteFalho);
+      if (process.env.WHATSAPP_WORKER !== '0') iniciarTrabalhador();
+      console.log(whatsappConfigurado() ? '[whatsapp] ligado à Meta' : '[whatsapp] MODO SIMULADO (sem WHATSAPP_TOKEN/WHATSAPP_PHONE_ID): nada sai pra Meta');
     } catch (e) {
       console.error('[boot] falha ao inicializar schema:', e.message);
     }

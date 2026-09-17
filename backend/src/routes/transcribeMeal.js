@@ -4,15 +4,18 @@
 //   1) Whisper transcreve o áudio em texto (PT-BR forçado)
 //   2) GPT estrutura a transcrição em items + macros + mealType
 // Resposta: { transcript, items, total, mealType, confidence }
+//
+// As duas chamadas à IA moram em services/refeicaoIA.js, que o bot de
+// WhatsApp também usa.
 
 import { Router } from 'express';
-import { teto } from '../services/limites.js';
+import { teto, TETOS } from '../services/limites.js';
 import { requirePremium } from '../services/billing.js';
-import { openai, MODEL, MEAL_VOICE_SCHEMA, MEAL_VOICE_PROMPT } from '../services/openai.js';
+import { transcrever, estruturarRefeicaoFalada } from '../services/refeicaoIA.js';
 
 const router = Router();
 
-router.post('/', requirePremium, teto('voz', { gratis: 8, assinante: 30, assinanteMes: 400 }, 'LIMITE_VOZ'), async (req, res, next) => {
+router.post('/', requirePremium, teto('voz', TETOS.voz.limites, TETOS.voz.env), async (req, res, next) => {
   try {
     const { audio, format } = req.body || {};
 
@@ -33,33 +36,8 @@ router.post('/', requirePremium, teto('voz', { gratis: 8, assinante: 30, assinan
       });
     }
 
-    // Extensão baseada no format declarado. Whisper aceita: mp3, mp4, mpeg,
-    // mpga, m4a, wav, webm, oga, flac, ogg.
-    const ext = (format || 'm4a').toLowerCase();
-    const mimeMap = {
-      m4a: 'audio/m4a',
-      mp3: 'audio/mpeg',
-      mp4: 'audio/mp4',
-      wav: 'audio/wav',
-      webm: 'audio/webm',
-      ogg: 'audio/ogg',
-    };
-    const mime = mimeMap[ext] || 'audio/m4a';
-
-    // ─── 1) Whisper transcreve ──────────────────────────────────
-    // OpenAI SDK aceita File-like — usamos toFile do helper.
-    const { toFile } = await import('openai/uploads');
-    const audioFile = await toFile(buffer, `audio.${ext}`, { type: mime });
-
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
-      model: 'whisper-1',
-      language: 'pt',
-      // prompt curto guia o vocabulário de domínio
-      prompt: 'Transcrição de uma pessoa relatando o que comeu numa refeição. Vocabulário comum: arroz, feijão, frango, ovo, salada, banana, café, leite, pão, tapioca, batata, brócolis, salmão, atum, aveia, granola.',
-    });
-
-    const transcript = (transcription.text || '').trim();
+    // Whisper aceita: mp3, mp4, mpeg, mpga, m4a, wav, webm, oga, flac, ogg.
+    const transcript = await transcrever(buffer, format || 'm4a');
 
     if (!transcript) {
       return res.status(422).json({
@@ -68,31 +46,7 @@ router.post('/', requirePremium, teto('voz', { gratis: 8, assinante: 30, assinan
       });
     }
 
-    // ─── 2) GPT estrutura a refeição ────────────────────────────
-    const completion = await openai.chat.completions.create({
-      model: MODEL,
-      messages: [
-        { role: 'system', content: MEAL_VOICE_PROMPT },
-        {
-          role: 'user',
-          content: `Transcrição do que o usuário disse:\n\n"${transcript}"\n\nEstruture em items de refeição com macros estimados.`,
-        },
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: MEAL_VOICE_SCHEMA,
-      },
-    });
-
-    const content = completion.choices[0]?.message?.content;
-    if (!content) {
-      throw Object.assign(new Error('Resposta vazia da IA.'), {
-        status: 502,
-        code: 'AI_EMPTY_RESPONSE',
-      });
-    }
-
-    const parsed = JSON.parse(content);
+    const parsed = await estruturarRefeicaoFalada(transcript);
     res.json({ transcript, ...parsed });
   } catch (err) {
     next(err);

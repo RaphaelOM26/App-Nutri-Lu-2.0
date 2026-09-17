@@ -3,16 +3,17 @@
 // Resposta: { items[], total, confidence }
 //
 // Usado pela tela "Foto IA" do app (Cal AI parity): usuário fotografa o prato
-// e a IA estima macros de cada item identificado.
+// e a IA estima macros de cada item identificado. A chamada à IA mora em
+// services/refeicaoIA.js, que o bot de WhatsApp também usa.
 
 import { Router } from 'express';
-import { teto } from '../services/limites.js';
+import { teto, TETOS } from '../services/limites.js';
 import { requirePremium } from '../services/billing.js';
-import { openai, FOOD_MODEL, FOOD_ANALYSIS_SCHEMA, FOOD_SYSTEM_PROMPT } from '../services/openai.js';
+import { analisarPrato } from '../services/refeicaoIA.js';
 
 const router = Router();
 
-router.post('/', requirePremium, teto('foto-ia', { gratis: 8, assinante: 30, assinanteMes: 400 }, 'LIMITE_FOTO_IA'), async (req, res, next) => {
+router.post('/', requirePremium, teto('foto-ia', TETOS['foto-ia'].limites, TETOS['foto-ia'].env), async (req, res, next) => {
   try {
     const { image } = req.body || {};
     if (!image) {
@@ -29,38 +30,7 @@ router.post('/', requirePremium, teto('foto-ia', { gratis: 8, assinante: 30, ass
     const imgBytes = Math.round((image.length * 3) / 4);
     console.log(`[analyze-food] received image: ${(imgBytes / 1024).toFixed(0)}KB, prefix="${image.slice(0, 20)}..."`);
 
-    const completion = await openai.chat.completions.create({
-      model: FOOD_MODEL,
-      messages: [
-        { role: 'system', content: FOOD_SYSTEM_PROMPT },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: 'Identifique os alimentos neste prato e estime os macros conforme o schema.',
-            },
-            {
-              type: 'image_url',
-              image_url: { url: dataUrl },
-            },
-          ],
-        },
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: FOOD_ANALYSIS_SCHEMA,
-      },
-    });
-
-    const content = completion.choices[0]?.message?.content;
-    if (!content) {
-      throw Object.assign(new Error('Resposta vazia da IA.'), {
-        status: 502,
-        code: 'AI_EMPTY_RESPONSE',
-      });
-    }
-    const parsed = JSON.parse(content);
+    const parsed = await analisarPrato(dataUrl);
     console.log(`[analyze-food] AI returned: items=${parsed.items?.length ?? 0}, confidence=${parsed.confidence}`);
     res.json(parsed);
   } catch (err) {

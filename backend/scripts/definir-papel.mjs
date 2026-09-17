@@ -4,6 +4,7 @@
 //
 //   node scripts/definir-papel.mjs --email lu@nutrilualves.com.br --papel nutri
 //   node scripts/definir-papel.mjs --email socio@exemplo.com --papel admin
+//   node scripts/definir-papel.mjs --email ana@exemplo.com --papel suporte    (só a tela de Atendimento do WhatsApp)
 //   node scripts/definir-papel.mjs --email fulana@exemplo.com --papel cliente   (revoga)
 //   node scripts/definir-papel.mjs --listar
 //
@@ -16,7 +17,7 @@ import 'dotenv/config';
 import pg from 'pg';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a, i, all) => (a.startsWith('--') ? [a.slice(2), all[i + 1]?.startsWith('--') || all[i + 1] === undefined ? true : all[i + 1]] : [])).filter((x) => x.length));
-const PAPEIS = ['cliente', 'nutri', 'admin'];
+const PAPEIS = ['cliente', 'nutri', 'admin', 'suporte'];
 const url = process.env.DATABASE_URL;
 if (!url) { console.error('DATABASE_URL ausente'); process.exit(1); }
 const pool = new pg.Pool({ connectionString: url, ssl: url.includes('railway') || url.includes('rlwy') ? { rejectUnauthorized: false } : undefined });
@@ -30,7 +31,7 @@ try {
     const email = String(args.email || '').trim().toLowerCase();
     const papel = String(args.papel || '');
     if (!email.includes('@') || !PAPEIS.includes(papel)) {
-      console.error('uso: node scripts/definir-papel.mjs --email <e-mail> --papel <cliente|nutri|admin>  |  --listar');
+      console.error('uso: node scripts/definir-papel.mjs --email <e-mail> --papel <cliente|nutri|admin|suporte>  |  --listar');
       process.exit(1);
     }
     const { rows } = await pool.query(

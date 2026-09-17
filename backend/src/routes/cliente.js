@@ -21,6 +21,8 @@ import { temAcesso } from '../services/billing.js';
 import { novaChave, urlDeUpload, urlDeLeitura, apagar, r2Configurado } from '../services/r2.js';
 import { exigirData, mesValido } from '../utils/datas.js';
 import { agendarRascunho } from '../services/triagem.js';
+import { numeroDoBot, mascarar } from '../services/whatsapp/api.js';
+import { contatoDaUsuaria, criarCodigoDeVinculo } from '../services/whatsapp/contatos.js';
 import {
   SLOTS, FONTES, erro, normalizarItens, exigirSlot, comFotoUrl, numeros,
   planoDaData, planoResumido, montarDia, montarEvolucao,
@@ -396,6 +398,43 @@ router.post('/perguntas', async (req, res, next) => {
     // cliente recebe o "enviado" na hora.
     agendarRascunho(rows[0].id);
     res.status(201).json({ id: rows[0].id, created_at: rows[0].created_at });
+  } catch (e) { next(e); }
+});
+
+// ─── WhatsApp (vínculo do número) ─────────────────────────────────────────
+// A paciente gera um código aqui (logada) e manda DO WhatsApp dela pro número
+// do bot: prova as duas pontas sem modelo pago de autenticação. Ver
+// services/whatsapp/contatos.js.
+
+router.get('/whatsapp', async (req, res, next) => {
+  try {
+    const c = await contatoDaUsuaria(req.user.userId);
+    const numero = numeroDoBot();
+    res.json({
+      disponivel: Boolean(numero),
+      numero_bot: numero,
+      link: numero ? `https://wa.me/${numero}` : null,
+      vinculado: Boolean(c),
+      numero: c ? mascarar(c.wa_id) : null,
+      vinculado_em: c?.vinculado_em || null,
+      avisos: c ? !c.opt_out_em : null,
+    });
+  } catch (e) { next(e); }
+});
+
+router.post('/whatsapp/codigo', async (req, res, next) => {
+  try {
+    if (!numeroDoBot()) throw erro('O WhatsApp do Nutri Lu ainda não está no ar.', 503, 'WHATSAPP_OFF');
+    res.status(201).json(await criarCodigoDeVinculo(req.user.userId));
+  } catch (e) { next(e); }
+});
+
+// Desvincular: o número volta a ser "de ninguém". O histórico da conversa
+// fica (some sozinho em 90 dias) e o diário não é tocado.
+router.delete('/whatsapp', async (req, res, next) => {
+  try {
+    await getPool().query(`UPDATE whatsapp_contatos SET user_id = NULL, vinculado_em = NULL, estado = '{}', updated_at = NOW() WHERE user_id = $1`, [req.user.userId]);
+    res.json({ ok: true });
   } catch (e) { next(e); }
 });
 

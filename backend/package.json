@@ -9,7 +9,8 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "backup": "node scripts/backup.mjs",
-    "backup:remoto": "node scripts/backup-remoto.mjs"
+    "backup:remoto": "node scripts/backup-remoto.mjs",
+    "worker": "node src/worker.js"
   },
   "engines": {
     "node": ">=20.0.0"

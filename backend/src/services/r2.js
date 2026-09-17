@@ -112,6 +112,48 @@ export async function urlDeLeitura(key) {
   return getSignedUrl(getClient(), cmd, { expiresIn: 3600 });
 }
 
+// ─── Gravação e leitura pelo SERVIDOR (bot de WhatsApp) ───────────────────
+// Na web o navegador sobe direto pro R2. No WhatsApp a foto chega da Meta pro
+// servidor (URL que expira em 5 min), então é o servidor que grava. E como a
+// análise por IA roda depois, num trabalhador, ele também precisa ler de volta.
+
+const EXT_WA = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'audio/ogg': 'ogg', 'audio/mpeg': 'mp3', 'audio/mp4': 'm4a', 'audio/aac': 'aac', 'audio/amr': 'amr', 'application/pdf': 'pdf' };
+
+/** Extensão de um tipo de mídia aceito pelo bot (null = não aceito). */
+export function extensaoDe(mime) {
+  return EXT_WA[String(mime || '').split(';')[0].trim().toLowerCase()] || null;
+}
+
+/** Chave nova pra mídia vinda do WhatsApp. `dono` = id da paciente, ou `wa/<contato>` se o número não é de ninguém ainda. */
+export function novaChaveWhatsapp(dono, mime) {
+  const ext = extensaoDe(mime);
+  if (!ext) throw Object.assign(new Error('Tipo de arquivo não aceito'), { status: 400, code: 'BAD_REQUEST' });
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  return `${dono}/whatsapp/${stamp}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
+}
+
+export async function gravar(key, buffer, contentType) {
+  if (LOCAL_DIR) {
+    const { mkdir, writeFile } = await import('node:fs/promises');
+    const { dirname, join } = await import('node:path');
+    const destino = join(LOCAL_DIR, ...key.replace(/\.\./g, '').split('/'));
+    await mkdir(dirname(destino), { recursive: true });
+    await writeFile(destino, buffer);
+    return;
+  }
+  await getClient().send(new PutObjectCommand({ Bucket: process.env.R2_BUCKET, Key: key, Body: buffer, ContentType: contentType }));
+}
+
+export async function ler(key) {
+  if (LOCAL_DIR) {
+    const { readFile } = await import('node:fs/promises');
+    const { join } = await import('node:path');
+    return readFile(join(LOCAL_DIR, ...key.replace(/\.\./g, '').split('/')));
+  }
+  const r = await getClient().send(new GetObjectCommand({ Bucket: process.env.R2_BUCKET, Key: key }));
+  return Buffer.from(await r.Body.transformToByteArray());
+}
+
 export async function apagar(key) {
   if (!key) return;
   if (LOCAL_DIR) { const { unlink } = await import('node:fs/promises'); await unlink(`${LOCAL_DIR}/${key}`).catch(() => {}); return; }

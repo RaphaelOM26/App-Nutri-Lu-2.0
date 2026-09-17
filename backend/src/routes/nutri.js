@@ -23,6 +23,7 @@ import {
 } from '../services/diario.js';
 import { montarDashboard, gerarSintese } from '../services/dashboard.js';
 import { gerarRascunho } from '../services/triagem.js';
+import { avisarMensagemDaNutri, avisarPlanoPronto } from '../services/whatsapp/avisos.js';
 
 const router = Router();
 const equipe = requirePapel('nutri', 'admin');
@@ -477,6 +478,9 @@ router.put('/pacientes/:id/plano-mes', soNutri, async (req, res, next) => {
     }
     await c.query('COMMIT');
 
+    // WhatsApp: só enfileira (o trabalhador entrega). O recado, se houver, vai junto com o aviso do plano.
+    if (publicar && b.avisar !== false) avisarPlanoPronto(u.id);
+
     let email = { enviado: false };
     if (publicar && b.avisar !== false && u.email) {
       email = await enviarPlanoPronto({ para: u.email, nome: (u.display_name || '').split(' ')[0], semana: `${total} semanas a partir de ${b.inicio}` })
@@ -530,6 +534,8 @@ router.put('/pacientes/:id/plano', soNutri, async (req, res, next) => {
       if (recado) await c.query(`INSERT INTO lu_messages (user_id, kind, author, text) VALUES ($1, 'recado', 'nutri', $2)`, [u.id, recado]);
     }
     await c.query('COMMIT');
+
+    if (publicar && b.avisar !== false) avisarPlanoPronto(u.id);
 
     let email = { enviado: false };
     if (publicar && b.avisar !== false && u.email) {
@@ -622,6 +628,8 @@ router.post('/pacientes/:id/recados', equipe, async (req, res, next) => {
       `INSERT INTO lu_messages (user_id, kind, author, text, reply_to) VALUES ($1, $2, 'nutri', $3, $4) RETURNING id, kind, author, text, reply_to, read_at, created_at`,
       [u.id, replyTo ? 'resposta' : 'recado', text, replyTo],
     );
+    // Chega também no WhatsApp dela, se estiver vinculado (pela fila, sem segurar esta resposta).
+    avisarMensagemDaNutri(u.id);
     res.status(201).json({ mensagem: rows[0] });
   } catch (e) { next(e); }
 });

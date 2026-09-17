@@ -21,8 +21,17 @@ export async function listarTabelas(pool) {
        AND table_type = 'BASE TABLE'
      ORDER BY table_name
   `);
-  return rows.map((r) => r.table_name);
+  return rows.map((r) => r.table_name).filter((t) => !FORA_DO_BACKUP.has(t));
 }
+
+/**
+ * Exceção EXPLÍCITA à descoberta automática: tabelas operacionais do bot de
+ * WhatsApp. Crescem com o volume (≈120 mil linhas/dia em 10 mil pacientes) e
+ * este dump lê cada tabela inteira na memória; nenhuma delas é insubstituível
+ * (fila de trabalho, histórico de conversa com retenção de 90 dias, código de
+ * 30 min). O vínculo número ↔ paciente (whatsapp_contatos) ENTRA no backup.
+ */
+const FORA_DO_BACKUP = new Set(['whatsapp_fila', 'whatsapp_mensagens', 'whatsapp_codigos']);
 
 /**
  * Lê o banco inteiro e devolve o arquivo já comprimido, junto do resumo.

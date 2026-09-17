@@ -269,6 +269,145 @@ export const MIGRACOES = [
       ALTER TABLE lu_messages ADD COLUMN IF NOT EXISTS rascunho_em TIMESTAMPTZ;
     `,
   },
+
+  // ─── Bot de WhatsApp (17/09/2026) ─────────────────────────────────────────
+  //
+  // Um número só (Cloud API da Meta) atende todas as pacientes: Luna, registro
+  // por foto/áudio e o time de suporte. Quatro tabelas:
+  //
+  //  whatsapp_contatos   quem fala com o número. `user_id` nulo = número que
+  //                      ainda não provou de quem é (o vínculo nasce da
+  //                      paciente mandando um código gerado na área de
+  //                      membros). `ultima_msg_cliente_em` é a JANELA de 24 h da
+  //                      Meta: dentro dela a resposta é livre e grátis; fora,
+  //                      só modelo aprovado. `atendimento = 'humano'` cala a
+  //                      Luna e põe a conversa na fila do painel.
+  //  whatsapp_codigos    código de vínculo, 30 min, uso único.
+  //  whatsapp_mensagens  o histórico (entrada e saída). `wa_message_id` único
+  //                      é a trava contra webhook repetido (a Meta reenvia por
+  //                      até 7 dias). `clinico` = fala de saúde por DICIONÁRIO:
+  //                      o papel suporte não lê. `sessao_humana` = chegou/saiu
+  //                      durante atendimento humano: é o que o suporte enxerga.
+  //  whatsapp_fila       trabalho pendente. O webhook só grava e responde 200;
+  //                      quem chama IA e a Meta é o trabalhador em segundo
+  //                      plano (services/whatsapp/fila.js). `chave` = contato:
+  //                      as mensagens de UMA pessoa saem em ordem, as de
+  //                      pessoas diferentes correm em paralelo.
+  //
+  // Fila e mensagens ficam FORA do backup diário (services/backup.js): crescem
+  // com o volume (10 mil pacientes ≈ 120 mil linhas/dia) e não são
+  // insubstituíveis. O vínculo (contatos) entra.
+  {
+    id: '008-whatsapp',
+    descricao: 'Bot de WhatsApp: contatos, vínculo por código, histórico, fila e papel suporte',
+    sql: `
+      ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+      ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('cliente', 'nutri', 'admin', 'suporte'));
+
+      CREATE TABLE IF NOT EXISTS whatsapp_contatos (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        wa_id TEXT NOT NULL UNIQUE,
+        user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+        nome_perfil TEXT,
+        vinculado_em TIMESTAMPTZ,
+        ultima_msg_cliente_em TIMESTAMPTZ,
+        atendimento TEXT NOT NULL DEFAULT 'luna' CHECK (atendimento IN ('luna', 'humano')),
+        fila TEXT CHECK (fila IS NULL OR fila IN ('suporte', 'comercial')),
+        atendente_id UUID REFERENCES users(id) ON DELETE SET NULL,
+        atendimento_desde TIMESTAMPTZ,
+        aguardando_equipe BOOLEAN NOT NULL DEFAULT FALSE,
+        opt_out_em TIMESTAMPTZ,
+        ultimo_aviso_em TIMESTAMPTZ,
+        estado JSONB NOT NULL DEFAULT '{}',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_wa_contatos_atendimento
+        ON whatsapp_contatos(fila, aguardando_equipe DESC, atendimento_desde) WHERE atendimento = 'humano';
+
+      CREATE TABLE IF NOT EXISTS whatsapp_codigos (
+        code TEXT PRIMARY KEY,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires_at TIMESTAMPTZ NOT NULL,
+        used_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_wa_codigos_user ON whatsapp_codigos(user_id);
+
+      CREATE TABLE IF NOT EXISTS whatsapp_mensagens (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        contato_id UUID NOT NULL REFERENCES whatsapp_contatos(id) ON DELETE CASCADE,
+        direcao TEXT NOT NULL CHECK (direcao IN ('in', 'out')),
+        wa_message_id TEXT UNIQUE,
+        tipo TEXT NOT NULL DEFAULT 'text',
+        texto TEXT,
+        media_key TEXT,
+        media_mime TEXT,
+        autor TEXT NOT NULL CHECK (autor IN ('cliente', 'luna', 'sistema', 'equipe')),
+        autor_id UUID REFERENCES users(id) ON DELETE SET NULL,
+        clinico BOOLEAN NOT NULL DEFAULT FALSE,
+        sessao_humana BOOLEAN NOT NULL DEFAULT FALSE,
+        status TEXT NOT NULL DEFAULT 'recebida',
+        erro TEXT,
+        criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_wa_mensagens_contato ON whatsapp_mensagens(contato_id, criado_em DESC);
+      CREATE INDEX IF NOT EXISTS idx_wa_mensagens_retencao ON whatsapp_mensagens(criado_em);
+      CREATE INDEX IF NOT EXISTS idx_wa_mensagens_janela ON whatsapp_mensagens(contato_id) WHERE status = 'aguardando_janela';
+
+      CREATE TABLE IF NOT EXISTS whatsapp_fila (
+        id BIGSERIAL PRIMARY KEY,
+        tipo TEXT NOT NULL,
+        chave TEXT NOT NULL,
+        payload JSONB NOT NULL DEFAULT '{}',
+        status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'processando', 'feito', 'falhou')),
+        tentativas INTEGER NOT NULL DEFAULT 0,
+        disponivel_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        travado_ate TIMESTAMPTZ,
+        erro TEXT,
+        criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        feito_em TIMESTAMPTZ
+      );
+      CREATE INDEX IF NOT EXISTS idx_wa_fila_aberta ON whatsapp_fila(chave, id) WHERE status IN ('pendente', 'processando');
+      CREATE INDEX IF NOT EXISTS idx_wa_fila_feita ON whatsapp_fila(feito_em) WHERE status IN ('feito', 'falhou');
+
+      -- Recado/resposta da Nutri Luciana já entregue no WhatsApp (nulo = ainda não).
+      ALTER TABLE lu_messages ADD COLUMN IF NOT EXISTS wa_entregue_em TIMESTAMPTZ;
+      CREATE INDEX IF NOT EXISTS idx_lu_messages_wa_pendente
+        ON lu_messages(user_id, created_at) WHERE author = 'nutri' AND wa_entregue_em IS NULL;
+    `,
+  },
+
+  // ─── Boas-vindas pelo WhatsApp a partir da compra (17/09/2026) ────────────
+  // A Hotmart manda o telefone do checkout junto com a compra aprovada. Cada
+  // compra vira no máximo UM convite (purchase_id único): um modelo aprovado
+  // com o botão "Começar". O telefone do checkout NÃO vincula nada sozinho (pode
+  // estar errado, ser de quem pagou): o vínculo só acontece quando a pessoa
+  // toca no botão, e `wa_id` guarda o identificador canônico que a Meta
+  // devolveu no envio, que é o mesmo que chega na resposta dela.
+  // Tudo desta função mora em services/whatsapp/convites.js e liga/desliga por
+  // WHATSAPP_BOAS_VINDAS — ver docs/whatsapp-bot.md.
+  {
+    id: '009-whatsapp-convites',
+    descricao: 'Convite de boas-vindas pelo WhatsApp a partir da compra na Hotmart',
+    sql: `
+      CREATE TABLE IF NOT EXISTS whatsapp_convites (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        purchase_id UUID NOT NULL UNIQUE REFERENCES purchases(id) ON DELETE CASCADE,
+        email TEXT NOT NULL,
+        nome TEXT,
+        telefone TEXT NOT NULL,
+        wa_id TEXT,
+        status TEXT NOT NULL DEFAULT 'pendente'
+          CHECK (status IN ('pendente', 'enviado', 'aceito', 'falhou', 'ignorado')),
+        motivo TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        enviado_em TIMESTAMPTZ,
+        aceito_em TIMESTAMPTZ
+      );
+      CREATE INDEX IF NOT EXISTS idx_wa_convites_wa_id ON whatsapp_convites(wa_id) WHERE status = 'enviado';
+    `,
+  },
 ];
 
 /**
