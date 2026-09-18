@@ -410,6 +410,12 @@ router.get('/whatsapp', async (req, res, next) => {
   try {
     const c = await contatoDaUsuaria(req.user.userId);
     const numero = numeroDoBot();
+    // Convite da compra (Hotmart) enviado e ainda sem resposta: a tela diz em
+    // que número a Luna já escreveu, em vez de mandar gerar código.
+    const { rows: [cv] } = c ? { rows: [] } : await getPool().query(
+      `SELECT v.wa_id, v.enviado_em FROM whatsapp_convites v JOIN users u ON u.email = v.email
+        WHERE u.id = $1 AND v.status = 'enviado' AND v.enviado_em > NOW() - interval '30 days'
+        ORDER BY v.enviado_em DESC LIMIT 1`, [req.user.userId]);
     res.json({
       disponivel: Boolean(numero),
       numero_bot: numero,
@@ -418,6 +424,7 @@ router.get('/whatsapp', async (req, res, next) => {
       numero: c ? mascarar(c.wa_id) : null,
       vinculado_em: c?.vinculado_em || null,
       avisos: c ? !c.opt_out_em : null,
+      convite: cv?.wa_id ? { numero: mascarar(cv.wa_id), enviado_em: cv.enviado_em } : null,
     });
   } catch (e) { next(e); }
 });

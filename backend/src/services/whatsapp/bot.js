@@ -132,18 +132,17 @@ async function semVinculo(contato, msg) {
     await mandar(contato, { texto: 'Combinado! Chamei a equipe do Nutri Lu. 🙋 Pode escrever a sua dúvida aqui que alguém te responde em horário comercial.' }, { autor: 'sistema' });
     return;
   }
-  // Veio da compra na Hotmart: tocou no botão "Começar" do convite (ou escreveu
-  // "começar"). É o toque, vindo do número que recebeu o convite, que vincula.
-  if (msg.type === 'button' || (msg.type === 'text' && ['comecar', 'vamos comecar', 'quero comecar'].includes(norm(msg.text?.body).replace(/[!.]+/g, '').trim()))) {
-    const compra = await aceitarConvite(contato);
-    if (compra) return boasVindas(contato, compra);
-  }
   if (msg.type === 'text') {
     const r = await tentarVinculo(contato, msg.text?.body);
     if (r.ok) return boasVindas(contato);
     if (r.motivo === 'bloqueado') { await mandar(contato, { texto: 'Foram muitos códigos errados seguidos. 🔒 Espera uma hora e gera um código novo em Perfil → Vincular WhatsApp.' }, { autor: 'sistema' }); return; }
     if (r.motivo === 'invalido') { await mandar(contato, { texto: `Esse código não está valendo (ele dura 30 minutos e só funciona uma vez). Gera outro em ${MEMBROS}/perfil e me manda. 😊` }, { autor: 'sistema' }); return; }
   }
+  // Veio da compra na Hotmart: o número que recebeu o convite RESPONDEU (tocou
+  // em "Começar" ou escreveu qualquer coisa). É a resposta vinda desse número
+  // que vincula; o telefone do checkout sozinho, não.
+  const compra = await aceitarConvite(contato);
+  if (compra) return boasVindas(contato, compra);
   // Instrução no máximo a cada 10 min: bot respondendo bot não vira conversa infinita.
   const ultima = contato.estado?.instrucao_em ? new Date(contato.estado.instrucao_em).getTime() : 0;
   if (Date.now() - ultima < 10 * 60 * 1000) return;
@@ -336,7 +335,7 @@ async function receberAudio(contato, msg, mensagemId) {
 // ─── 5. Texto: dicionário antes de IA ─────────────────────────────────────
 
 const SAUDACOES = new Set(['oi', 'oii', 'oie', 'ola', 'opa', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'ajuda', 'help', 'inicio', 'comecar', 'oi luna', 'ola luna']);
-const RE_MACROS = /\bmacros?\b|quant[oa]s? (calorias? )?(ja )?(comi|consumi|falta|faltam|posso comer)|resumo d[oe] (dia|hoje)|como (esta|ta|anda) (o )?meu dia|meu dia/;
+const RE_MACROS = /\bmacros?\b|quant[oa]s? (calorias? )?(ainda )?(ja )?(comi|consumi|falta|faltam|resta|restam|sobra|sobrou|posso (comer|consumir|ingerir)|consigo (comer|consumir))|(ainda )?(posso|consigo) (comer|consumir) quant|resumo d[oe] (dia|hoje)|como (esta|ta|anda) (o )?meu dia|meu dia/;
 const RE_PLANO = /o que (eu )?(como|vou comer|tem|e|devo comer|posso comer) .{0,12}\b(hoje|amanha|agora)\b|\b(plano|cardapio|refeicoes|refeicao) (alimentar )?(de |do |da |pra |para )?(hoje|amanha|agora)\b|\b(cafe|almoco|jantar|janta|lanche|ceia) (da manha |da tarde )?(de |do |pra |para )?(hoje|amanha)\b|^(meu )?(plano|cardapio)$/;
 const RE_PESO = /^(?:(?:meu )?peso|pesei|pesando|to com|estou com)\D{0,6}(\d{2,3}(?:[.,]\d{1,2})?)\s*(?:kg|kilos?|quilos?)?$|^(\d{2,3}(?:[.,]\d{1,2})?)\s*(?:kg|kilos?|quilos?)$/;
 const RE_MATERIAIS = /^(quero |ver |me manda |manda |os |meus )*(materia(l|is)|pdfs?|apostilas?|videos?|aulas?|ebooks?)( da (nutri|luciana|lu))?$/;
@@ -406,9 +405,20 @@ async function resumoDoDia(contato) {
   const hoje = dataBR();
   const dia = await montarDia(contato.user_id, hoje);
   const t = dia.targets || {}; const c = dia.consumido;
-  const linha = (rotulo, v, meta, un) => (meta ? `${rotulo}: *${n0(v)}* de ${n0(meta)} ${un}${meta > v ? ` · faltam ${n0(meta - v)}` : ' ✅'}` : `${rotulo}: *${n0(v)}* ${un}`);
+  // Sem plano publicado, a conta é contra a faixa provisória do onboarding (e
+  // sai em faixa também: ninguém escolhe um número dentro dela).
+  const est = !t.kcal && dia.estimativa?.kcal ? dia.estimativa : null;
+  const chave = { Calorias: 'kcal', Proteína: 'p', Carboidrato: 'c', Gordura: 'f' };
+  const linha = (rotulo, v, meta, un) => {
+    if (meta) return `${rotulo}: *${n0(v)}* de ${n0(meta)} ${un}${meta > v ? ` · faltam ${n0(meta - v)}` : ' ✅'}`;
+    const f = est?.[chave[rotulo]];
+    if (!f) return `${rotulo}: *${n0(v)}* ${un}`;
+    const [lo, hi] = f;
+    const resto = v < lo ? ` · faltam ${n0(lo - v)} a ${n0(hi - v)}` : v <= hi ? ` · na faixa, até ${n0(hi - v)} a mais` : ' · passou da faixa';
+    return `${rotulo}: *${n0(v)}* de ${n0(lo)} a ${n0(hi)} ${un}${resto}`;
+  };
   const feitas = [...new Set(dia.entries.map((e) => ROTULO[e.slot]))];
-  const referencia = !t.kcal && dia.estimativa?.kcal ? `\n\n_Referência provisória: ${n0(dia.estimativa.kcal[0])} a ${n0(dia.estimativa.kcal[1])} kcal, até a Nutri Luciana publicar o seu plano._` : '';
+  const referencia = est ? '\n\n_Faixa provisória, calculada no seu cadastro. Vale até a Nutri Luciana publicar o seu plano._' : '';
   await mandar(contato, {
     texto: `*Seu dia até agora* (${dataCurta(hoje)})\n\n🔥 ${linha('Calorias', c.kcal, t.kcal, 'kcal')}\n🥩 ${linha('Proteína', c.p, t.p, 'g')}\n🍚 ${linha('Carboidrato', c.c, t.c, 'g')}\n🥑 ${linha('Gordura', c.f, t.f, 'g')}\n💧 Água: ${n0(dia.water_ml)} ml${t.water_ml ? ` de ${n0(t.water_ml)}` : ''}\n\n${feitas.length ? `Registrado: ${feitas.join(' · ')}` : 'Nada registrado hoje ainda. Manda a foto do próximo prato que eu registro. 📸'}${referencia}`,
   }, { autor: 'sistema' });

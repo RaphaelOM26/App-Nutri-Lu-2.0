@@ -408,6 +408,15 @@ export const MIGRACOES = [
       CREATE INDEX IF NOT EXISTS idx_wa_convites_wa_id ON whatsapp_convites(wa_id) WHERE status = 'enviado';
     `,
   },
+  // A área de membros mostra "a Luna já te escreveu no número X" pelo e-mail
+  // da conta (GET /me/whatsapp), a cada abertura do Perfil e do onboarding.
+  {
+    id: '010-whatsapp-convites-email',
+    descricao: 'Índice do convite pendente por e-mail',
+    sql: `
+      CREATE INDEX IF NOT EXISTS idx_wa_convites_email ON whatsapp_convites(email) WHERE status = 'enviado';
+    `,
+  },
 ];
 
 /**

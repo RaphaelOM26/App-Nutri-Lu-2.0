@@ -105,8 +105,22 @@ function buildContextMessage(ctx) {
   if (ctx.macros) {
     const { kcal, p, c, f } = ctx.macros;
     parts.push(
-      `Macros de hoje (consumido / meta): ${kcal?.value}kcal/${kcal?.target}kcal · ` +
-        `Proteína ${p?.value}g/${p?.target}g · Carbs ${c?.value}g/${c?.target}g · Gordura ${f?.value}g/${f?.target}g.`,
+      kcal?.target
+        ? `Macros de hoje (consumido / meta): ${kcal?.value}kcal/${kcal?.target}kcal · ` +
+            `Proteína ${p?.value}g/${p?.target}g · Carbs ${c?.value}g/${c?.target}g · Gordura ${f?.value}g/${f?.target}g.`
+        : `Consumido hoje: ${kcal?.value}kcal · Proteína ${p?.value}g · Carbs ${c?.value}g · Gordura ${f?.value}g (sem meta do plano ainda).`,
+    );
+  }
+  // Sem plano publicado, a referência é a faixa provisória do onboarding
+  // (fórmula de bolso). Vai como FAIXA: a Luna não escolhe um número dentro dela.
+  const e = ctx.estimativa;
+  if (e?.kcal) {
+    const fx = (f, un) => `${f[0]} a ${f[1]}${un}`;
+    parts.push(
+      `Ainda não há plano publicado pela Nutri Luciana. Referência PROVISÓRIA (faixa por dia, calculada no cadastro): ` +
+        `${fx(e.kcal, ' kcal')} · Proteína ${fx(e.p, ' g')} · Carbs ${fx(e.c, ' g')} · Gordura ${fx(e.f, ' g')}. ` +
+        `Se ela perguntar quanto ainda pode comer, calcule o que falta até a faixa (em faixa, ex.: "faltam 400 a 700 kcal") ` +
+        `a partir do consumido e diga que é provisório até a Nutri Luciana publicar o plano.`,
     );
   }
   if (Array.isArray(ctx.meals) && ctx.meals.length) {
@@ -214,6 +228,7 @@ export async function contextoDoServidor(userId, date) {
       kcal: { value: dia.consumido.kcal, target: t.kcal ?? 0 }, p: { value: dia.consumido.p, target: t.p ?? 0 },
       c: { value: dia.consumido.c, target: t.c ?? 0 }, f: { value: dia.consumido.f, target: t.f ?? 0 },
     },
+    estimativa: !t.kcal && dia.estimativa?.kcal ? dia.estimativa : null,
     meals: dia.entries.map((e) => ({ name: ROTULO_SLOT[e.slot] || e.slot, items: (e.items || []).map((i) => ({ name: i.name, portion: i.portion, kcal: i.kcal })) })),
     planoHoje: (dia.plano?.dia?.meals || []).map((m) => `${ROTULO_SLOT[m.slot] || m.slot}${m.time ? ` (${m.time})` : ''}: ${m.name}${m.subs ? ` · substituições: ${m.subs}` : ''}`),
     water: Math.round((dia.water_ml || 0) / 250),
