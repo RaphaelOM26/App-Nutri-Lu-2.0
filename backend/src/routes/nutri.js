@@ -124,7 +124,9 @@ router.get('/pacientes', equipe, async (req, res, next) => {
       ), prox AS (
         SELECT DISTINCT user_id FROM meal_plans WHERE status = 'ativo' AND week_start = $4
       ), rasc AS (
-        SELECT user_id, COUNT(*)::int AS n FROM meal_plans WHERE status = 'rascunho' GROUP BY user_id
+        -- Rascunho DELA: o do sistema (aprovação em lote) que ela ainda não tocou
+        -- não conta aqui, senão toda paciente nova apareceria "com rascunho".
+        SELECT user_id, COUNT(*)::int AS n FROM meal_plans WHERE status = 'rascunho' AND (created_by <> 'sistema' OR alterado_pela_nutri) GROUP BY user_id
       ), anam AS (
         -- 'caneta' é dado clínico: só vai na resposta pra nutri (ver abaixo).
         SELECT user_id, (data->>'caneta_usa') = 'sim' AS caneta FROM anamnese_clinica

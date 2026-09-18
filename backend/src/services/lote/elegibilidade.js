@@ -123,11 +123,13 @@ export function checarPlano(semanas, targets, d) {
   if (gasto && targets?.kcal && (gasto - targets.kcal) / gasto > R.deficitMax) motivos.push(`déficit de ${Math.round(((gasto - targets.kcal) / gasto) * 100)}% do gasto estimado`);
   const termos = termosExcluidos(d.naoGosta, d.alergias);
   const pedidos = normalizar(d.indispensavel);
+  let diasFora = 0, maiorDesvio = 0;
   for (const [i, s] of semanas.entries()) {
     const usos = new Map();
     for (const dia of s.days || []) {
       const soma = (dia.meals || []).flatMap((m) => m.items || []).reduce((a, it) => a + Number(it.kcal || 0), 0);
-      if (targets?.kcal && Math.abs(soma - targets.kcal) / targets.kcal > R.toleranciaMeta) { motivos.push(`semana ${i + 1}, dia ${dia.weekday}: ${Math.round(soma)} kcal contra meta de ${targets.kcal}`); }
+      const desvio = targets?.kcal ? Math.abs(soma - targets.kcal) / targets.kcal : 0;
+      if (desvio > R.toleranciaMeta) { diasFora += 1; maiorDesvio = Math.max(maiorDesvio, desvio); }
       for (const m of dia.meals || []) {
         for (const it of m.items || []) {
           const code = it.code || m.code;
@@ -142,6 +144,7 @@ export function checarPlano(semanas, targets, d) {
     }
     for (const [code, n] of usos) if (n > R.repeticaoMaxSemana) motivos.push(`semana ${i + 1}: ${PRATICA_POR_CODIGO.get(code)?.name || code} repete ${n}×`);
   }
+  if (diasFora) motivos.push(`${diasFora} dia${diasFora > 1 ? 's' : ''} fora da meta de calorias (até ${Math.round(maiorDesvio * 100)}% de diferença)`);
   if (pedidos && pedidos.length >= 3 && !semanas.some((s) => (s.days || []).some((dia) => (dia.meals || []).some((m) => m.items?.some((it) => { const r = PRATICA_POR_CODIGO.get(it.code || m.code); return r && pedidos.split(/[,; e]+/).filter((x) => x.length >= 3).some((t) => normalizar(r.name + ' ' + r.ingredients.map((i) => i.name).join(' ')).includes(t)); }))))) {
     motivos.push('o "não abro mão" não entrou no plano');
   }

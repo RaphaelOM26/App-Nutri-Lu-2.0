@@ -10,7 +10,9 @@
 // lote quem cumpre TODOS os critérios; qualquer coisa fora, ou que ninguém
 // previu, cai na revisão individual da Luciana. Regra em código, nunca IA.
 
-export const VERSAO = '2026-09-18.1';
+// Sobe também quando o GERADOR muda (ex.: .2 = ajuste fino de porções): o
+// rascunho intocado é refeito na varredura seguinte.
+export const VERSAO = '2026-09-18.2';
 
 export const REGRAS = {
   // Parte 1: quem pode entrar no lote

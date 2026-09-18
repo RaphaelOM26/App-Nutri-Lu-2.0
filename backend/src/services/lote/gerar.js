@@ -116,10 +116,13 @@ export async function varrerPacientesSemPlano() {
         AND NOT EXISTS (SELECT 1 FROM whatsapp_fila f WHERE f.tipo = 'plano' AND f.chave = 'plano:' || u.id::text AND f.status IN ('pendente', 'processando'))
         AND (
           NOT EXISTS (SELECT 1 FROM meal_plans m WHERE m.user_id = u.id AND m.week_start = $1)
+          -- regras (ou gerador) mudaram: rascunho do sistema ainda intocado é refeito
+          OR EXISTS (SELECT 1 FROM meal_plans m WHERE m.user_id = u.id AND m.created_by = 'sistema' AND m.status = 'rascunho'
+                        AND NOT m.alterado_pela_nutri AND m.lote_id IS NULL AND m.regras_versao IS DISTINCT FROM $3)
           OR EXISTS (SELECT 1 FROM meal_plans m WHERE m.user_id = u.id AND m.status = 'ativo' AND m.week_start = $1 AND m.week_index = m.week_total
                         AND NOT EXISTS (SELECT 1 FROM meal_plans n WHERE n.user_id = u.id AND n.week_start = $2))
         )
-      LIMIT 500`, [ws, prox]);
+      LIMIT 500`, [ws, prox, VERSAO]);
   for (const r of rows) await pedirGeracao(r.id, { emSegundos: 0 });
   if (rows.length) console.log(`[lote] varredura: ${rows.length} geração(ões) pedida(s)`);
 }
