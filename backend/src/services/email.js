@@ -6,8 +6,10 @@
 // troca-se só esta função por um provedor de API (Resend, Postmark) — quem
 // chama não muda.
 //
+// Em produção (18/09/2026) é o Resend, pela API HTTPS: ver `enviar()` abaixo.
+//
 // Variáveis (Railway):
-//   SMTP_HOST   ex.: smtp.titan.email
+//   SMTP_HOST   ex.: smtp.resend.com (vira API) ou smtp.titan.email
 //   SMTP_PORT   465 (SSL) ou 587 (STARTTLS)
 //   SMTP_USER   o e-mail que envia
 //   SMTP_PASS   a senha dele — NUNCA no chat, nunca no repositório
@@ -32,8 +34,32 @@ function getTransporter() {
     port,
     secure: port === 465,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    // Sem isso uma porta bloqueada segura o pedido por minutos e a tela fica em "Enviando…".
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
   });
   return transporter;
+}
+
+// O Railway (plano Hobby) bloqueia SMTP de saída. Com o Resend configurado
+// (SMTP_HOST=smtp.resend.com, a chave em SMTP_PASS), o envio vai pela API
+// HTTPS dele, que passa. Outros provedores seguem por SMTP.
+const viaApiResend = () => process.env.SMTP_HOST === 'smtp.resend.com';
+
+async function enviar({ from, to, subject, text, html }) {
+  if (!viaApiResend()) return getTransporter().sendMail({ from, to, subject, text, html });
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.SMTP_PASS}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to: [to], subject, text, html }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!r.ok) {
+    const corpo = await r.text().catch(() => '');
+    throw new Error(`Resend ${r.status}: ${corpo.slice(0, 200)}`);
+  }
+  return r.json();
 }
 
 function escapar(s) {
@@ -79,7 +105,7 @@ export async function enviarCodigoLogin({ para, codigo, nome }) {
       <p style="font-size: 14px; margin: 0;">Lu Alves · Nutri Lu</p>
     </div>`;
 
-  await getTransporter().sendMail({
+  await enviar({
     from,
     to: para,
     subject: `${codigo} é o seu código do Nutri Lu`,
@@ -118,6 +144,6 @@ export async function enviarPlanoPronto({ para, nome, semana, link }) {
       <p style="font-size: 14px; color: #555; margin: 0 0 8px;">Qualquer dúvida, me chama por lá.</p>
       <p style="font-size: 14px; margin: 0;">Lu Alves · Nutri Lu</p>
     </div>`;
-  await getTransporter().sendMail({ from, to: para, subject: 'Seu plano da semana está pronto', text: texto, html });
+  await enviar({ from, to: para, subject: 'Seu plano da semana está pronto', text: texto, html });
   return { enviado: true };
 }
