@@ -24,6 +24,7 @@ import {
 import { montarDashboard, gerarSintese } from '../services/dashboard.js';
 import { gerarRascunho } from '../services/triagem.js';
 import { avisarMensagemDaNutri, avisarPlanoPronto } from '../services/whatsapp/avisos.js';
+import { travarLote } from './lote.js';
 
 const router = Router();
 const equipe = requirePapel('nutri', 'admin');
@@ -418,7 +419,10 @@ router.get('/pacientes/:id/plano-mes', equipe, async (req, res, next) => {
       const p = rows.find((r) => r.week_start === ws);
       return { week_start: ws, indice: i + 1, plano: p ? { ...planoResumido(p), days: p.days, overrides: p.overrides, published_at: p.published_at, updated_at: p.updated_at } : null };
     });
-    res.json({ inicio, semanas });
+    // Rascunho do sistema: o editor mostra o veredito da lista verde e o lote em que está.
+    const s = rows.find((r) => r.created_by === 'sistema' && r.week_index === 1);
+    const sistema = s ? { elegivel_lote: s.elegivel_lote, motivos_revisao: s.motivos_revisao, perfil_chave: s.perfil_chave, regras_versao: s.regras_versao, gerado_em: s.gerado_em, alterado_pela_nutri: s.alterado_pela_nutri, lote_id: s.lote_id, aprovacao: s.aprovacao } : null;
+    res.json({ inicio, semanas, sistema });
   } catch (e) { next(e); }
 });
 
@@ -447,6 +451,19 @@ router.put('/pacientes/:id/plano-mes', soNutri, async (req, res, next) => {
     const recado = b.recado ? String(b.recado).trim().slice(0, 2000) : '';
 
     await c.query('BEGIN');
+    // Rascunho do SISTEMA (aprovação em lote) neste mês? Então esta gravação
+    // é a Luciana revisando: registra se ela mudou algo (calibração) e, se
+    // ela estava conferindo a amostra de um lote, trava o lote inteiro.
+    const { rows: anteriores } = await c.query(
+      `SELECT week_start, created_by, days, targets, lote_id, alterado_pela_nutri FROM meal_plans WHERE user_id = $1 AND week_start = ANY($2) FOR UPDATE`,
+      [u.id, semanas.map((s) => s.week_start)]);
+    const doSistema = anteriores.filter((a) => a.created_by === 'sistema');
+    // O jsonb reordena as chaves ao guardar: a comparação precisa ser canônica.
+    const canon = (v) => JSON.stringify(v, (_, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, x[k]])) : x));
+    const mudou = doSistema.some((a) => {
+      const novo = semanas.find((s) => s.week_start === a.week_start);
+      return !novo || canon(a.days) !== canon(novo.days) || canon(a.targets) !== canon(novo.targets);
+    }) || (doSistema.length > 0 && semanas.length !== anteriores.length);
     const salvos = [];
     for (const plano of semanas) {
       const { rows: [s] } = await c.query(
@@ -456,11 +473,20 @@ router.put('/pacientes/:id/plano-mes', soNutri, async (req, res, next) => {
            week_index = EXCLUDED.week_index, week_total = EXCLUDED.week_total, targets = EXCLUDED.targets,
            note = EXCLUDED.note, days = EXCLUDED.days, updated_at = NOW(),
            status = CASE WHEN $8 = 'ativo' THEN 'ativo' ELSE meal_plans.status END,
-           published_at = CASE WHEN $8 = 'ativo' THEN COALESCE(meal_plans.published_at, NOW()) ELSE meal_plans.published_at END
+           published_at = CASE WHEN $8 = 'ativo' THEN COALESCE(meal_plans.published_at, NOW()) ELSE meal_plans.published_at END,
+           alterado_pela_nutri = meal_plans.alterado_pela_nutri OR ($9::boolean AND meal_plans.created_by = 'sistema'),
+           aprovacao = CASE WHEN $8 = 'ativo' AND meal_plans.created_by = 'sistema' THEN 'individual' ELSE meal_plans.aprovacao END,
+           aprovado_por = CASE WHEN $8 = 'ativo' AND meal_plans.created_by = 'sistema' THEN $10::uuid ELSE meal_plans.aprovado_por END
          RETURNING *`,
-        [u.id, plano.week_start, plano.week_index, plano.week_total, JSON.stringify(plano.targets), plano.note, JSON.stringify(plano.days), publicar ? 'ativo' : 'rascunho'],
+        [u.id, plano.week_start, plano.week_index, plano.week_total, JSON.stringify(plano.targets), plano.note, JSON.stringify(plano.days), publicar ? 'ativo' : 'rascunho', mudou, req.user.userId],
       );
       salvos.push(s);
+    }
+    const loteId = doSistema.find((a) => a.lote_id)?.lote_id;
+    if (loteId && (mudou || publicar)) {
+      const { rows: [l] } = await c.query(`SELECT amostra, status FROM planos_lotes WHERE id = $1`, [loteId]);
+      if (l?.status === 'aberto' && mudou && l.amostra.includes(u.id)) await travarLote(loteId, `correção na amostra (${u.display_name || u.email})`, c);
+      else await c.query(`UPDATE meal_plans SET lote_id = NULL WHERE user_id = $1 AND lote_id = $2`, [u.id, loteId]);
     }
     if (sups) {
       await c.query(`UPDATE supplements SET active = FALSE WHERE user_id = $1`, [u.id]);

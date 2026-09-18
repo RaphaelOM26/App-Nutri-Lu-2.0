@@ -417,6 +417,42 @@ export const MIGRACOES = [
       CREATE INDEX IF NOT EXISTS idx_wa_convites_email ON whatsapp_convites(email) WHERE status = 'enviado';
     `,
   },
+  // Aprovação em lote (18/09/2026, services/lote): o sistema gera o rascunho
+  // do mês e registra se cabe no lote e por quê não; a Luciana aprova de 10
+  // em 10 com amostra, ou um a um. Tudo fica registrado (quem, quando, como,
+  // com que versão das regras).
+  {
+    id: '011-aprovacao-em-lote',
+    descricao: 'Rascunhos gerados pelo sistema, elegibilidade, lotes e registro da aprovação',
+    sql: `
+      ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS elegivel_lote BOOLEAN;
+      ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS motivos_revisao JSONB NOT NULL DEFAULT '[]';
+      ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS perfil_chave TEXT;
+      ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS regras_versao TEXT;
+      ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS gerado_em TIMESTAMPTZ;
+      ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS alterado_pela_nutri BOOLEAN NOT NULL DEFAULT FALSE;
+      ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS aprovacao TEXT CHECK (aprovacao IN ('individual', 'lote'));
+      ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS aprovado_por UUID REFERENCES users(id) ON DELETE SET NULL;
+      ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS lote_id UUID;
+      CREATE INDEX IF NOT EXISTS idx_meal_plans_sistema ON meal_plans(created_by, status, week_index) WHERE created_by = 'sistema';
+      CREATE INDEX IF NOT EXISTS idx_meal_plans_calibracao ON meal_plans(perfil_chave, created_by, status) WHERE created_by = 'sistema' AND week_index = 1;
+
+      CREATE TABLE IF NOT EXISTS planos_lotes (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        criado_por UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        perfil_chave TEXT NOT NULL,
+        regras_versao TEXT NOT NULL,
+        membros JSONB NOT NULL,          -- [{ user_id, inicio }]
+        amostra JSONB NOT NULL,          -- user_ids sorteados
+        conferidos JSONB NOT NULL DEFAULT '[]',
+        status TEXT NOT NULL DEFAULT 'aberto' CHECK (status IN ('aberto', 'aprovado', 'travado', 'cancelado')),
+        motivo TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        fechado_em TIMESTAMPTZ
+      );
+      CREATE INDEX IF NOT EXISTS idx_planos_lotes_abertos ON planos_lotes(criado_por) WHERE status = 'aberto';
+    `,
+  },
 ];
 
 /**

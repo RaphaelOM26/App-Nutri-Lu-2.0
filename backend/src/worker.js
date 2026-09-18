@@ -11,11 +11,14 @@ import { registrarExecutor, iniciarTrabalhador } from './services/whatsapp/fila.
 import { processarMensagem, avisarFalha } from './services/whatsapp/bot.js';
 import { executarAviso } from './services/whatsapp/avisos.js';
 import { executarConvite, marcarConviteFalho } from './services/whatsapp/convites.js';
+import { gerarPlanoAutomatico, varrerPacientesSemPlano } from './services/lote/gerar.js';
 
 if (!process.env.DATABASE_URL) { console.error('DATABASE_URL ausente'); process.exit(1); }
 registrarExecutor('mensagem', processarMensagem, avisarFalha);
 registrarExecutor('aviso', executarAviso);
 registrarExecutor('convite', executarConvite, marcarConviteFalho);
+registrarExecutor('plano', gerarPlanoAutomatico);
 iniciarTrabalhador();
+setInterval(() => varrerPacientesSemPlano().catch((e) => console.warn('[lote] varredura falhou:', e.message)), 60 * 60 * 1000);
 // Os timers da fila são unref(): sem isto o processo sairia na hora.
 setInterval(() => {}, 60 * 60 * 1000);

@@ -27,6 +27,8 @@ import nutriRouter from './routes/nutri.js';
 import whatsappRouter from './routes/whatsapp.js';
 import atendimentoRouter from './routes/atendimento.js';
 import { registrarExecutor, iniciarTrabalhador } from './services/whatsapp/fila.js';
+import { gerarPlanoAutomatico, varrerPacientesSemPlano } from './services/lote/gerar.js';
+import loteRouter from './routes/lote.js';
 import { processarMensagem, avisarFalha } from './services/whatsapp/bot.js';
 import { executarAviso } from './services/whatsapp/avisos.js';
 import { executarConvite, marcarConviteFalho } from './services/whatsapp/convites.js';
@@ -139,6 +141,7 @@ app.use('/billing', billingRouter);
 app.use('/me', clienteRouter);
 // Painel da Luciana (papel nutri) e dos sócios (papel admin).
 app.use('/nutri', nutriRouter);
+app.use('/nutri/lote', loteRouter);
 // Bot de WhatsApp: o webhook da Meta e o painel onde o time responde.
 app.use('/whatsapp', whatsappRouter);
 app.use('/atendimento', atendimentoRouter);
@@ -181,7 +184,14 @@ async function start() {
       registrarExecutor('mensagem', processarMensagem, avisarFalha);
       registrarExecutor('aviso', executarAviso);
       registrarExecutor('convite', executarConvite, marcarConviteFalho);
-      if (process.env.WHATSAPP_WORKER !== '0') iniciarTrabalhador();
+      // Rascunho do plano gerado pelo sistema (aprovação em lote). Varredura
+      // por hora pega quem ficou sem e quem está no fim do mês de plano.
+      registrarExecutor('plano', gerarPlanoAutomatico);
+      if (process.env.WHATSAPP_WORKER !== '0') {
+        iniciarTrabalhador();
+        setInterval(() => varrerPacientesSemPlano().catch((e) => console.warn('[lote] varredura falhou:', e.message)), 60 * 60 * 1000).unref();
+        setTimeout(() => varrerPacientesSemPlano().catch(() => {}), 30_000).unref();
+      }
       console.log(whatsappConfigurado() ? '[whatsapp] ligado à Meta' : '[whatsapp] MODO SIMULADO (sem WHATSAPP_TOKEN/WHATSAPP_PHONE_ID): nada sai pra Meta');
     } catch (e) {
       console.error('[boot] falha ao inicializar schema:', e.message);

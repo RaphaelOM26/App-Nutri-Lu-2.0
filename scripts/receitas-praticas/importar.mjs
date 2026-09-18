@@ -277,4 +277,14 @@ export const PRATICAS_POR_CODIGO: Record<string, NutriRecipe> = Object.fromEntri
 fs.mkdirSync(path.dirname(DESTINO), { recursive: true });
 fs.writeFileSync(DESTINO, conteudo);
 console.log(`\n✔ ${receitas.length} receitas → ${DESTINO}`);
+
+// O servidor também precisa do livro (aprovação em lote: o gerador roda lá).
+// Só o que o gerador usa: sem passos, conservação e substituições.
+const DESTINO_JSON = path.resolve(RAIZ, 'backend', 'data', 'receitas-praticas.json');
+fs.mkdirSync(path.dirname(DESTINO_JSON), { recursive: true });
+fs.writeFileSync(DESTINO_JSON, JSON.stringify(receitas.map((r) => ({
+  id: r.id, name: r.name, tipo: r.tipo, meals: r.meals, tags: r.tags, time: r.time, servings: r.servings,
+  ingredients: r.ingredients.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit })), macros: r.macros,
+}))));
+console.log(`✔ livro pro servidor → ${DESTINO_JSON}`);
 console.log(`  relatório: ${RELATORIO}`);

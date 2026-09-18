@@ -193,6 +193,9 @@ export const CAMPOS_PERFIL = new Set([
   // Onboarding web: quando terminou e a estimativa em faixa (referência até
   // a nutricionista aprovar o plano). foto_key é a foto de perfil no R2.
   'onboarding_em', 'estimativa', 'foto_key',
+  // Gestante ou amamentando: 'nao' | 'gravida' | 'amamentando'. Tira do lote
+  // de aprovação (services/lote); não é dado clínico, é do cadastro.
+  'gestante',
 ]);
 
 /** Campos clínicos (dado de saúde). Só a dona e o painel da nutri (papel nutri) leem. */

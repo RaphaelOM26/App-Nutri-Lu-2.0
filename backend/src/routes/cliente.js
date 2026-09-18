@@ -23,6 +23,7 @@ import { exigirData, mesValido } from '../utils/datas.js';
 import { agendarRascunho } from '../services/triagem.js';
 import { numeroDoBot, mascarar } from '../services/whatsapp/api.js';
 import { contatoDaUsuaria, criarCodigoDeVinculo } from '../services/whatsapp/contatos.js';
+import { pedirGeracao } from '../services/lote/gerar.js';
 import {
   SLOTS, FONTES, erro, normalizarItens, exigirSlot, comFotoUrl, numeros,
   planoDaData, planoResumido, montarDia, montarEvolucao,
@@ -326,6 +327,9 @@ router.put('/perfil', async (req, res, next) => {
        RETURNING data`,
       [req.user.userId, JSON.stringify(limpo)],
     );
+    // Cadastro terminou (ou mudou algo que entra no plano): o sistema monta o
+    // rascunho do mês pra Luciana aprovar. Só enfileira; roda no trabalhador.
+    if (rows[0].data?.onboarding_em && ['onboarding_em', 'restricoes', 'alergias', 'nao_gosta', 'indispensavel', 'objetivo', 'atividade', 'meta_kg', 'gestante'].some((k) => k in limpo)) pedirGeracao(req.user.userId);
     res.json({ perfil: await perfilComFoto(rows[0].data) });
   } catch (e) { next(e); }
 });
@@ -356,6 +360,7 @@ router.put('/anamnese-clinica', async (req, res, next) => {
        RETURNING data, consentimento_em`,
       [req.user.userId, JSON.stringify(limpo)],
     );
+    pedirGeracao(req.user.userId); // a lista verde depende da anamnese (lida só pelo código, pra decidir lote × revisão)
     res.json({ respondida: true, data: rows[0].data, consentimento_em: rows[0].consentimento_em });
   } catch (e) { next(e); }
 });
