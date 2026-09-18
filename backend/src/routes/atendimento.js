@@ -27,6 +27,7 @@ import { dataBR } from '../utils/datas.js';
 import { mascarar, whatsappConfigurado, numeroDoBot } from '../services/whatsapp/api.js';
 import { contatoPorId, janelaAberta, mandar, chamarEquipe, devolverPraLuna } from '../services/whatsapp/contatos.js';
 import { avisarMensagemDaEquipe } from '../services/whatsapp/avisos.js';
+import { notificar } from '../services/notificacoes.js';
 
 const router = Router();
 router.use(requirePapel('nutri', 'admin', 'suporte'));
@@ -190,6 +191,7 @@ router.post('/conversas/:id/mensagens', async (req, res, next) => {
     await getPool().query(`UPDATE whatsapp_contatos SET aguardando_equipe = FALSE, updated_at = NOW() WHERE id = $1`, [c.id]);
     // Janela fechada: a mensagem ficou guardada; um aviso por modelo sai pela fila.
     if (r.pendente) avisarMensagemDaEquipe(c);
+    if (c.user_id) notificar(c.user_id, { tipo: 'equipe', titulo: 'O time do Nutri Lu te respondeu', texto: texto.slice(0, 160), link: '/perfil', refId: r.id || null });
     res.status(201).json({ ok: true, enviada: r.enviada, guardada: r.pendente === true });
   } catch (e) { next(e); }
 });

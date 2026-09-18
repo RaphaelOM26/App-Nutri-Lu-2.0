@@ -47,6 +47,7 @@ acompanhamento").
 | `o que como hoje` / `amanhã` | O plano do dia, com as trocas | não |
 | `peso 72,4` | Registra o peso | não |
 | `materiais` | Lista; PDF vai como arquivo, vídeo como link | não |
+| `lista de compras` | A lista da semana (de sexta a domingo, a da semana que vem), com botões "por dia" e "por refeição". Também sai pelo botão "Receber pela Luna" da tela Meu plano | não |
 | `dúvida pra nutri` | A próxima mensagem vira pergunta na caixa da Luciana (mesma triagem da web) | não |
 | Algo de saúde | Por **dicionário**, sem modelo: oferece mandar pra Nutri Luciana | não |
 | `atendente` | A Luna se cala; a conversa vai pro painel de Atendimento | não |
@@ -130,6 +131,7 @@ mensagens por dia pra assinante): o teto é da conta, não do canal.
    | `resposta_nutri` | Oi, {{1}}! A Nutri Luciana respondeu a dúvida que você enviou. Toque no botão abaixo pra ler a resposta. | Ver resposta |
    | `boas_vindas` | Oi, {{1}}! Aqui é a Luna, assistente da Nutri Luciana. Sua compra do acompanhamento Nutri Lu foi confirmada. Toque no botão abaixo pra começar por aqui. | Começar |
    | `mensagem_equipe` | Oi, {{1}}! O time do Nutri Lu respondeu o seu atendimento. Toque no botão abaixo pra ler a mensagem. | Ver mensagem |
+   | `lista_compras` | Oi, {{1}}! A sua lista de compras da semana está pronta. Toque no botão abaixo pra receber aqui mesmo. | Ver a lista |
 
    Só depois de aprovado o nome entra em `WHATSAPP_TEMPLATES`. Modelo fora da
    lista não é nem tentado (e o conteúdo chega quando a paciente escrever).
@@ -151,8 +153,9 @@ O servidor local **nunca** fala com a Meta, mesmo com o token no `.env`
 
 ## O que ficou pra depois
 
-- Envio de **sexta com a lista de compras** (precisa dos ingredientes do livro
-  PR no servidor; hoje a lista é calculada no navegador).
+- Envio automático de **sexta com a lista de compras**: já está pronto
+  (`enviarListasDeSexta`, sexta às 10 h BR, semana seguinte), mas DESLIGADO
+  até o modelo `lista_compras` ser aprovado. Ligar com `WHATSAPP_LISTA_SEXTA=1`.
 - **Lembretes** de refeição/água/peso (os botões já existem no Perfil).
 - **Comunicado em lote** com tela no painel (hoje o "recado pra todas" chega
   no WhatsApp de cada uma quando ela escrever, sem disparo em massa).

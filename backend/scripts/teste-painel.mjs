@@ -171,6 +171,12 @@ check(todos.enviados >= 1, `recado em massa chegou pra ${todos.enviados}`);
 const recCli = await chamar(tCli, 'GET', '/me/recados');
 check(recCli.mensagens.some((m) => m.kind === 'resposta') && recCli.mensagens.some((m) => m.text === 'Semana que vem tem material novo.'), 'cliente vê a resposta e o recado em massa');
 await chamar(tN, 'GET', `/nutri/pacientes/${pac.id}/recados`);
+// Sino: o plano publicado e a resposta viraram notificações; abrir marca como lidas.
+const notif = await chamar(tCli, 'GET', '/me/notificacoes');
+check(notif.itens.some((n) => n.tipo === 'plano') && notif.itens.some((n) => n.tipo === 'resposta') && notif.nao_lidas >= 2, 'sino: plano publicado e resposta da nutri viram notificações não lidas');
+await chamar(tCli, 'POST', '/me/notificacoes/lidas', {});
+check((await chamar(tCli, 'GET', '/me/notificacoes')).nao_lidas === 0, 'sino: marcar lidas zera o contador');
+await chamar(tCli, 'GET', '/me/notificacoes/x', null, 404);
 const resumo = await chamar(tN, 'GET', '/nutri/resumo');
 check(typeof resumo.duvidas === 'number' && resumo.papel === 'nutri', 'resumo do menu');
 

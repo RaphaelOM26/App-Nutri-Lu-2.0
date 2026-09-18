@@ -33,6 +33,7 @@ import { baixarMidia, marcarLida } from './api.js';
 import { contatoPorWaId, mandar, entregarGuardadas, atualizarEstado, tentarVinculo, chamarEquipe, devolverPraLuna, janelaAberta } from './contatos.js';
 import { entregarPendentes } from './avisos.js';
 import { aceitarConvite, emailMascarado } from './convites.js';
+import { planoDaLista, textosLista } from '../plano/listaCompras.js';
 
 const MEMBROS = (process.env.MEMBROS_URL || 'https://nutrilualves.com.br/membros').replace(/\/$/, '');
 const ROTULO = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã', almoco: 'Almoço', lanche_tarde: 'Lanche da tarde', jantar: 'Jantar', ceia: 'Ceia' };
@@ -191,6 +192,7 @@ async function tratarBotao(contato, acao, msg) {
     return enviarPraLuciana(contato, pergunta);
   }
   if (tipo === 'humano') return irPraEquipe(contato, a === 'comercial' ? 'comercial' : 'suporte');
+  if (tipo === 'lista' && ['dia', 'refeicao'].includes(a)) return enviarLista(contato, a, b || null);
   if (tipo === 'mat' && uuid(a)) return mandarMaterial(contato, a);
   await mandar(contato, { texto: `Esse botão não vale mais. 😊\n\n${MENU}` });
 }
@@ -339,7 +341,8 @@ const RE_MACROS = /\bmacros?\b|quant[oa]s? (calorias? )?(ainda )?(ja )?(comi|con
 const RE_PLANO = /o que (eu )?(como|vou comer|tem|e|devo comer|posso comer) .{0,12}\b(hoje|amanha|agora)\b|\b(plano|cardapio|refeicoes|refeicao) (alimentar )?(de |do |da |pra |para )?(hoje|amanha|agora)\b|\b(cafe|almoco|jantar|janta|lanche|ceia) (da manha |da tarde )?(de |do |pra |para )?(hoje|amanha)\b|^(meu )?(plano|cardapio)$/;
 const RE_PESO = /^(?:(?:meu )?peso|pesei|pesando|to com|estou com)\D{0,6}(\d{2,3}(?:[.,]\d{1,2})?)\s*(?:kg|kilos?|quilos?)?$|^(\d{2,3}(?:[.,]\d{1,2})?)\s*(?:kg|kilos?|quilos?)$/;
 const RE_MATERIAIS = /^(quero |ver |me manda |manda |os |meus )*(materia(l|is)|pdfs?|apostilas?|videos?|aulas?|ebooks?)( da (nutri|luciana|lu))?$/;
-const RE_ATENDENTE = /\b(atendente|atendimento humano|humano|suporte)\b|falar com (alguem|uma pessoa|a equipe|o time|gente)/;
+const RE_LISTA = /lista (de |das |de compras|do mercado|da feira)|\bcompras\b|\bmercado\b|o que (eu )?(preciso|tenho que) comprar|ingredientes da semana/;
+const RE_ATENDENTE =/\b(atendente|atendimento humano|humano|suporte)\b|falar com (alguem|uma pessoa|a equipe|o time|gente)/;
 const RE_FINANCEIRO = /\b(reembolso|estorno|cobranca|cobrado|cobraram|pagamento|boleto|fatura|nota fiscal|hotmart)\b|cancelar (a |o |minha |meu )?(assinatura|compra|plano|acompanhamento)|nao consigo (entrar|acessar|logar)/;
 const RE_NUTRI = /^(quero |preciso |posso )?(falar|mandar|enviar|fazer|tirar)?\s*(uma |minha )?(duvida|pergunta|mensagem|recado)?\s*(com|pra|para|a|pro)?\s*(a )?(nutri|nutricionista|luciana|dra\.? luciana|lu)( luciana)?$/;
 const PARAR = new Set(['parar', 'pare', 'sair', 'stop', 'cancelar avisos', 'parar avisos', 'nao quero receber']);
@@ -386,8 +389,24 @@ async function tratarTexto(contato, texto, { msg, entregues = 0 } = {}) {
   if (curto && RE_MACROS.test(t)) return resumoDoDia(contato);
   if (curto && RE_PLANO.test(t)) return planoDoDia(contato, /\bamanha\b/.test(t) ? 1 : 0, /\bagora\b/.test(t));
   if (RE_MATERIAIS.test(t)) return listarMateriais(contato);
+  if (curto && RE_LISTA.test(t)) return enviarLista(contato, /\bdia\b/.test(t) ? 'dia' : /refei/.test(t) ? 'refeicao' : 'geral');
 
   return conversarComLuna(contato, texto, msg);
+}
+
+/** "lista de compras": a da semana que vem de sexta a domingo, senão a desta semana. Sem IA. */
+async function enviarLista(contato, modo = 'geral', weekStart = null) {
+  const { plano, proxima } = await planoDaLista(contato.user_id, weekStart);
+  if (!plano) return mandar(contato, { texto: 'A lista de compras nasce do plano da semana, e o seu ainda não está publicado. Assim que a Nutri Luciana publicar, eu monto pra você. 😊' }, { autor: 'sistema' });
+  const { rows: [u] } = await getPool().query(`SELECT display_name FROM users WHERE id = $1`, [contato.user_id]);
+  const partes = textosLista(plano, modo, String(u?.display_name || '').split(' ')[0]);
+  if (proxima && modo === 'geral') partes[0] = `Como já é fim de semana, essa é a lista da *semana que vem*. 😉\n\n${partes[0]}`;
+  for (const [i, texto] of partes.entries()) {
+    const ultima = i === partes.length - 1;
+    await mandar(contato, ultima && modo === 'geral'
+      ? { texto, botoes: [{ id: `lista:dia:${plano.week_start}`, titulo: 'Ver por dia' }, { id: `lista:refeicao:${plano.week_start}`, titulo: 'Por refeição' }] }
+      : { texto }, { autor: 'sistema' });
+  }
 }
 
 async function registrarPeso(contato, kg) {

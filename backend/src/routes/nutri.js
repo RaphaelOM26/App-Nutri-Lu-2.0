@@ -25,6 +25,7 @@ import { montarDashboard, gerarSintese } from '../services/dashboard.js';
 import { gerarRascunho } from '../services/triagem.js';
 import { avisarMensagemDaNutri, avisarPlanoPronto } from '../services/whatsapp/avisos.js';
 import { travarLote } from './lote.js';
+import { notificar } from '../services/notificacoes.js';
 
 const router = Router();
 const equipe = requirePapel('nutri', 'admin');
@@ -508,6 +509,7 @@ router.put('/pacientes/:id/plano-mes', soNutri, async (req, res, next) => {
 
     // WhatsApp: só enfileira (o trabalhador entrega). O recado, se houver, vai junto com o aviso do plano.
     if (publicar && b.avisar !== false) avisarPlanoPronto(u.id);
+    if (publicar) notificar(u.id, { tipo: 'plano', titulo: 'Seu plano do mês está pronto', texto: `A Nutri Luciana publicou as suas refeições a partir de ${b.inicio.slice(8, 10)}/${b.inicio.slice(5, 7)}.`, link: '/plano', refId: `mes:${b.inicio}` });
 
     let email = { enviado: false };
     if (publicar && b.avisar !== false && u.email) {
@@ -656,8 +658,11 @@ router.post('/pacientes/:id/recados', equipe, async (req, res, next) => {
       `INSERT INTO lu_messages (user_id, kind, author, text, reply_to) VALUES ($1, $2, 'nutri', $3, $4) RETURNING id, kind, author, text, reply_to, read_at, created_at`,
       [u.id, replyTo ? 'resposta' : 'recado', text, replyTo],
     );
-    // Chega também no WhatsApp dela, se estiver vinculado (pela fila, sem segurar esta resposta).
+    // Chega também no WhatsApp dela, se estiver vinculado (pela fila, sem segurar esta resposta), e no sino.
     avisarMensagemDaNutri(u.id);
+    notificar(u.id, replyTo
+      ? { tipo: 'resposta', titulo: 'A Nutri Luciana respondeu a sua dúvida', texto: text.slice(0, 160), link: '/perfil', refId: rows[0].id }
+      : { tipo: 'recado', titulo: 'Recado da Nutri Luciana', texto: text.slice(0, 160), link: '/', refId: rows[0].id });
     res.status(201).json({ mensagem: rows[0] });
   } catch (e) { next(e); }
 });

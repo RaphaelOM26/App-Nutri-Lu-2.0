@@ -28,6 +28,8 @@ import whatsappRouter from './routes/whatsapp.js';
 import atendimentoRouter from './routes/atendimento.js';
 import { registrarExecutor, iniciarTrabalhador } from './services/whatsapp/fila.js';
 import { gerarPlanoAutomatico, varrerPacientesSemPlano } from './services/lote/gerar.js';
+import { enviarListasDeSexta } from './services/whatsapp/avisos.js';
+import { gerarInsightSemanal, varrerInsights } from './services/notificacoes.js';
 import loteRouter from './routes/lote.js';
 import { processarMensagem, avisarFalha } from './services/whatsapp/bot.js';
 import { executarAviso } from './services/whatsapp/avisos.js';
@@ -187,10 +189,15 @@ async function start() {
       // Rascunho do plano gerado pelo sistema (aprovação em lote). Varredura
       // por hora pega quem ficou sem e quem está no fim do mês de plano.
       registrarExecutor('plano', gerarPlanoAutomatico);
+      registrarExecutor('insight', gerarInsightSemanal);
       if (process.env.WHATSAPP_WORKER !== '0') {
         iniciarTrabalhador();
+        // Insight semanal da Luna (segunda, 8 h BR): só enfileira; o executor dedupe.
+        setInterval(() => varrerInsights().catch((e) => console.warn('[insight] varredura falhou:', e.message)), 60 * 60 * 1000).unref();
         setInterval(() => varrerPacientesSemPlano().catch((e) => console.warn('[lote] varredura falhou:', e.message)), 60 * 60 * 1000).unref();
         setTimeout(() => varrerPacientesSemPlano().catch(() => {}), 30_000).unref();
+        // Lista de compras de sexta (só com WHATSAPP_LISTA_SEXTA=1).
+        setInterval(() => enviarListasDeSexta().catch((e) => console.warn('[whatsapp] lista de sexta falhou:', e.message)), 60 * 60 * 1000).unref();
       }
       console.log(whatsappConfigurado() ? '[whatsapp] ligado à Meta' : '[whatsapp] MODO SIMULADO (sem WHATSAPP_TOKEN/WHATSAPP_PHONE_ID): nada sai pra Meta');
     } catch (e) {

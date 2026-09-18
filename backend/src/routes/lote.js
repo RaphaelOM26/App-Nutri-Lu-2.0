@@ -23,6 +23,7 @@ import { somarDias } from '../utils/datas.js';
 import { avaliarPaciente, checarPlano } from '../services/lote/elegibilidade.js';
 import { REGRAS, VERSAO } from '../services/lote/regras.js';
 import { pedirGeracao } from '../services/lote/gerar.js';
+import { notificar } from '../services/notificacoes.js';
 
 const router = Router();
 const equipe = requirePapel('nutri', 'admin');
@@ -240,6 +241,7 @@ router.post('/lotes/:id/aprovar', soNutri, async (req, res, next) => {
     res.json({ publicados, excluidos, lote: await montarLote({ ...l, status: 'aprovado' }) });
     for (const p of publicados) {
       avisarPlanoPronto(p.user_id);
+      notificar(p.user_id, { tipo: 'plano', titulo: 'Seu plano do mês está pronto', texto: `A Nutri Luciana publicou as suas refeições a partir de ${p.inicio.slice(8, 10)}/${p.inicio.slice(5, 7)}.`, link: '/plano', refId: `mes:${p.inicio}` });
       const { rows: [u] } = await pool.query(`SELECT email, display_name FROM users WHERE id = $1`, [p.user_id]);
       if (u?.email) enviarPlanoPronto({ para: u.email, nome: (u.display_name || '').split(' ')[0], semana: `${REGRAS.semanasNoMes} semanas a partir de ${p.inicio}` })
         .catch((e) => console.warn('[lote] e-mail de plano falhou:', e.message));

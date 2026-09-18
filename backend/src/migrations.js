@@ -453,6 +453,29 @@ export const MIGRACOES = [
       CREATE INDEX IF NOT EXISTS idx_planos_lotes_abertos ON planos_lotes(criado_por) WHERE status = 'aberto';
     `,
   },
+  // Sino de notificações da paciente (18/09/2026): plano publicado, recado,
+  // resposta, mensagem do time e o insight semanal da Luna. Uma linha por
+  // aviso; o sino lê as não lidas (índice parcial) e marca ao abrir.
+  {
+    id: '012-notificacoes',
+    descricao: 'Notificações da área de membros (sino)',
+    sql: `
+      CREATE TABLE IF NOT EXISTS notificacoes (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        tipo TEXT NOT NULL CHECK (tipo IN ('plano', 'recado', 'resposta', 'equipe', 'insight')),
+        titulo TEXT NOT NULL,
+        texto TEXT,
+        link TEXT,
+        ref_id TEXT,
+        lida_em TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_notif_nao_lidas ON notificacoes(user_id) WHERE lida_em IS NULL;
+      CREATE INDEX IF NOT EXISTS idx_notif_recentes ON notificacoes(user_id, created_at DESC);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_notif_ref ON notificacoes(user_id, tipo, ref_id) WHERE ref_id IS NOT NULL;
+    `,
+  },
 ];
 
 /**

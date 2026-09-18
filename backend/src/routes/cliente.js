@@ -19,7 +19,10 @@ import { getPool } from '../db.js';
 import { requireAuth } from '../services/auth.js';
 import { temAcesso } from '../services/billing.js';
 import { novaChave, urlDeUpload, urlDeLeitura, apagar, r2Configurado } from '../services/r2.js';
-import { exigirData, mesValido } from '../utils/datas.js';
+import { exigirData, mesValido, dataValida, diaDaSemana } from '../utils/datas.js';
+import { planoDaLista } from '../services/plano/listaCompras.js';
+import { avisarListaCompras } from '../services/whatsapp/avisos.js';
+import { listar, marcarLidas } from '../services/notificacoes.js';
 import { agendarRascunho } from '../services/triagem.js';
 import { numeroDoBot, mascarar } from '../services/whatsapp/api.js';
 import { contatoDaUsuaria, criarCodigoDeVinculo } from '../services/whatsapp/contatos.js';
@@ -403,6 +406,36 @@ router.post('/perguntas', async (req, res, next) => {
     // cliente recebe o "enviado" na hora.
     agendarRascunho(rows[0].id);
     res.status(201).json({ id: rows[0].id, created_at: rows[0].created_at });
+  } catch (e) { next(e); }
+});
+
+// ─── Notificações (o sino) ────────────────────────────────────────────────
+router.get('/notificacoes', async (req, res, next) => {
+  try { res.json(await listar(req.user.userId, Math.min(50, parseInt(req.query.limite, 10) || 30))); } catch (e) { next(e); }
+});
+router.post('/notificacoes/lidas', async (req, res, next) => {
+  try {
+    const ids = Array.isArray(req.body?.ids) ? req.body.ids.filter((x) => /^[0-9a-f-]{36}$/i.test(String(x))) : null;
+    await marcarLidas(req.user.userId, ids);
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
+// ─── Lista de compras pela Luna ───────────────────────────────────────────
+// A tela Meu plano monta a lista no navegador (geral, por dia, por refeição).
+// Aqui é o botão "Receber pela Luna no WhatsApp": a MESMA lista, montada no
+// servidor, sai pelo bot. Dentro da janela de 24 h vai na hora; fora, sai o
+// modelo (se aprovado) e a lista chega quando ela escrever.
+router.post('/lista-compras/whatsapp', async (req, res, next) => {
+  try {
+    const ws = req.body?.week_start;
+    if (!dataValida(ws) || diaDaSemana(ws) !== 1) throw erro('week_start precisa ser uma segunda-feira (YYYY-MM-DD)');
+    const modo = ['geral', 'dia', 'refeicao'].includes(req.body?.modo) ? req.body.modo : 'geral';
+    const { plano } = await planoDaLista(req.user.userId, ws);
+    if (!plano) throw erro('Não há plano publicado nessa semana.', 404, 'SEM_PLANO');
+    const r = await avisarListaCompras(req.user.userId, ws, modo);
+    if (r === 'sem_whatsapp') throw erro('Vincule o seu WhatsApp primeiro (Perfil → Conectar o WhatsApp).', 409, 'SEM_WHATSAPP');
+    res.json({ ok: true, quando: r });
   } catch (e) { next(e); }
 });
 
