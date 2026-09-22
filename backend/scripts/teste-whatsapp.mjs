@@ -216,12 +216,14 @@ try {
   check(!curioso.user_id, 'número que não recebeu convite não se vincula tocando em botão');
   await receber(WA_COMPRA, { type: 'button', button: { text: 'Começar', payload: 'Começar' } });
   const boas = await saidas(WA_COMPRA, 4);
-  check(boas.some((m) => /compra do acompanhamento está confirmada/.test(m.texto)) && boas.some((m) => /primeiro passo/.test(m.texto) && /te••/.test(m.texto) && !m.texto.includes(COMPRADORA)), 'toque em "Começar" → boas-vindas + primeiro passo, com o e-mail mascarado');
+  const RE_ABERTURA = /acesso ao acompanhamento da \*Nutri Luciana\* está confirmado/;
+  check(boas.some((m) => RE_ABERTURA.test(m.texto)) && boas.some((m) => /primeiro passo/.test(m.texto) && /te••/.test(m.texto) && !m.texto.includes(COMPRADORA)), 'toque em "Começar" → boas-vindas + primeiro passo, com o e-mail mascarado');
   // Nome: o da compra entra limpo ("JULIA DA SILVA SANTOS" → "Julia") e a
   // Luna PERGUNTA se pode chamar assim, com botão — sem segurar o onboarding.
-  const abertura = boas.find((m) => /compra do acompanhamento está confirmada/.test(m.texto));
-  check(/Que bom te ver por aqui, Julia!/.test(abertura?.texto || '') && /posso te chamar de \*Julia\*/.test(abertura?.texto || '') && abertura?.tipo === 'interactive',
-    'boas-vindas tratam o nome da compra e perguntam se pode chamar assim');
+  // O texto da abertura é o do Raphael (21/09), e a Luna sempre diz que não é nutricionista.
+  const abertura = boas.find((m) => RE_ABERTURA.test(m.texto));
+  check(/^Oi, Julia! Seu acesso/.test(abertura?.texto || '') && /eu sou a \*Luna\*/.test(abertura?.texto || '') && /Não sou nutricionista/.test(abertura?.texto || '') && /posso te chamar de \*Julia\*/.test(abertura?.texto || '') && abertura?.tipo === 'interactive',
+    'boas-vindas com o texto do Raphael tratam o nome da compra e perguntam se pode chamar assim');
   check(boas.some((m) => /primeiro passo/.test(m.texto)), 'a pergunta do nome não segura o primeiro passo');
   await botao(WA_COMPRA, 'nome:ok', 'Pode sim');
   const { rows: [apJulia] } = await pool.query(`SELECT apelido, display_name FROM users WHERE email = $1`, [COMPRADORA]);

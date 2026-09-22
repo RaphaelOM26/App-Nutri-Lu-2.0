@@ -29,7 +29,7 @@ import { comContextoDeUso } from '../uso.js';
 import { montarDia, normalizarItens, SLOTS } from '../diario.js';
 import { gravar, ler, apagar, urlDeLeitura, novaChaveWhatsapp, extensaoDe, r2Configurado } from '../r2.js';
 import { dataBR, slotPelaHora, somarDias } from '../../utils/datas.js';
-import { nomeDe, vocativo, apelidoDoTexto } from '../../utils/nomes.js';
+import { nomeDe, vocativo, saudacao, apelidoDoTexto } from '../../utils/nomes.js';
 import { baixarMidia, marcarLida } from './api.js';
 import { contatoPorWaId, mandar, entregarGuardadas, atualizarEstado, tentarVinculo, chamarEquipe, devolverPraLuna, janelaAberta } from './contatos.js';
 import { entregarPendentes } from './avisos.js';
@@ -162,9 +162,12 @@ async function boasVindas(contato, compra = null) {
   const nome = nomeDe({ ...u, nome: compra?.nome, nome_perfil: contato.nome_perfil });
   const jaConfirmado = Boolean(nomeDe({ apelido: u?.apelido }));
   const perguntarNome = !jaConfirmado;
-  const apresentacao = '\n\nEu sou a *Luna*, assistente de IA da Nutri Luciana. Não sou nutricionista: eu te ajudo no dia a dia, e o que for de saúde eu passo pra ela.';
+  // A abertura pós-compra é o TEXTO DO RAPHAEL (aprovado em 21/09): o fato na
+  // conta dela + a Luna se apresentando. A frase "não sou nutricionista" fica
+  // porque é regra do projeto — a Luna nunca se apresenta sem ela.
+  const apresentacao = '\n\nMas antes deixa eu me apresentar: eu sou a *Luna*, a sua assistente aqui no WhatsApp. É por aqui que você recebe o seu plano, tira dúvidas e fala com a equipe. Não sou nutricionista — o que for de saúde eu passo pra Nutri Luciana.';
   const primeira = compra
-    ? `Que bom te ver por aqui${vocativo(nome)}! 🌿 Sua compra do acompanhamento está confirmada e este WhatsApp já ficou ligado à sua conta.${apresentacao}`
+    ? `${saudacao(nome)} Seu acesso ao acompanhamento da *Nutri Luciana* está confirmado! 💚${apresentacao}`
     : `Pronto${vocativo(nome)}! ✅ Seu WhatsApp está ligado à sua conta do Nutri Lu.${apresentacao}`;
 
   if (perguntarNome && nome) {
