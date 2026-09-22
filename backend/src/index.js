@@ -4,6 +4,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import { initSchema, getPool } from './db.js';
 import { aplicarMigracoes } from './migrations.js';
 import { fotosLocais, pastaLocal } from './services/r2.js';
@@ -60,6 +61,12 @@ const origens = CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean);
 if (CORS_ORIGIN === '*') console.warn('[cors] CORS_ORIGIN ausente — qualquer origem aceita');
 
 // Middleware
+// Headers de segurança (revisão de 22/09/2026). Pra uma API JSON o que pesa é
+// X-Content-Type-Options: nosniff, HSTS e tirar o X-Powered-By; o CSP padrão
+// não atrapalha porque a API não serve HTML. Só o Cross-Origin-Resource-Policy
+// fica em 'cross-origin': o padrão ('same-origin') bloquearia as fotos do
+// /dev-fotos embutidas pela área de membros em dev, que roda em outra porta.
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: origens.length === 1 && origens[0] === '*' ? '*' : origens }));
 // Limite alto pra acomodar imagens base64 (foto comum de celular ~2-4MB → base64 ~3-6MB)
 // `verify` guarda o corpo CRU só do webhook do WhatsApp: a assinatura da Meta

@@ -59,7 +59,11 @@ export async function verifyProviderToken(provider, identityToken) {
     }
   } catch (e) {
     if (e.status) throw e;
-    throw Object.assign(new Error(`Token de identidade inválido (${provider}): ${e.message}`), {
+    // O motivo (issuer, audience, expiração...) fica no log do servidor; pro
+    // cliente vai só o genérico — a mensagem do jose descreve a nossa validação
+    // e não ajuda quem está com o app, só quem está testando o endpoint.
+    console.warn(`[auth] token de identidade rejeitado (${provider}):`, e.message);
+    throw Object.assign(new Error(`Token de identidade inválido (${provider})`), {
       status: 401,
       code: 'INVALID_IDENTITY_TOKEN',
     });
