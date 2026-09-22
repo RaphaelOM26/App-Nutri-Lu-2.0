@@ -47,7 +47,7 @@ acompanhamento").
 | `o que como hoje` / `amanhã` | O plano do dia, com as trocas | não |
 | `peso 72,4` | Registra o peso | não |
 | `materiais` | Lista; PDF vai como arquivo, vídeo como link | não |
-| `lista de compras` | A lista da semana (de sexta a domingo, a da semana que vem), por seção do mercado, com botão "Ver por dia". O botão "Receber pela Luna" da tela Meu plano abre o WhatsApp com esse texto pré-digitado — ela manda, a Luna responde | não |
+| `lista de compras` | A Luna pergunta o formato com 3 botões: **Marcar no celular** (link da página `/lista` da área de membros), **PDF pra imprimir** (arquivo anexado) e **Ver aqui no chat** (texto por seção, com "Ver por dia"). De sexta a domingo é a da semana que vem. O botão "Receber pela Luna" da tela Meu plano abre o WhatsApp com esse texto pré-digitado | não |
 | `dúvida pra nutri` | A próxima mensagem vira pergunta na caixa da Luciana (mesma triagem da web) | não |
 | Algo de saúde | Por **dicionário**, sem modelo: oferece mandar pra Nutri Luciana | não |
 | `atendente` | A Luna se cala; a conversa vai pro painel de Atendimento | não |
@@ -119,12 +119,17 @@ objeto (`dadosDaLista()`) vira três coisas:
 - a página `/lista` da área de membros (papel cream, seções em colunas,
   carrinho pra marcar, "Imprimir" e "Baixar PDF");
 - `GET /me/lista-compras.pdf` — o PDF desenhado no servidor
-  (`services/plano/listaPdf.js`, pdfkit, fontes padrão do PDF, ~10 KB, ~100 ms);
-- no WhatsApp, a lista geral sai em **duas mensagens**: o texto (com o botão
-  "Ver por dia") e o PDF anexado. O PDF é gravado no R2 em
-  `<user>/listas/<semana>.pdf` (sobrescreve a mesma semana; 10 mil pacientes ×
-  4 semanas ≈ 0,4 GB) e a Meta baixa pela URL assinada. Se o PDF falhar, o
-  texto já foi — ela nunca fica sem lista. Sem R2 configurado só vai o texto.
+  (`services/plano/listaPdf.js`, pdfkit, fontes da marca via @fontsource, ~27 KB, ~230 ms);
+- no WhatsApp, "lista de compras" (ou o botão "Mandar a lista" do aviso de
+  plano pronto) faz a Luna **perguntar o formato**, com 3 botões:
+  **Marcar no celular** (link de `/lista?ws=` na área de membros: toca no
+  item, risca, fica salvo no celular), **PDF pra imprimir** (arquivo anexado)
+  e **Ver aqui no chat** (texto por seção, com "Ver por dia"). O PDF é
+  gravado no R2 em `<user>/listas/<semana>.pdf` (sobrescreve a mesma semana;
+  10 mil pacientes × 4 semanas ≈ 1 GB) e a Meta baixa pela URL assinada. Se o
+  PDF falhar ou não houver R2, vai o texto com um aviso — ela nunca fica sem
+  lista. O PDF não é interativo (caixas desenhadas): a versão de marcar é a
+  página.
 
 ## Regras que o código garante
 

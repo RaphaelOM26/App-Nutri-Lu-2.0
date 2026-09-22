@@ -245,7 +245,8 @@ async function tratarBotao(contato, acao, msg) {
     return mandar(contato, { texto: 'Claro! Como você prefere que eu te chame? Pode mandar só o primeiro nome. 😊' }, { autor: 'sistema' });
   }
   if (tipo === 'humano') return irPraEquipe(contato, a === 'comercial' ? 'comercial' : 'suporte');
-  if (tipo === 'lista' && ['geral', 'dia'].includes(a)) return enviarLista(contato, a, b || null);
+  if (tipo === 'lista' && a === 'geral') return perguntarLista(contato, b || null);
+  if (tipo === 'lista' && ['web', 'pdf', 'chat', 'dia'].includes(a)) return entregarLista(contato, a, b || null);
   if (tipo === 'mat' && uuid(a)) return mandarMaterial(contato, a);
   await mandar(contato, { texto: `Esse botão não vale mais. 😊\n\n${MENU}` });
 }
@@ -481,34 +482,68 @@ async function tratarTexto(contato, texto, { msg, entregues = 0 } = {}) {
   if (curto && RE_MACROS.test(t)) return resumoDoDia(contato);
   if (curto && RE_PLANO.test(t)) return planoDoDia(contato, /\bamanha\b/.test(t) ? 1 : 0, /\bagora\b/.test(t));
   if (RE_MATERIAIS.test(t)) return listarMateriais(contato);
-  if (curto && RE_LISTA.test(t)) return enviarLista(contato, /\bdia\b/.test(t) ? 'dia' : /refei/.test(t) ? 'refeicao' : 'geral');
+  if (curto && RE_LISTA.test(t)) return /\bdia\b/.test(t) ? entregarLista(contato, 'dia') : perguntarLista(contato);
 
   return conversarComLuna(contato, texto, msg);
 }
 
 /** "lista de compras": a da semana que vem de sexta a domingo, senão a desta semana. Sem IA. */
-async function enviarLista(contato, modo = 'geral', weekStart = null) {
+const SEM_PLANO_LISTA = 'A lista de compras nasce do plano da semana, e o seu ainda não está publicado. Assim que a Nutri Luciana publicar, eu monto pra você. 😊';
+const faixaCurta = (ws) => `${ws.slice(8, 10)}/${ws.slice(5, 7)} a ${somarDias(ws, 6).slice(8, 10)}/${somarDias(ws, 6).slice(5, 7)}`;
+
+/**
+ * "lista de compras" (ou o botão "Mandar a lista" do aviso de plano pronto):
+ * a Luna pergunta o formato (fluxo do Raphael, 22/09). O mesmo conteúdo, três
+ * jeitos: marcar no celular (página /lista da área de membros), PDF pra
+ * imprimir, ou o texto aqui no chat. Ela escolhe um; se quiser outro, toca de
+ * novo. Tudo dentro da janela: sem modelo, R$ 0.
+ */
+async function perguntarLista(contato, weekStart = null) {
   const { plano, proxima } = await planoDaLista(contato.user_id, weekStart);
-  if (!plano) return mandar(contato, { texto: 'A lista de compras nasce do plano da semana, e o seu ainda não está publicado. Assim que a Nutri Luciana publicar, eu monto pra você. 😊' }, { autor: 'sistema' });
+  if (!plano) return mandar(contato, { texto: SEM_PLANO_LISTA }, { autor: 'sistema' });
+  const ws = plano.week_start;
+  await mandar(contato, {
+    texto: `Lista de compras da semana de ${faixaCurta(ws)} pronta! 🛒${proxima ? '\n(Como já é fim de semana, é a da *semana que vem*.)' : ''}\n\nComo você prefere?`,
+    botoes: [
+      { id: `lista:web:${ws}`, titulo: 'Marcar no celular' },
+      { id: `lista:pdf:${ws}`, titulo: 'PDF pra imprimir' },
+      { id: `lista:chat:${ws}`, titulo: 'Ver aqui no chat' },
+    ],
+  }, { autor: 'sistema' });
+}
+
+/** Entrega no formato escolhido: web (link), pdf (arquivo), chat (texto geral) ou dia (texto dia a dia). */
+async function entregarLista(contato, formato, weekStart = null) {
+  const { plano, proxima } = await planoDaLista(contato.user_id, weekStart);
+  if (!plano) return mandar(contato, { texto: SEM_PLANO_LISTA }, { autor: 'sistema' });
+  const ws = plano.week_start;
+  if (formato === 'web') {
+    return mandar(contato, { texto: `Aqui está a sua lista pra marcar no mercado:\n${MEMBROS}/lista?ws=${ws}\n\nToca no item pra riscar; as marcações ficam salvas no seu celular. 😉` }, { autor: 'sistema' });
+  }
   const nome = await nomeDoContato(contato);
+  if (formato === 'pdf') {
+    // A folha com a marca, igual à da área de membros: gera no servidor, guarda
+    // no R2 e a Meta baixa pela URL assinada. Sem R2 ou com falha, vai o texto
+    // — ela não fica sem lista.
+    if (r2Configurado()) {
+      try {
+        const pdf = await gerarPdfLista(dadosDaLista(plano, null, { proxima, nome }));
+        const key = `${contato.user_id}/listas/${ws}.pdf`;
+        await gravar(key, pdf, 'application/pdf');
+        return mandar(contato, { texto: 'Sua lista em PDF, pra imprimir ou guardar. 🛒', documento: { link: await urlDeLeitura(key), nome: nomeDoArquivo(ws) } }, { autor: 'sistema' });
+      } catch (e) { console.error('[lista] PDF não saiu:', e.message); }
+    }
+    await mandar(contato, { texto: 'Não consegui gerar o PDF agora. 😕 Vai o texto da lista, e daqui a pouco você tenta o PDF de novo.' }, { autor: 'sistema' });
+    formato = 'chat';
+  }
+  const modo = formato === 'dia' ? 'dia' : 'geral';
   const partes = textosLista(plano, modo, nome);
   if (proxima && modo === 'geral') partes[0] = `Como já é fim de semana, essa é a lista da *semana que vem*. 😉\n\n${partes[0]}`;
   for (const [i, texto] of partes.entries()) {
     const ultima = i === partes.length - 1;
     await mandar(contato, ultima && modo === 'geral'
-      ? { texto, botoes: [{ id: `lista:dia:${plano.week_start}`, titulo: 'Ver por dia' }] }
+      ? { texto, botoes: [{ id: `lista:dia:${ws}`, titulo: 'Ver por dia' }] }
       : { texto }, { autor: 'sistema' });
-  }
-  // A lista geral vai também como PDF (a folha com a marca, igual à da área de
-  // membros): gera no servidor, guarda no R2 e a Meta baixa pela URL assinada.
-  // Se o PDF falhar, o texto já foi — ela não fica sem lista.
-  if (modo === 'geral' && r2Configurado()) {
-    try {
-      const pdf = await gerarPdfLista(dadosDaLista(plano, null, { proxima, nome }));
-      const key = `${contato.user_id}/listas/${plano.week_start}.pdf`;
-      await gravar(key, pdf, 'application/pdf');
-      await mandar(contato, { texto: 'A mesma lista em PDF, pra imprimir ou guardar. 🛒', documento: { link: await urlDeLeitura(key), nome: nomeDoArquivo(plano.week_start) } }, { autor: 'sistema' });
-    } catch (e) { console.error('[lista] PDF não saiu:', e.message); }
   }
 }
 

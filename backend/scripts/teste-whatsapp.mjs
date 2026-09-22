@@ -247,12 +247,18 @@ try {
   const ws = (() => { const d = new Date(`${new Date().toISOString().slice(0, 10)}T12:00:00Z`); const dow = d.getUTCDay() || 7; d.setUTCDate(d.getUTCDate() + 1 - dow); return d.toISOString().slice(0, 10); })();
   const diasLista = Array.from({ length: 7 }, (_, i) => ({ weekday: i + 1, meals: [{ slot: 'cafe', time: '07:00', name: 'IOGURTE PROTEICO COM FRUTA, AVEIA E CHIA', code: 'PR-001', items: [{ name: 'IOGURTE PROTEICO COM FRUTA, AVEIA E CHIA', portion: '1 porção', code: 'PR-001', kcal: 325, p: 22, c: 43, f: 10 }], kcal: 325, p: 22, c: 43, f: 10 }] }));
   await pool.query(`INSERT INTO meal_plans (user_id, week_start, week_index, week_total, targets, days, status, published_at) VALUES ($1, $2, 1, 4, '{"kcal":1600}', $3, 'ativo', NOW()) ON CONFLICT (user_id, week_start) DO UPDATE SET days = EXCLUDED.days, status = 'ativo'`, [cli.user.id, ws, JSON.stringify(diasLista)]);
+  // Fluxo de 22/09: a Luna pergunta o formato; ela escolhe (celular, PDF ou chat).
   await texto(WA, 'lista de compras');
-  // Saem 2 mensagens: o texto (com botão "Ver por dia") e, depois, o PDF da folha.
-  const saidasLista = await saidas(WA, 3);
-  const saidaLista = saidasLista.find((m) => m.tipo === 'interactive') || { texto: '' };
-  check(saidasLista[0]?.tipo === 'document' && /PDF/.test(saidasLista[0].texto), 'a lista geral vai também como PDF anexado (a folha com a marca)');
-  check(/Lista de compras/.test(saidaLista.texto) && /Iogurte proteico/.test(saidaLista.texto) && saidaLista.tipo === 'interactive', '"lista de compras" → lista geral com ingredientes do livro e botão "Ver por dia"');
+  const pergunta = await ultima(WA);
+  check(pergunta.tipo === 'interactive' && /Como você prefere\?/.test(pergunta.texto) && !/Iogurte/.test(pergunta.texto), '"lista de compras" → a Luna pergunta o formato (Marcar no celular · PDF pra imprimir · Ver aqui no chat)');
+  await botao(WA, `lista:web:${ws}`, 'Marcar no celular');
+  check(new RegExp(`/lista\\?ws=${ws}`).test((await ultima(WA)).texto), '"Marcar no celular" → link da página da lista na área de membros');
+  await botao(WA, `lista:pdf:${ws}`, 'PDF pra imprimir');
+  const saidaPdf = await ultima(WA);
+  check(saidaPdf.tipo === 'document' && /PDF/.test(saidaPdf.texto), '"PDF pra imprimir" → PDF anexado (a folha com a marca)');
+  await botao(WA, `lista:chat:${ws}`, 'Ver aqui no chat');
+  const saidaLista = await ultima(WA);
+  check(/Lista de compras/.test(saidaLista.texto) && /Iogurte proteico/.test(saidaLista.texto) && saidaLista.tipo === 'interactive', '"Ver aqui no chat" → lista geral com ingredientes do livro e botão "Ver por dia"');
   check(/Lista de compras de Duda/.test(saidaLista.texto), 'a lista sai com o apelido que ela escolheu');
   // Formato de 22/09: seções do mercado, quantidades SOMADAS na semana (7 cafés
   // × 160 g = 1.120 g → 8 potes de 150 g), unidade de compra na frente e o
