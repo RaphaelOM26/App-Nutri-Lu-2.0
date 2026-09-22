@@ -11,7 +11,7 @@
 
 import { getDeviceId } from '../storage/deviceId';
 
-const PRODUCTION_API_URL = 'https://app-nutri-lu-20-production.up.railway.app';
+const PRODUCTION_API_URL = 'https://api.nutrilualves.com.br';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || PRODUCTION_API_URL;
 

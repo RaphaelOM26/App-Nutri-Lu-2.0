@@ -10,7 +10,7 @@
       "channel": "preview",
       "environment": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://app-nutri-lu-20-production.up.railway.app",
+        "EXPO_PUBLIC_API_URL": "https://api.nutrilualves.com.br",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "383069892255-ble4f72d3j6iia28at1uofu77acputpr.apps.googleusercontent.com"
       },
       "android": {
@@ -30,7 +30,7 @@
       "environment": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://app-nutri-lu-20-production.up.railway.app",
+        "EXPO_PUBLIC_API_URL": "https://api.nutrilualves.com.br",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "383069892255-ble4f72d3j6iia28at1uofu77acputpr.apps.googleusercontent.com"
       }
     }

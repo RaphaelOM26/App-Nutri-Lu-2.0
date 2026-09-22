@@ -143,7 +143,7 @@ igual na web e aqui.
    `WHATSAPP_WORKER` (`0` desliga o trabalhador neste serviço),
    `WHATSAPP_API_VERSION` (`v25.0`).
 3. **Webhook** (app → WhatsApp → Configuração): URL
-   `https://app-nutri-lu-20-production.up.railway.app/whatsapp/webhook`, o
+   `https://api.nutrilualves.com.br/whatsapp/webhook`, o
    mesmo `WHATSAPP_VERIFY_TOKEN`, e assinar o campo **`messages`**.
 4. **Modelos** (WhatsApp Manager → Modelos de mensagem → Criar). Categoria
    **Utilidade**, idioma **Português (BR)**, corpo com 1 variável (exemplo:
