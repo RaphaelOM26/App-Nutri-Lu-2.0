@@ -249,14 +249,19 @@ try {
   await pool.query(`INSERT INTO meal_plans (user_id, week_start, week_index, week_total, targets, days, status, published_at) VALUES ($1, $2, 1, 4, '{"kcal":1600}', $3, 'ativo', NOW()) ON CONFLICT (user_id, week_start) DO UPDATE SET days = EXCLUDED.days, status = 'ativo'`, [cli.user.id, ws, JSON.stringify(diasLista)]);
   await texto(WA, 'lista de compras');
   const saidaLista = await ultima(WA);
-  check(/Lista de compras/.test(saidaLista.texto) && /iogurte/i.test(saidaLista.texto) && saidaLista.tipo === 'interactive', '"lista de compras" → lista geral com ingredientes do livro e botões por dia / por refeição');
+  check(/Lista de compras/.test(saidaLista.texto) && /Iogurte proteico/.test(saidaLista.texto) && saidaLista.tipo === 'interactive', '"lista de compras" → lista geral com ingredientes do livro e botão "Ver por dia"');
   check(/Lista de compras de Duda/.test(saidaLista.texto), 'a lista sai com o apelido que ela escolheu');
+  // Formato de 22/09: seções do mercado, quantidades SOMADAS na semana (7 cafés
+  // × 160 g = 1.120 g → 8 potes de 150 g), unidade de compra na frente e o
+  // peso entre parênteses.
+  check(/\*🥚 Ovos e laticínios\*/.test(saidaLista.texto) && /Iogurte proteico — 8 potes \(1,1 kg · 150 g cada\)/.test(saidaLista.texto), 'lista por seção do mercado, com os 7 cafés somados em 8 potes de iogurte');
+  check(!/Por refeição/.test(JSON.stringify(saidaLista)), 'não existe mais o modo "por refeição"');
   await botao(WA, `lista:dia:${ws}`, 'Ver por dia');
   check(/\*Segunda\*/.test((await ultima(WA)).texto) && /\*Domingo\*/.test((await ultima(WA)).texto), 'botão "Ver por dia" → lista dia a dia');
-  const pelaLuna = await chamar(tCli, 'POST', '/me/lista-compras/whatsapp', { week_start: ws, modo: 'refeicao' });
-  check(pelaLuna.ok && pelaLuna.quando === 'agora', 'POST /me/lista-compras/whatsapp → manda agora (janela aberta)');
-  check(await esperarSaida(WA, (m) => /Café da manhã: IOGURTE/i.test(m.texto)), '"Receber pela Luna" por refeição → chegou no WhatsApp');
-  await chamar(tCli, 'POST', '/me/lista-compras/whatsapp', { week_start: '2030-01-07' }, 404);
+  const listaJson = await chamar(tCli, 'GET', `/me/lista-compras?week_start=${ws}`);
+  check(listaJson.week_start === ws && Array.isArray(listaJson.secoes) && listaJson.secoes.some((s) => s.id === 'laticinios' && s.itens.some((i) => i.nome === 'Iogurte proteico' && i.principal === '8 potes')) && typeof listaJson.texto === 'string', 'GET /me/lista-compras → seções, dias e texto, a MESMA lista da Luna');
+  await chamar(tCli, 'GET', '/me/lista-compras?week_start=2030-01-07', undefined, 404);
+  await chamar(tCli, 'POST', '/me/lista-compras/whatsapp', { week_start: ws }, 404);
 
   // 11. Com IA de verdade
   if (COM_IA) {

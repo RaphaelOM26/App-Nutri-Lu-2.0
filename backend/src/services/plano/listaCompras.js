@@ -1,81 +1,96 @@
-// Lista de compras de uma semana do plano, no servidor: a mesma conta de
-// web/src/lib/listaCompras.ts (ingredientes das receitas do livro que estão
-// na semana, com as trocas da cliente já aplicadas), em três formas:
-//   geral       → cada ingrediente uma vez, somando quantas vezes aparece
-//   por dia     → dia a dia, nome + quantidade
-//   por refeição→ refeição a refeição, nome + quantidade
-// e o texto pronto pro WhatsApp (a Luna manda quando ela pede "lista de
-// compras", ou quando ela clica em "Receber pela Luna" na área de membros).
+// Lista de compras de uma semana do plano, no servidor — a ÚNICA fonte: a
+// área de membros lê daqui (GET /me/lista-compras) e a Luna manda o texto no
+// WhatsApp. Duas formas:
+//   geral   → o que comprar, por seção do mercado, quantidades somadas na
+//             semana, unidade de compra + peso ("Tomate — ~5 un (560 g)")
+//   por dia → o que separar em cada dia, nome + quantidade
+// (a forma "por refeição" saiu em 22/09/2026: era lista de preparo, não de
+// compra, e a tela Meu plano já mostra as refeições do dia).
 //
-// Só o livro PR está no servidor. Receita do livro da nutricionista (NL) que
-// a Luciana tenha posto à mão entra pelo NOME, sem os ingredientes.
+// O ingrediente vem como o livro escreve; `ingredientes.js` transforma no
+// item como se compra (sinônimos, preparo fora, grãos em peso cru, seção e
+// unidade). Só o livro PR está no servidor: item solto (TACO/texto livre)
+// entra com as gramas que tiver, ou vai pra "Também no plano" com a porção
+// escrita.
 
-import { PRATICA_POR_CODIGO, normalizar } from './receitas.js';
+import { PRATICA_POR_CODIGO } from './receitas.js';
 import { planoResumido } from '../diario.js';
 import { inicioDaSemana, somarDias, diaDaSemana, dataBR } from '../../utils/datas.js';
 import { getPool } from '../../db.js';
+import { canonico, gramasCruas, emPesoCru, secaoDe, unidadeDe, SECOES } from './ingredientes.js';
 
-const PREFIXO_MEDIDA = /^[\d½¼¾.,/ ]+(x[íi]cara|colher|colheres|unidade|unidades|fatia|fatias|pote|potes|copo|copos)?(\s*\([^)]*\))?\s*(de\s+)?/i;
-const IGNORAR = /^(agua|gelo|sal)(\s|$)/;
 const DIAS = ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-const ROTULO = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã', almoco: 'Almoço', lanche_tarde: 'Lanche da tarde', jantar: 'Jantar', ceia: 'Ceia' };
 
-/** Ingredientes de uma refeição: [{ nome, qtd }]. Item sem receita entra pelo nome. */
+/** Ingredientes de uma refeição já como itens de compra. */
 function ingredientesDe(meal) {
   const out = [];
   for (const it of meal.items || []) {
     const r = it.code ? PRATICA_POR_CODIGO.get(it.code) : null;
     if (r) {
       for (const ing of r.ingredients) {
-        const nome = ing.name.replace(PREFIXO_MEDIDA, '').trim() || ing.name;
-        if (IGNORAR.test(normalizar(nome))) continue;
-        out.push({ nome, qtd: ing.quantity ? `${ing.quantity} ${ing.unit || ''}`.trim() : '' });
+        const c = canonico(ing.name);
+        if (c.ignorar) continue;
+        const q = Number(String(ing.quantity || '').replace(',', '.')) || 0;
+        out.push({ nome: c.nome, g: ing.unit === 'g' ? gramasCruas(c.nome, q, c.pronto) : 0, ml: ing.unit === 'ml' ? q : 0, pesoCru: c.pronto && emPesoCru(c.nome), secao: secaoDe(c.nome) });
       }
-    } else if (!IGNORAR.test(normalizar(it.name))) out.push({ nome: it.name, qtd: it.portion || '' });
+      continue;
+    }
+    const c = canonico(it.name);
+    if (c.ignorar) continue;
+    const g = Number(it.grams) || 0;
+    if (g) out.push({ nome: c.nome, g: gramasCruas(c.nome, g, c.pronto), ml: 0, pesoCru: c.pronto && emPesoCru(c.nome), secao: secaoDe(c.nome) });
+    // Sem gramas (TACO por medida, texto livre): não dá pra somar — fica com a porção escrita.
+    else out.push({ nome: it.name, g: 0, ml: 0, pesoCru: false, secao: 'outros', porcao: it.portion || '' });
   }
   return out;
 }
 
 const dias = (plano) => (planoResumido(plano)?.dias || []).filter((d) => d.meals?.length);
 
-/** Geral: cada item uma vez, ordenado, com quantas vezes aparece e as quantidades. */
-export function listaGeral(plano) {
+/** Soma itens iguais: [{ nome, g, ml, vezes, secao, principal, secundario }]. */
+function somar(itens) {
   const mapa = new Map();
-  for (const d of dias(plano)) for (const m of d.meals) for (const ing of ingredientesDe(m)) {
-    const k = normalizar(ing.nome);
-    const cur = mapa.get(k) || { nome: ing.nome, vezes: 0, qtd: [] };
-    cur.vezes += 1; if (ing.qtd) cur.qtd.push(ing.qtd); mapa.set(k, cur);
+  for (const i of itens) {
+    const k = `${i.secao}:${i.nome.toLowerCase()}`;
+    const cur = mapa.get(k) || { nome: i.nome, g: 0, ml: 0, vezes: 0, secao: i.secao, pesoCru: false, porcoes: new Set() };
+    cur.g += i.g; cur.ml += i.ml; cur.vezes += 1; cur.pesoCru = cur.pesoCru || i.pesoCru;
+    if (i.porcao) cur.porcoes.add(i.porcao);
+    mapa.set(k, cur);
   }
-  return [...mapa.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  return [...mapa.values()].map((i) => {
+    let principal, secundario;
+    if (i.secao === 'despensa') { principal = ''; secundario = ''; }            // decisão B: despensa sem gramas
+    else if (i.secao === 'outros') { principal = [...i.porcoes].slice(0, 2).join(', '); secundario = i.vezes > 1 ? `${i.vezes}×` : ''; }
+    else ({ principal, secundario } = unidadeDe(i));
+    return { nome: i.nome, g: i.g, ml: i.ml, vezes: i.vezes, secao: i.secao, principal, secundario };
+  }).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 }
 
-/** Por dia: [{ weekday, date, itens: [{ nome, qtd }] }], repetidos do mesmo dia somados nas quantidades. */
+/** Geral: seções do mercado, cada uma com os itens somados na semana. */
+export function listaGeral(plano) {
+  const itens = somar(dias(plano).flatMap((d) => d.meals.flatMap(ingredientesDe)));
+  return SECOES.map((s) => ({ ...s, itens: itens.filter((i) => i.secao === s.id) })).filter((s) => s.itens.length);
+}
+
+/** Por dia: [{ weekday, date, itens }] — o que separar no dia (temperos de despensa ficam de fora). */
 export function listaPorDia(plano) {
-  return dias(plano).map((d) => {
-    const mapa = new Map();
-    for (const m of d.meals) for (const ing of ingredientesDe(m)) {
-      const k = normalizar(ing.nome); const cur = mapa.get(k) || { nome: ing.nome, qtd: [] };
-      if (ing.qtd) cur.qtd.push(ing.qtd); mapa.set(k, cur);
-    }
-    return { weekday: d.weekday, date: d.date, itens: [...mapa.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')) };
-  });
+  return dias(plano).map((d) => ({ weekday: d.weekday, date: d.date, itens: somar(d.meals.flatMap(ingredientesDe)).filter((i) => i.secao !== 'despensa') }));
 }
 
-/** Por refeição: [{ weekday, date, refeicoes: [{ slot, nome, itens }] }]. */
-export function listaPorRefeicao(plano) {
-  return dias(plano).map((d) => ({ weekday: d.weekday, date: d.date, refeicoes: d.meals.map((m) => ({ slot: m.slot, nome: m.name, itens: ingredientesDe(m) })) }));
-}
-
-const linha = (i) => `• ${i.nome}${i.vezes > 1 ? ` (${i.vezes}×)` : ''}${i.qtd?.length ? ` — ${[...new Set(i.qtd)].slice(0, 2).join(', ')}` : ''}`;
-const cabecalho = (plano, nome) => `🛒 *Lista de compras${nome ? ` de ${nome}` : ''}*\nSemana de ${plano.week_start.slice(8, 10)}/${plano.week_start.slice(5, 7)} a ${somarDias(plano.week_start, 6).slice(8, 10)}/${somarDias(plano.week_start, 6).slice(5, 7)} · plano da Nutri Luciana`;
+const linha = (i) => `• ${i.nome}${i.principal ? ` — ${i.principal}` : ''}${i.secundario ? ` (${i.secundario})` : ''}`;
+const periodo = (ws) => `${ws.slice(8, 10)}/${ws.slice(5, 7)} a ${somarDias(ws, 6).slice(8, 10)}/${somarDias(ws, 6).slice(5, 7)}`;
+const cabecalho = (plano, nome) => `🛒 *Lista de compras${nome ? ` de ${nome}` : ''}*\nSemana de ${periodo(plano.week_start)} · plano da Nutri Luciana`;
+const NOTA = '_Unidade é o que você compra; o peso, o que as receitas usam. "~" é média por unidade._';
 
 /** Textos pro WhatsApp. Pode devolver mais de uma mensagem (limite de 4.000 caracteres). */
 export function textosLista(plano, modo, nome) {
   let corpo;
-  if (modo === 'dia') corpo = listaPorDia(plano).map((d) => `*${DIAS[d.weekday]}*\n${d.itens.map(linha).join('\n') || '—'}`).join('\n\n');
-  else if (modo === 'refeicao') corpo = listaPorRefeicao(plano).map((d) => `*${DIAS[d.weekday]}*\n${d.refeicoes.map((r) => `_${ROTULO[r.slot] || r.slot}: ${r.nome}_\n${r.itens.map(linha).join('\n') || '—'}`).join('\n')}`).join('\n\n');
-  else corpo = listaGeral(plano).map(linha).join('\n');
-  const texto = `${cabecalho(plano, nome)}\n\n${corpo || '(a semana não tem receitas do livro)'}`;
+  if (modo === 'dia') {
+    corpo = listaPorDia(plano).map((d) => `*${DIAS[d.weekday]}*\n${d.itens.map(linha).join('\n') || '—'}`).join('\n\n');
+  } else {
+    corpo = listaGeral(plano).map((s) => `*${s.emoji} ${s.titulo}*\n${s.itens.map(linha).join('\n')}`).join('\n\n');
+  }
+  const texto = `${cabecalho(plano, nome)}\n${modo === 'dia' ? '' : `${NOTA}\n`}\n${corpo || '(a semana não tem receitas do livro)'}`;
   const partes = []; let resto = texto;
   while (resto.length > 3800) { let corte = resto.lastIndexOf('\n\n', 3800); if (corte < 500) corte = resto.lastIndexOf('\n', 3800); if (corte < 500) corte = 3800; partes.push(resto.slice(0, corte)); resto = resto.slice(corte).trimStart(); }
   partes.push(resto);

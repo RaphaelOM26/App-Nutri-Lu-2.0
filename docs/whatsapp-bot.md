@@ -47,7 +47,7 @@ acompanhamento").
 | `o que como hoje` / `amanhã` | O plano do dia, com as trocas | não |
 | `peso 72,4` | Registra o peso | não |
 | `materiais` | Lista; PDF vai como arquivo, vídeo como link | não |
-| `lista de compras` | A lista da semana (de sexta a domingo, a da semana que vem), com botões "por dia" e "por refeição". Também sai pelo botão "Receber pela Luna" da tela Meu plano | não |
+| `lista de compras` | A lista da semana (de sexta a domingo, a da semana que vem), por seção do mercado, com botão "Ver por dia". O botão "Receber pela Luna" da tela Meu plano abre o WhatsApp com esse texto pré-digitado — ela manda, a Luna responde | não |
 | `dúvida pra nutri` | A próxima mensagem vira pergunta na caixa da Luciana (mesma triagem da web) | não |
 | Algo de saúde | Por **dicionário**, sem modelo: oferece mandar pra Nutri Luciana | não |
 | `atendente` | A Luna se cala; a conversa vai pro painel de Atendimento | não |
@@ -80,6 +80,38 @@ inativo). Confirmação curta de um toque ("Feito! Passei pra Almoço ✅") NÃO
 leva nome: repetir em toda mensagem soa disparo automático, que é o que faz
 gente denunciar o número. A regra está no `SYSTEM_PROMPT` da Luna, então vale
 igual na web e aqui.
+
+## Lista de compras
+
+Uma lista só, montada no servidor (`services/plano/listaCompras.js` +
+`ingredientes.js`) e usada pelos dois canais: a área de membros lê
+`GET /me/lista-compras` e desenha; a Luna manda o mesmo conteúdo em texto.
+Decisões do Raphael em 22/09/2026, depois de ver a saída real:
+
+- **A · Seções do mercado**: Hortifruti · Açougue e peixaria · Ovos e
+  laticínios · Mercearia · Despensa · Também no plano (item solto sem gramas).
+- **B · Despensa sem gramas**: azeite, temperos, mel, cacau, chia, castanhas —
+  "confere se tem", ninguém compra 6 g de azeite.
+- **C · Grãos em peso cru**: o livro pesa cozido (macros); a compra é crua.
+  Fator por dicionário (arroz e feijão ×0,4; macarrão ×0,45; cuscuz ×0,65;
+  polenta ×0,25) — só quando o nome diz "cozido/hidratado/pronto".
+- **D · Sinônimos e preparo por dicionário**: "Ovo"/"Ovos", "Aveia"/"Aveia em
+  flocos", "Frango cozido e desfiado" → "Peito de frango". Nunca IA — o mesmo
+  nome dá sempre o mesmo item, e alergia continua casando por texto. Nome
+  fora do dicionário passa pelo genérico (tira preparo) e vai pra Mercearia:
+  nunca some da lista. ⏳ Limpar a coluna de ingredientes da planilha PR é o
+  complemento (fonte única).
+- **E · Só geral e por dia**: "por refeição" saiu — era lista de preparo, e a
+  tela Meu plano já mostra as refeições.
+- **F · Unidade de compra + peso**: "Tomate — ~5 un (560 g)", "Iogurte
+  proteico — 7 potes (1,05 kg · 150 g cada)", carnes em peso com a unidade
+  de apoio ("400 g (~2 filés)"). Pesos médios por unidade (tabela de medidas
+  caseiras IBGE/TACO) em `UNIDADES`; "~" avisa que é média.
+
+Como chega até ela (decisão de 21/09): **nunca a empresa puxa** — sem modelo
+de lista e sem envio de sexta. Ela pede (`lista de compras` ou o botão da
+web, que abre o WhatsApp já com o texto) ou toca em "Mandar a lista" no
+aviso de plano pronto. Tudo dentro da janela: R$ 0.
 
 ## Regras que o código garante
 
@@ -155,7 +187,8 @@ igual na web e aqui.
    | `resposta_nutri` | Oi, {{1}}! A Nutri Luciana respondeu a dúvida que você enviou. Toque no botão abaixo pra ler a resposta. | Ver resposta |
    | `boas_vindas_luna` | Oi, {{1}}! Aqui é a Luna, assistente da Nutri Luciana. Sua compra do acompanhamento Nutri Lu foi confirmada. Toque no botão abaixo pra começar por aqui. | Começar |
    | `mensagem_equipe` | Oi, {{1}}! O time do Nutri Lu respondeu o seu atendimento. Toque no botão abaixo pra ler a mensagem. | Ver mensagem |
-   | `lista_compras` | Oi, {{1}}! A sua lista de compras da semana está pronta. Toque no botão abaixo pra receber aqui mesmo. | Ver a lista |
+
+   (Não existe modelo de lista de compras — ver a seção "Lista de compras".)
 
    Só depois de aprovado o nome entra em `WHATSAPP_TEMPLATES`. Modelo fora da
    lista não é nem tentado (e o conteúdo chega quando a paciente escrever).
@@ -186,9 +219,6 @@ O servidor local **nunca** fala com a Meta, mesmo com o token no `.env`
 
 ## O que ficou pra depois
 
-- Envio automático de **sexta com a lista de compras**: já está pronto
-  (`enviarListasDeSexta`, sexta às 10 h BR, semana seguinte), mas DESLIGADO
-  até o modelo `lista_compras` ser aprovado. Ligar com `WHATSAPP_LISTA_SEXTA=1`.
 - **Lembretes** de refeição/água/peso (os botões já existem no Perfil).
 - **Comunicado em lote** com tela no painel (hoje o "recado pra todas" chega
   no WhatsApp de cada uma quando ela escrever, sem disparo em massa).

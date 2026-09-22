@@ -244,7 +244,7 @@ async function tratarBotao(contato, acao, msg) {
     return mandar(contato, { texto: 'Claro! Como você prefere que eu te chame? Pode mandar só o primeiro nome. 😊' }, { autor: 'sistema' });
   }
   if (tipo === 'humano') return irPraEquipe(contato, a === 'comercial' ? 'comercial' : 'suporte');
-  if (tipo === 'lista' && ['dia', 'refeicao'].includes(a)) return enviarLista(contato, a, b || null);
+  if (tipo === 'lista' && ['geral', 'dia'].includes(a)) return enviarLista(contato, a, b || null);
   if (tipo === 'mat' && uuid(a)) return mandarMaterial(contato, a);
   await mandar(contato, { texto: `Esse botão não vale mais. 😊\n\n${MENU}` });
 }
@@ -494,7 +494,7 @@ async function enviarLista(contato, modo = 'geral', weekStart = null) {
   for (const [i, texto] of partes.entries()) {
     const ultima = i === partes.length - 1;
     await mandar(contato, ultima && modo === 'geral'
-      ? { texto, botoes: [{ id: `lista:dia:${plano.week_start}`, titulo: 'Ver por dia' }, { id: `lista:refeicao:${plano.week_start}`, titulo: 'Por refeição' }] }
+      ? { texto, botoes: [{ id: `lista:dia:${plano.week_start}`, titulo: 'Ver por dia' }] }
       : { texto }, { autor: 'sistema' });
   }
 }

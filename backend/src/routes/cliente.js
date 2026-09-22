@@ -21,8 +21,7 @@ import { temAcesso } from '../services/billing.js';
 import { novaChave, urlDeUpload, urlDeLeitura, apagar, r2Configurado } from '../services/r2.js';
 import { exigirData, mesValido, dataValida, diaDaSemana } from '../utils/datas.js';
 import { primeiroNome, nomeDe } from '../utils/nomes.js';
-import { planoDaLista } from '../services/plano/listaCompras.js';
-import { avisarListaCompras } from '../services/whatsapp/avisos.js';
+import { planoDaLista, listaGeral, listaPorDia, textosLista } from '../services/plano/listaCompras.js';
 import { listar, marcarLidas } from '../services/notificacoes.js';
 import { agendarRascunho } from '../services/triagem.js';
 import { numeroDoBot, mascarar } from '../services/whatsapp/api.js';
@@ -428,21 +427,28 @@ router.post('/notificacoes/lidas', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// ─── Lista de compras pela Luna ───────────────────────────────────────────
-// A tela Meu plano monta a lista no navegador (geral, por dia, por refeição).
-// Aqui é o botão "Receber pela Luna no WhatsApp": a MESMA lista, montada no
-// servidor, sai pelo bot. Dentro da janela de 24 h vai na hora; fora, sai o
-// modelo (se aprovado) e a lista chega quando ela escrever.
-router.post('/lista-compras/whatsapp', async (req, res, next) => {
+// ─── Lista de compras ─────────────────────────────────────────────────────
+// A lista é montada AQUI (services/plano/listaCompras.js) e é a mesma que a
+// Luna manda no WhatsApp: seções do mercado, quantidades somadas na semana,
+// unidade de compra + peso. A tela Meu plano só desenha. "Receber pela Luna"
+// virou um link wa.me com "lista de compras" pré-digitado — ela manda, a
+// janela abre, a Luna responde de graça (sem modelo).
+//   GET /me/lista-compras?week_start=YYYY-MM-DD  (sem week_start: a de hoje —
+//   de sexta a domingo, a da semana que vem)
+router.get('/lista-compras', async (req, res, next) => {
   try {
-    const ws = req.body?.week_start;
-    if (!dataValida(ws) || diaDaSemana(ws) !== 1) throw erro('week_start precisa ser uma segunda-feira (YYYY-MM-DD)');
-    const modo = ['geral', 'dia', 'refeicao'].includes(req.body?.modo) ? req.body.modo : 'geral';
-    const { plano } = await planoDaLista(req.user.userId, ws);
+    const ws = req.query.week_start ? String(req.query.week_start) : null;
+    if (ws && (!dataValida(ws) || diaDaSemana(ws) !== 1)) throw erro('week_start precisa ser uma segunda-feira (YYYY-MM-DD)');
+    const { plano, proxima } = await planoDaLista(req.user.userId, ws);
     if (!plano) throw erro('Não há plano publicado nessa semana.', 404, 'SEM_PLANO');
-    const r = await avisarListaCompras(req.user.userId, ws, modo);
-    if (r === 'sem_whatsapp') throw erro('Vincule o seu WhatsApp primeiro (Perfil → Conectar o WhatsApp).', 409, 'SEM_WHATSAPP');
-    res.json({ ok: true, quando: r });
+    const { rows: [u] } = await getPool().query(`SELECT apelido, display_name FROM users WHERE id = $1`, [req.user.userId]);
+    res.json({
+      week_start: plano.week_start,
+      proxima,
+      secoes: listaGeral(plano),
+      dias: listaPorDia(plano),
+      texto: textosLista(plano, 'geral', nomeDe(u)).join('\n\n'),
+    });
   } catch (e) { next(e); }
 });
 
