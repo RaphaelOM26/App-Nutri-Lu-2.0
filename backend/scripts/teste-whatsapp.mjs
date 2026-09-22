@@ -252,7 +252,16 @@ try {
   const pergunta = await ultima(WA);
   check(pergunta.tipo === 'interactive' && /Como você prefere\?/.test(pergunta.texto) && !/Iogurte/.test(pergunta.texto), '"lista de compras" → a Luna pergunta o formato (Marcar no celular · PDF pra imprimir · Ver aqui no chat)');
   await botao(WA, `lista:web:${ws}`, 'Marcar no celular');
-  check(new RegExp(`/lista\\?ws=${ws}`).test((await ultima(WA)).texto), '"Marcar no celular" → link da página da lista na área de membros');
+  const textoLink = (await ultima(WA)).texto;
+  const linkMagico = /https?:\/\/\S+\/entrar\?t=([A-Za-z0-9_-]+)&para=([^\s]+)/.exec(textoLink);
+  check(Boolean(linkMagico) && decodeURIComponent(linkMagico[2]) === `/lista?ws=${ws}`, '"Marcar no celular" → link MÁGICO da página da lista (já logada)');
+  // Link mágico: troca por sessão UMA vez; a segunda tentativa é recusada.
+  const sessaoLink = await chamar(null, 'POST', '/auth/link', { t: linkMagico[1] });
+  check(Boolean(sessaoLink.token) && sessaoLink.user?.id === cli.user.id && sessaoLink.destino === `/lista?ws=${ws}`, 'POST /auth/link → sessão da MESMA conta e destino /lista');
+  await chamar(sessaoLink.token, 'GET', '/auth/me');
+  await chamar(null, 'POST', '/auth/link', { t: linkMagico[1] }, 410);
+  await chamar(null, 'POST', '/auth/link', { t: 'x'.repeat(50) }, 410);
+  await chamar(null, 'POST', '/auth/link', { t: 'curto' }, 400);
   await botao(WA, `lista:pdf:${ws}`, 'PDF pra imprimir');
   const saidaPdf = await ultima(WA);
   check(saidaPdf.tipo === 'document' && /PDF/.test(saidaPdf.texto), '"PDF pra imprimir" → PDF anexado (a folha com a marca)');

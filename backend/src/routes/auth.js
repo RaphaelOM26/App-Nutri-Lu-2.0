@@ -24,6 +24,7 @@ import {
 } from '../services/auth.js';
 import { getPool } from '../db.js';
 import { criarCodigo, conferirCodigo, emailValido } from '../services/loginPorEmail.js';
+import { trocarLink } from '../services/loginPorLink.js';
 import { enviarCodigoLogin } from '../services/email.js';
 
 const router = Router();
@@ -70,6 +71,31 @@ router.post('/email/request', async (req, res, next) => {
     // inteiro sem caixa de e-mail. Em produção nunca: exigiria SMTP ausente E
     // ALLOW_DEV_LOGIN ligado ao mesmo tempo.
     res.json({ ok: true, ...(envio.dev ? { dev_code: codigo } : {}) });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// POST /auth/link — link mágico mandado pela Luna no WhatsApp (uso único,
+// 10 min). A página troca o token por sessão só depois de um toque em
+// "Entrar", por isso é POST: prévia de link (GET) não consome o acesso.
+router.post('/link', async (req, res, next) => {
+  try {
+    if (ipExcedeu(req.ip)) {
+      return res.status(429).json({ error: 'Muitos pedidos. Tente mais tarde.', code: 'RATE_LIMITED' });
+    }
+    const r = await trocarLink(req.body?.t);
+    if (!r.ok) {
+      const mensagens = {
+        FORMATO_INVALIDO: 'Esse link não é válido.',
+        NAO_ENCONTRADO: 'Esse link não é válido. Pede outro pra Luna.',
+        EXPIRADO: 'Esse link venceu (vale 10 minutos). Pede outro pra Luna.',
+        USADO: 'Esse link já foi usado. Pede outro pra Luna.',
+      };
+      return res.status(r.motivo === 'FORMATO_INVALIDO' ? 400 : 410).json({ error: mensagens[r.motivo], code: r.motivo });
+    }
+    const token = await issueSessionToken(r.user);
+    res.json({ token, user: { id: r.user.id, displayName: r.user.display_name, email: r.user.email, role: r.user.role || 'cliente' }, destino: r.destino });
   } catch (e) {
     next(e);
   }

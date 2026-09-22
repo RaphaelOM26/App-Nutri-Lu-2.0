@@ -36,9 +36,19 @@ import { entregarPendentes } from './avisos.js';
 import { aceitarConvite, emailMascarado } from './convites.js';
 import { planoDaLista, textosLista, dadosDaLista } from '../plano/listaCompras.js';
 import { gerarPdfLista, nomeDoArquivo } from '../plano/listaPdf.js';
+import { criarLink } from '../loginPorLink.js';
 
 const MEMBROS = (process.env.MEMBROS_URL || 'https://nutrilualves.com.br/membros').replace(/\/$/, '');
 const ROTULO = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã', almoco: 'Almoço', lanche_tarde: 'Lanche da tarde', jantar: 'Jantar', ceia: 'Ceia' };
+/**
+ * Link da área de membros já LOGADO (link mágico de uso único, 10 min): o
+ * número dela está vinculado, então o WhatsApp é canal autenticado. Só pra
+ * contato com conta; sem conta, o link comum. Ver services/loginPorLink.js.
+ */
+async function linkLogado(contato, caminho = '/') {
+  if (!contato?.user_id) return `${MEMBROS}${caminho}`;
+  try { return await criarLink(contato.user_id, caminho); } catch (e) { console.warn('[whatsapp] link logado falhou:', e.message); return `${MEMBROS}${caminho}`; }
+}
 const uuid = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s || ''));
 const n0 = (v) => Math.round(Number(v) || 0).toLocaleString('pt-BR');
 const dataCurta = (iso) => new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(`${iso}T12:00:00Z`)).replace('.', '');
@@ -186,7 +196,7 @@ async function boasVindas(contato, compra = null) {
   }
 
   if (compra && !compra.cadastroFeito) {
-    await mandar(contato, { texto: `*Seu primeiro passo* 👇\n\n1. Entra na área de membros: ${MEMBROS}\n2. Usa o e-mail da compra (${emailMascarado(compra.email)}). Eu mando um código de 6 números pra ele, sem senha.\n3. Responde o questionário. Leva uns 10 minutos.\n\nCom as suas respostas, a Nutri Luciana monta o seu plano alimentar, e eu te aviso por aqui assim que ele ficar pronto.` }, { autor: 'sistema' });
+    await mandar(contato, { texto: `*Seu primeiro passo* 👇\n\n1. Toca aqui pra entrar na área de membros (já entra logada, sem senha): ${await linkLogado(contato, '/comecar')}\n2. Responde o questionário. Leva uns 10 minutos.\n\nCom as suas respostas, a Nutri Luciana monta o seu plano alimentar, e eu te aviso por aqui assim que ele ficar pronto.\n\n_Se o link vencer (vale 10 minutos), entra em ${MEMBROS} com o e-mail da compra (${emailMascarado(compra.email)})._` }, { autor: 'sistema' });
   }
   await mandar(contato, { texto: `${MENU}\n\nTudo que você registrar aqui aparece na área de membros, em Meu plano.\n\n_Avisos importantes (plano pronto, resposta da Nutri Luciana) chegam por aqui. Pra não receber, manda PARAR._` }, { autor: 'sistema' });
   await entregarPendentes(contato);
@@ -273,7 +283,7 @@ async function podeUsarIA(contato, recurso) {
   // Notícia ruim leva o nome: é onde ele faz diferença de verdade.
   if (premiumObrigatorio() && !(await temAcesso(contato.user_id)).acesso) {
     const quem = await nomeDoContato(contato);
-    await mandar(contato, { texto: `${quem ? `${quem}, seu` : 'Seu'} acesso ao acompanhamento não está ativo, então não consigo registrar por aqui. Dá uma olhada em ${MEMBROS}/perfil ou escreve *atendente* que o time te ajuda.` }, { autor: 'sistema' });
+    await mandar(contato, { texto: `${quem ? `${quem}, seu` : 'Seu'} acesso ao acompanhamento não está ativo, então não consigo registrar por aqui. Dá uma olhada em ${await linkLogado(contato, '/perfil')} ou escreve *atendente* que o time te ajuda.` }, { autor: 'sistema' });
     return false;
   }
   const t = await consumirTeto(recurso, contato.user_id);
@@ -518,7 +528,7 @@ async function entregarLista(contato, formato, weekStart = null) {
   if (!plano) return mandar(contato, { texto: SEM_PLANO_LISTA }, { autor: 'sistema' });
   const ws = plano.week_start;
   if (formato === 'web') {
-    return mandar(contato, { texto: `Aqui está a sua lista pra marcar no mercado:\n${MEMBROS}/lista?ws=${ws}\n\nToca no item pra riscar; as marcações ficam salvas no seu celular. 😉` }, { autor: 'sistema' });
+    return mandar(contato, { texto: `Aqui está a sua lista pra marcar no mercado (já abre logada):\n${await linkLogado(contato, `/lista?ws=${ws}`)}\n\nToca no item pra riscar; as marcações ficam salvas no seu celular. 😉` }, { autor: 'sistema' });
   }
   const nome = await nomeDoContato(contato);
   if (formato === 'pdf') {
@@ -593,14 +603,14 @@ async function planoDoDia(contato, maisDias, soAgora) {
     const itens = (m.items || []).slice(0, 8).map((i) => `   • ${i.name}${i.portion ? ` (${i.portion})` : ''}`).join('\n');
     return `*${ROTULO[m.slot] || m.slot}*${m.time ? ` · ${m.time}` : ''}\n${m.name} · ${n0(m.kcal)} kcal${m.trocada ? ' _(você trocou)_' : ''}${itens ? `\n${itens}` : ''}${m.subs ? `\n   _Pode trocar: ${m.subs}_` : ''}`;
   });
-  await mandar(contato, { texto: `*Plano de ${maisDias ? 'amanhã' : 'hoje'}* (${dataCurta(data)})\n\n${blocos.join('\n\n')}\n\nPra trocar uma refeição ou ver a lista de compras: ${MEMBROS}/plano` }, { autor: 'sistema' });
+  await mandar(contato, { texto: `*Plano de ${maisDias ? 'amanhã' : 'hoje'}* (${dataCurta(data)})\n\n${blocos.join('\n\n')}\n\nPra trocar uma refeição ou ver a lista de compras: ${await linkLogado(contato, '/plano')}` }, { autor: 'sistema' });
 }
 
 async function listarMateriais(contato) {
   const { rows } = await getPool().query(`SELECT id, title, kind FROM materials WHERE active ORDER BY sort, created_at DESC LIMIT 10`);
   if (!rows.length) return mandar(contato, { texto: 'A Nutri Luciana ainda não publicou materiais. Quando sair algo novo, aparece em Materiais, na área de membros. 📚' }, { autor: 'sistema' });
   await mandar(contato, {
-    texto: `Esses são os materiais mais recentes da Nutri Luciana. 📚 Escolhe um que eu te mando.\n\nTodos ficam em ${MEMBROS}/materiais`,
+    texto: `Esses são os materiais mais recentes da Nutri Luciana. 📚 Escolhe um que eu te mando.\n\nTodos ficam em ${await linkLogado(contato, '/materiais')}`,
     lista: { botao: 'Ver materiais', titulo: 'Materiais', itens: rows.map((m) => ({ id: `mat:${m.id}`, titulo: m.title, descricao: m.kind === 'pdf' ? 'PDF' : 'Vídeo' })) },
   }, { autor: 'sistema' });
 }
@@ -613,7 +623,7 @@ async function mandarMaterial(contato, id) {
   if (m.kind === 'pdf' && m.file_key && r2Configurado()) {
     return mandar(contato, { texto: m.title, documento: { link: await urlDeLeitura(m.file_key), nome: `${m.title}.pdf` } }, { autor: 'sistema' });
   }
-  await mandar(contato, { texto: `*${m.title}*\n${m.url || `${MEMBROS}/materiais`}` }, { autor: 'sistema' });
+  await mandar(contato, { texto: `*${m.title}*\n${m.url || await linkLogado(contato, '/materiais')}` }, { autor: 'sistema' });
 }
 
 async function conversarComLuna(contato, texto, msg) {

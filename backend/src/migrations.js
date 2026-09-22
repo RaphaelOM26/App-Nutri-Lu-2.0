@@ -486,6 +486,22 @@ export const MIGRACOES = [
     descricao: 'Como a paciente prefere ser chamada',
     sql: `ALTER TABLE users ADD COLUMN IF NOT EXISTS apelido TEXT;`,
   },
+  {
+    id: '014-login-links',
+    descricao: 'Links mágicos de login mandados pela Luna (uso único, 10 min)',
+    sql: `
+      CREATE TABLE IF NOT EXISTS login_links (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token_hash TEXT NOT NULL UNIQUE,
+        destino TEXT NOT NULL DEFAULT '/',
+        expires_at TIMESTAMPTZ NOT NULL,
+        used_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_login_links_expira ON login_links(expires_at);
+    `,
+  },
 ];
 
 /**

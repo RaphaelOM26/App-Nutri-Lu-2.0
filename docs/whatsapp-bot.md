@@ -131,6 +131,22 @@ objeto (`dadosDaLista()`) vira três coisas:
   lista. O PDF não é interativo (caixas desenhadas): a versão de marcar é a
   página.
 
+## Login por link mágico (22/09)
+
+Todo link da área de membros que a Luna manda pra uma paciente VINCULADA vai
+"já logado": `services/loginPorLink.js` grava um token de uso único (hash
+SHA-256, 10 minutos, amarrado ao `user_id`, destino relativo) e o link vira
+`/membros/entrar?t=…&para=/lista?ws=…`. A página mostra "Você chegou pelo
+link da Luna" e troca o token por sessão só depois do toque em **Entrar**
+(`POST /auth/link`): prévia de link (GET) não consome o acesso. Vencido ou
+usado → 410 e a tela cai no login por e-mail. Já logada → vai direto ao
+destino sem gastar o token. O risco que sobra é o do próprio WhatsApp (celular
+desbloqueado); por isso o número precisa estar vinculado (prova por código).
+Usado em: primeiro passo pós-compra (`/comecar`), lista (`/lista`), plano
+(`/plano`), materiais, perfil. A área de membros também é instalável
+("Adicionar à tela inicial", `manifest.webmanifest` + ícones): abre pelo
+ícone, já logada, e o WhatsApp vira atalho.
+
 ## Regras que o código garante
 
 - **Anamnese clínica nunca é lida** pelo bot nem entra em prompt.
