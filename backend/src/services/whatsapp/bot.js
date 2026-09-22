@@ -34,7 +34,8 @@ import { baixarMidia, marcarLida } from './api.js';
 import { contatoPorWaId, mandar, entregarGuardadas, atualizarEstado, tentarVinculo, chamarEquipe, devolverPraLuna, janelaAberta } from './contatos.js';
 import { entregarPendentes } from './avisos.js';
 import { aceitarConvite, emailMascarado } from './convites.js';
-import { planoDaLista, textosLista } from '../plano/listaCompras.js';
+import { planoDaLista, textosLista, dadosDaLista } from '../plano/listaCompras.js';
+import { gerarPdfLista, nomeDoArquivo } from '../plano/listaPdf.js';
 
 const MEMBROS = (process.env.MEMBROS_URL || 'https://nutrilualves.com.br/membros').replace(/\/$/, '');
 const ROTULO = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã', almoco: 'Almoço', lanche_tarde: 'Lanche da tarde', jantar: 'Jantar', ceia: 'Ceia' };
@@ -489,13 +490,25 @@ async function tratarTexto(contato, texto, { msg, entregues = 0 } = {}) {
 async function enviarLista(contato, modo = 'geral', weekStart = null) {
   const { plano, proxima } = await planoDaLista(contato.user_id, weekStart);
   if (!plano) return mandar(contato, { texto: 'A lista de compras nasce do plano da semana, e o seu ainda não está publicado. Assim que a Nutri Luciana publicar, eu monto pra você. 😊' }, { autor: 'sistema' });
-  const partes = textosLista(plano, modo, await nomeDoContato(contato));
+  const nome = await nomeDoContato(contato);
+  const partes = textosLista(plano, modo, nome);
   if (proxima && modo === 'geral') partes[0] = `Como já é fim de semana, essa é a lista da *semana que vem*. 😉\n\n${partes[0]}`;
   for (const [i, texto] of partes.entries()) {
     const ultima = i === partes.length - 1;
     await mandar(contato, ultima && modo === 'geral'
       ? { texto, botoes: [{ id: `lista:dia:${plano.week_start}`, titulo: 'Ver por dia' }] }
       : { texto }, { autor: 'sistema' });
+  }
+  // A lista geral vai também como PDF (a folha com a marca, igual à da área de
+  // membros): gera no servidor, guarda no R2 e a Meta baixa pela URL assinada.
+  // Se o PDF falhar, o texto já foi — ela não fica sem lista.
+  if (modo === 'geral' && r2Configurado()) {
+    try {
+      const pdf = await gerarPdfLista(dadosDaLista(plano, null, { proxima, nome }));
+      const key = `${contato.user_id}/listas/${plano.week_start}.pdf`;
+      await gravar(key, pdf, 'application/pdf');
+      await mandar(contato, { texto: 'A mesma lista em PDF, pra imprimir ou guardar. 🛒', documento: { link: await urlDeLeitura(key), nome: nomeDoArquivo(plano.week_start) } }, { autor: 'sistema' });
+    } catch (e) { console.error('[lista] PDF não saiu:', e.message); }
   }
 }
 

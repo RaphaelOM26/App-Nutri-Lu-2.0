@@ -113,6 +113,19 @@ de lista e sem envio de sexta. Ela pede (`lista de compras` ou o botão da
 web, que abre o WhatsApp já com o texto) ou toca em "Mandar a lista" no
 aviso de plano pronto. Tudo dentro da janela: R$ 0.
 
+**A folha com a marca (22/09, exemplo aprovado pelo Raphael).** O mesmo
+objeto (`dadosDaLista()`) vira três coisas:
+
+- a página `/lista` da área de membros (papel cream, seções em colunas,
+  carrinho pra marcar, "Imprimir" e "Baixar PDF");
+- `GET /me/lista-compras.pdf` — o PDF desenhado no servidor
+  (`services/plano/listaPdf.js`, pdfkit, fontes padrão do PDF, ~10 KB, ~100 ms);
+- no WhatsApp, a lista geral sai em **duas mensagens**: o texto (com o botão
+  "Ver por dia") e o PDF anexado. O PDF é gravado no R2 em
+  `<user>/listas/<semana>.pdf` (sobrescreve a mesma semana; 10 mil pacientes ×
+  4 semanas ≈ 0,4 GB) e a Meta baixa pela URL assinada. Se o PDF falhar, o
+  texto já foi — ela nunca fica sem lista. Sem R2 configurado só vai o texto.
+
 ## Regras que o código garante
 
 - **Anamnese clínica nunca é lida** pelo bot nem entra em prompt.

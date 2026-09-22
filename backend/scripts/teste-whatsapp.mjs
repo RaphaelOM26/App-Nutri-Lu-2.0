@@ -248,7 +248,10 @@ try {
   const diasLista = Array.from({ length: 7 }, (_, i) => ({ weekday: i + 1, meals: [{ slot: 'cafe', time: '07:00', name: 'IOGURTE PROTEICO COM FRUTA, AVEIA E CHIA', code: 'PR-001', items: [{ name: 'IOGURTE PROTEICO COM FRUTA, AVEIA E CHIA', portion: '1 porção', code: 'PR-001', kcal: 325, p: 22, c: 43, f: 10 }], kcal: 325, p: 22, c: 43, f: 10 }] }));
   await pool.query(`INSERT INTO meal_plans (user_id, week_start, week_index, week_total, targets, days, status, published_at) VALUES ($1, $2, 1, 4, '{"kcal":1600}', $3, 'ativo', NOW()) ON CONFLICT (user_id, week_start) DO UPDATE SET days = EXCLUDED.days, status = 'ativo'`, [cli.user.id, ws, JSON.stringify(diasLista)]);
   await texto(WA, 'lista de compras');
-  const saidaLista = await ultima(WA);
+  // Saem 2 mensagens: o texto (com botão "Ver por dia") e, depois, o PDF da folha.
+  const saidasLista = await saidas(WA, 3);
+  const saidaLista = saidasLista.find((m) => m.tipo === 'interactive') || { texto: '' };
+  check(saidasLista[0]?.tipo === 'document' && /PDF/.test(saidasLista[0].texto), 'a lista geral vai também como PDF anexado (a folha com a marca)');
   check(/Lista de compras/.test(saidaLista.texto) && /Iogurte proteico/.test(saidaLista.texto) && saidaLista.tipo === 'interactive', '"lista de compras" → lista geral com ingredientes do livro e botão "Ver por dia"');
   check(/Lista de compras de Duda/.test(saidaLista.texto), 'a lista sai com o apelido que ela escolheu');
   // Formato de 22/09: seções do mercado, quantidades SOMADAS na semana (7 cafés
@@ -260,6 +263,9 @@ try {
   check(/\*Segunda\*/.test((await ultima(WA)).texto) && /\*Domingo\*/.test((await ultima(WA)).texto), 'botão "Ver por dia" → lista dia a dia');
   const listaJson = await chamar(tCli, 'GET', `/me/lista-compras?week_start=${ws}`);
   check(listaJson.week_start === ws && Array.isArray(listaJson.secoes) && listaJson.secoes.some((s) => s.id === 'laticinios' && s.itens.some((i) => i.nome === 'Iogurte proteico' && i.principal === '8 potes')) && typeof listaJson.texto === 'string' && Array.isArray(listaJson.cardapio) && listaJson.cardapio[0]?.refeicoes?.length > 0 && listaJson.cardapio.every((d) => d.refeicoes.every((r) => r !== r.toUpperCase())), 'GET /me/lista-compras → seções, dias e texto, a MESMA lista da Luna');
+  const pdfRes = await fetch(`${BASE}/me/lista-compras.pdf?week_start=${ws}`, { headers: { Authorization: `Bearer ${tCli}` } });
+  const pdfBuf = Buffer.from(await pdfRes.arrayBuffer());
+  check(pdfRes.status === 200 && String(pdfRes.headers.get('content-type')).includes('application/pdf') && pdfBuf.subarray(0, 5).toString() === '%PDF-' && pdfBuf.length > 3000, 'GET /me/lista-compras.pdf → PDF de verdade (a mesma folha da web e do WhatsApp)');
   await chamar(tCli, 'GET', '/me/lista-compras?week_start=2030-01-07', undefined, 404);
   await chamar(tCli, 'POST', '/me/lista-compras/whatsapp', { week_start: ws }, 404);
 

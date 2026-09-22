@@ -22,6 +22,7 @@ import { novaChave, urlDeUpload, urlDeLeitura, apagar, r2Configurado } from '../
 import { exigirData, mesValido, dataValida, diaDaSemana } from '../utils/datas.js';
 import { primeiroNome, nomeDe } from '../utils/nomes.js';
 import { planoDaLista, dadosDaLista } from '../services/plano/listaCompras.js';
+import { gerarPdfLista, nomeDoArquivo } from '../services/plano/listaPdf.js';
 import { listar, marcarLidas } from '../services/notificacoes.js';
 import { agendarRascunho } from '../services/triagem.js';
 import { numeroDoBot, mascarar } from '../services/whatsapp/api.js';
@@ -435,14 +436,29 @@ router.post('/notificacoes/lidas', async (req, res, next) => {
 // janela abre, a Luna responde de graça (sem modelo).
 //   GET /me/lista-compras?week_start=YYYY-MM-DD  (sem week_start: a de hoje —
 //   de sexta a domingo, a da semana que vem)
+//   GET /me/lista-compras.pdf?week_start=  → a mesma lista como PDF (a folha
+//   com a marca; é o arquivo que a Luna anexa no WhatsApp)
+async function listaDaSemana(req) {
+  const ws = req.query.week_start ? String(req.query.week_start) : null;
+  if (ws && (!dataValida(ws) || diaDaSemana(ws) !== 1)) throw erro('week_start precisa ser uma segunda-feira (YYYY-MM-DD)');
+  const { plano, proxima } = await planoDaLista(req.user.userId, ws);
+  if (!plano) throw erro('Não há plano publicado nessa semana.', 404, 'SEM_PLANO');
+  const { rows: [u] } = await getPool().query(`SELECT apelido, display_name FROM users WHERE id = $1`, [req.user.userId]);
+  return dadosDaLista(plano, u, { proxima, nome: nomeDe(u) });
+}
+
 router.get('/lista-compras', async (req, res, next) => {
+  try { res.json(await listaDaSemana(req)); } catch (e) { next(e); }
+});
+
+router.get('/lista-compras.pdf', async (req, res, next) => {
   try {
-    const ws = req.query.week_start ? String(req.query.week_start) : null;
-    if (ws && (!dataValida(ws) || diaDaSemana(ws) !== 1)) throw erro('week_start precisa ser uma segunda-feira (YYYY-MM-DD)');
-    const { plano, proxima } = await planoDaLista(req.user.userId, ws);
-    if (!plano) throw erro('Não há plano publicado nessa semana.', 404, 'SEM_PLANO');
-    const { rows: [u] } = await getPool().query(`SELECT apelido, display_name FROM users WHERE id = $1`, [req.user.userId]);
-    res.json(dadosDaLista(plano, u, { proxima, nome: nomeDe(u) }));
+    const dados = await listaDaSemana(req);
+    const pdf = await gerarPdfLista(dados);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${nomeDoArquivo(dados.week_start)}"`);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.send(pdf);
   } catch (e) { next(e); }
 });
 
