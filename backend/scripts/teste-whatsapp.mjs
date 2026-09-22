@@ -205,7 +205,7 @@ try {
   // Nome como vem MESMO da Hotmart: tudo em maiúscula, nome completo.
   const compra = await hotmart(TRANSACAO, { email: COMPRADORA, name: 'JULIA DA SILVA SANTOS', first_name: 'JULIA DA SILVA SANTOS', checkout_phone_code: '31', checkout_phone: FONE_COMPRA });
   check(compra.status === 200, 'webhook da Hotmart aceita a compra aprovada');
-  check(await esperarSaida(WA_COMPRA, (m) => m.tipo === 'template' && /boas_vindas/.test(m.texto)), 'a compradora recebe o modelo boas_vindas no telefone do checkout');
+  check(await esperarSaida(WA_COMPRA, (m) => m.tipo === 'template' && /boas_vindas_luna/.test(m.texto)), 'a compradora recebe o modelo boas_vindas_luna no telefone do checkout');
   const { rows: [antesDoToque] } = await pool.query(`SELECT user_id FROM whatsapp_contatos WHERE wa_id = $1`, [WA_COMPRA]);
   check(antesDoToque && !antesDoToque.user_id, 'o telefone do checkout, sozinho, NÃO vincula conta nenhuma');
   await hotmart(TRANSACAO, { email: COMPRADORA, first_name: 'JULIA DA SILVA SANTOS', checkout_phone_code: '31', checkout_phone: FONE_COMPRA });

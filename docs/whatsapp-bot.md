@@ -12,7 +12,7 @@ falar com a Meta) e está coberto por `backend/scripts/teste-whatsapp.mjs`.
 Dois caminhos, que convivem:
 
 1. **Pela compra (automático).** A Hotmart manda o telefone do checkout junto
-   com a compra aprovada. A compradora recebe o modelo `boas_vindas` com o
+   com a compra aprovada. A compradora recebe o modelo `boas_vindas_luna` com o
    botão **Começar**; ao tocar, o número fica ligado à conta do e-mail da
    compra (a conta é criada se ela ainda não entrou na área de membros) e a
    Luna manda as boas-vindas e o primeiro passo (entrar e responder o
@@ -153,12 +153,21 @@ igual na web e aqui.
    |---|---|---|
    | `plano_pronto` | Oi, {{1}}! A Nutri Luciana terminou e publicou o seu plano alimentar. Toque no botão abaixo pra ver os detalhes aqui mesmo. | Ver meu plano |
    | `resposta_nutri` | Oi, {{1}}! A Nutri Luciana respondeu a dúvida que você enviou. Toque no botão abaixo pra ler a resposta. | Ver resposta |
-   | `boas_vindas` | Oi, {{1}}! Aqui é a Luna, assistente da Nutri Luciana. Sua compra do acompanhamento Nutri Lu foi confirmada. Toque no botão abaixo pra começar por aqui. | Começar |
+   | `boas_vindas_luna` | Oi, {{1}}! Aqui é a Luna, assistente da Nutri Luciana. Sua compra do acompanhamento Nutri Lu foi confirmada. Toque no botão abaixo pra começar por aqui. | Começar |
    | `mensagem_equipe` | Oi, {{1}}! O time do Nutri Lu respondeu o seu atendimento. Toque no botão abaixo pra ler a mensagem. | Ver mensagem |
    | `lista_compras` | Oi, {{1}}! A sua lista de compras da semana está pronta. Toque no botão abaixo pra receber aqui mesmo. | Ver a lista |
 
    Só depois de aprovado o nome entra em `WHATSAPP_TEMPLATES`. Modelo fora da
    lista não é nem tentado (e o conteúdo chega quando a paciente escrever).
+
+   Lições da Meta (21/09/2026): o `boas_vindas_luna` é categoria **Marketing**,
+   não Utilidade — a Meta recategoriza boas-vindas pelo TIPO da mensagem, não
+   pela redação, e o envio falha se a categoria não bater. Nome de modelo
+   apagado fica **bloqueado 30 dias** (`boas_vindas` e `boas_vindas_v2`
+   queimaram assim). Nome + idioma são chaves separadas: modelo criado em
+   English não é achado pelo envio em `pt_BR` (erro 132001). Na UI nova o botão
+   de resposta rápida chama-se **Personalizado**; não ligar o toggle de
+   "validade personalizada" (expira a mensagem em 10 min).
 5. **Time de suporte**: `node scripts/definir-papel.mjs --email ana@… --papel suporte`.
    A pessoa entra na área de membros com esse e-mail e cai direto em
    Painel → WhatsApp.

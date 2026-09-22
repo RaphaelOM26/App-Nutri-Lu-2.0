@@ -25,7 +25,7 @@ if (process.env.WHATSAPP_REAL !== '1') {
   delete process.env.WHATSAPP_TOKEN; delete process.env.WHATSAPP_PHONE_ID; delete process.env.WHATSAPP_APP_SECRET;
   process.env.WHATSAPP_NUMERO ||= '5521900000000';
   process.env.WHATSAPP_VERIFY_TOKEN ||= 'dev';
-  process.env.WHATSAPP_TEMPLATES ||= 'resposta_nutri,plano_pronto,mensagem_equipe,boas_vindas';
+  process.env.WHATSAPP_TEMPLATES ||= 'resposta_nutri,plano_pronto,mensagem_equipe,boas_vindas_luna';
   process.env.WHATSAPP_BOAS_VINDAS ||= '1';
 }
 // Webhook da Hotmart testável local (o hottok de verdade só existe no Railway).

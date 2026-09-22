@@ -26,7 +26,7 @@ import { enviar, templateAprovado, mascarar } from './api.js';
 import { enfileirar } from './fila.js';
 import { primeiroNome } from '../../utils/nomes.js';
 
-export const MODELO_BOAS_VINDAS = 'boas_vindas';
+export const MODELO_BOAS_VINDAS = 'boas_vindas_luna';
 export const boasVindasLigadas = () => process.env.WHATSAPP_BOAS_VINDAS === '1';
 
 /**
@@ -69,7 +69,7 @@ export async function executarConvite({ conviteId, adiamentos = 0 }) {
   const encerrar = (status, motivo) => pool.query(`UPDATE whatsapp_convites SET status = $2, motivo = $3 WHERE id = $1`, [c.id, status, motivo]);
 
   if (!boasVindasLigadas()) return encerrar('ignorado', 'função desligada');
-  if (!templateAprovado(MODELO_BOAS_VINDAS)) return encerrar('ignorado', 'modelo boas_vindas não está em WHATSAPP_TEMPLATES');
+  if (!templateAprovado(MODELO_BOAS_VINDAS)) return encerrar('ignorado', 'modelo boas_vindas_luna não está em WHATSAPP_TEMPLATES');
   // Compra que caiu (reembolso em minutos) ou paciente que já se vinculou pelo código: não incomoda.
   const { rows: [situacao] } = await pool.query(
     `SELECT p.status AS compra,
