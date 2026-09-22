@@ -45,7 +45,8 @@ const competencia = () => {
  */
 const DEVICE_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function contarNaMemoria(chave, maximo) {
+/** Contador diário em memória (zera à meia-noite; por instância). Exportado pro /day-snapshot. */
+export function contarNaMemoria(chave, maximo) {
   const hoje = inicioDoDia();
   const atual = janelas.get(chave);
   if (!atual || atual.dia !== hoje) {
