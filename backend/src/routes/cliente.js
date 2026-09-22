@@ -20,6 +20,7 @@ import { requireAuth } from '../services/auth.js';
 import { temAcesso } from '../services/billing.js';
 import { novaChave, urlDeUpload, urlDeLeitura, apagar, r2Configurado } from '../services/r2.js';
 import { exigirData, mesValido, dataValida, diaDaSemana } from '../utils/datas.js';
+import { primeiroNome, nomeDe } from '../utils/nomes.js';
 import { planoDaLista } from '../services/plano/listaCompras.js';
 import { avisarListaCompras } from '../services/whatsapp/avisos.js';
 import { listar, marcarLidas } from '../services/notificacoes.js';
@@ -298,14 +299,14 @@ router.get('/perfil', async (req, res, next) => {
   try {
     const p = getPool();
     const [u, c, a, plano] = await Promise.all([
-      p.query(`SELECT id, display_name, email, created_at FROM users WHERE id = $1`, [req.user.userId]),
+      p.query(`SELECT id, display_name, apelido, email, created_at FROM users WHERE id = $1`, [req.user.userId]),
       p.query(`SELECT data, updated_at FROM client_profiles WHERE user_id = $1`, [req.user.userId]),
       temAcesso(req.user.userId),
       planoDaData(req.user.userId, new Date().toISOString().slice(0, 10)),
     ]);
     if (!u.rows[0]) return res.status(401).json({ error: 'Usuário não existe mais', code: 'AUTH_EXPIRED' });
     res.json({
-      user: { id: u.rows[0].id, displayName: u.rows[0].display_name, email: u.rows[0].email, since: u.rows[0].created_at },
+      user: { id: u.rows[0].id, displayName: u.rows[0].display_name, apelido: u.rows[0].apelido, comoChamar: nomeDe(u.rows[0]), email: u.rows[0].email, since: u.rows[0].created_at },
       perfil: await perfilComFoto(c.rows[0]?.data),
       acesso: a,
       plano: plano ? { week_index: plano.week_index, week_total: plano.week_total, week_start: plano.week_start, targets: plano.targets } : null,
@@ -323,6 +324,12 @@ router.put('/perfil', async (req, res, next) => {
     if (limpo.foto_key === '') limpo.foto_key = null;
     if (typeof limpo.nome === 'string' && limpo.nome.trim()) {
       await getPool().query(`UPDATE users SET display_name = $2 WHERE id = $1`, [req.user.userId, limpo.nome.trim().slice(0, 40)]);
+    }
+    // Como ela quer ser chamada (o mesmo apelido que o WhatsApp usa). Campo
+    // separado do nome: string vazia volta pro nome do cadastro.
+    if (typeof dados.apelido === 'string') {
+      const a = primeiroNome(dados.apelido);
+      await getPool().query(`UPDATE users SET apelido = $2 WHERE id = $1`, [req.user.userId, dados.apelido.trim() ? a : null]);
     }
     const { rows } = await getPool().query(
       `INSERT INTO client_profiles (user_id, data) VALUES ($1, $2)

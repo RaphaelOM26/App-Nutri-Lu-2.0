@@ -51,11 +51,35 @@ acompanhamento").
 | `dúvida pra nutri` | A próxima mensagem vira pergunta na caixa da Luciana (mesma triagem da web) | não |
 | Algo de saúde | Por **dicionário**, sem modelo: oferece mandar pra Nutri Luciana | não |
 | `atendente` | A Luna se cala; a conversa vai pro painel de Atendimento | não |
+| `meu nome é Mari` | Troca como a Luna a chama (grava `users.apelido`) | não |
 | `PARAR` / `AVISOS` | Desliga / religa os avisos por modelo | não |
 | Qualquer outra coisa | Luna, com o dia e o plano dela no contexto | sim |
 
 Os tetos de IA são **os mesmos contadores da web** (30 fotos, 30 áudios, 60
 mensagens por dia pra assinante): o teto é da conta, não do canal.
+
+## Como a Luna chama a paciente
+
+O nome vem de três fontes, nesta ordem (`src/utils/nomes.js`, usado também
+pela web): **`users.apelido`** (o que ela escolheu) → **`users.display_name`**
+(o nome da compra) → **nome do perfil do WhatsApp**. Sem nenhum, a frase sai
+sem nome; a Luna nunca inventa "querida" nem "amiga".
+
+O nome da compra é chute — vem `MARIA DA SILVA SANTOS`, vem o nome de quem
+pagou. Por isso ele é tratado (primeiro nome, caixa arrumada) e, na primeira
+mensagem, a Luna **pergunta com botão**: "posso te chamar de *Maria*?" ·
+`Pode sim` / `Prefiro outro`. O "Pode sim" grava o apelido; o "Prefiro outro"
+abre uma pergunta e a próxima mensagem vira o apelido. Se ela não responder,
+segue o nome da compra: **a pergunta nunca segura o onboarding**. O
+`display_name` nunca é sobrescrito — é por ele que a Luciana acha a paciente
+no painel e que a gente bate com a Hotmart.
+
+Dosagem (decidida em 21/09/2026): o nome entra na **primeira fala** de cada
+conversa, em **elogio/incentivo** e em **notícia ruim** (limite batido, acesso
+inativo). Confirmação curta de um toque ("Feito! Passei pra Almoço ✅") NÃO
+leva nome: repetir em toda mensagem soa disparo automático, que é o que faz
+gente denunciar o número. A regra está no `SYSTEM_PROMPT` da Luna, então vale
+igual na web e aqui.
 
 ## Regras que o código garante
 

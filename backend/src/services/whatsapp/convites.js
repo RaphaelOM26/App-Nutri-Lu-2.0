@@ -24,6 +24,7 @@
 import { getPool } from '../../db.js';
 import { enviar, templateAprovado, mascarar } from './api.js';
 import { enfileirar } from './fila.js';
+import { primeiroNome } from '../../utils/nomes.js';
 
 export const MODELO_BOAS_VINDAS = 'boas_vindas';
 export const boasVindasLigadas = () => process.env.WHATSAPP_BOAS_VINDAS === '1';
@@ -79,7 +80,9 @@ export async function executarConvite({ conviteId, adiamentos = 0 }) {
   if (situacao.ja_vinculada) return encerrar('ignorado', 'a conta já tem WhatsApp vinculado');
   if (situacao.opt_out) return encerrar('ignorado', 'este número pediu pra não receber avisos');
 
-  const primeiro = String(c.nome || '').trim().split(/\s+/)[0] || 'tudo bem';
+  // O nome da compra tratado (primeiro nome, "MARIA" → "Maria"). É o único
+  // que existe neste ponto: ela ainda não respondeu como prefere ser chamada.
+  const primeiro = primeiroNome(c.nome) || 'tudo bem';
   let r;
   try {
     r = await enviar(c.telefone, { type: 'template', template: { name: MODELO_BOAS_VINDAS, language: { code: 'pt_BR' }, components: [{ type: 'body', parameters: [{ type: 'text', text: primeiro.slice(0, 60) }] }] } });

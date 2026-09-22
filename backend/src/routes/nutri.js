@@ -102,7 +102,9 @@ router.get('/pacientes', equipe, async (req, res, next) => {
     const limite = Math.min(200, Math.max(1, parseInt(req.query.limite, 10) || 50));
     const pagina = Math.max(1, parseInt(req.query.pagina, 10) || 1);
     // Sem busca, $7 ainda precisa aparecer na query (o pg exige tipo pra todo parâmetro).
-    const busca = q ? `(display_name ILIKE $7 OR email ILIKE $7)` : `($7::text IS NULL)`;
+    // `apelido` também: a Luna chama de "Mari" quem está no cadastro como "MARIA
+    // DA SILVA" — a Luciana lê a conversa e procura pelo nome que viu lá.
+    const busca = q ? `(display_name ILIKE $7 OR apelido ILIKE $7 OR email ILIKE $7)` : `($7::text IS NULL)`;
     const params = [hoje, ws, somarDias(hoje, -6), prox, fimDeSemana, somarDias(hoje, -3), q ? `%${q}%` : null];
 
     // Cada tabela é varrida UMA vez e agrupada por usuário (em vez de uma
@@ -132,7 +134,7 @@ router.get('/pacientes', equipe, async (req, res, next) => {
         -- 'caneta' é dado clínico: só vai na resposta pra nutri (ver abaixo).
         SELECT user_id, (data->>'caneta_usa') = 'sim' AS caneta FROM anamnese_clinica
       ), base AS (
-        SELECT u.id, u.display_name, u.email, u.created_at, c.data AS perfil,
+        SELECT u.id, u.display_name, u.apelido, u.email, u.created_at, c.data AS perfil,
                COALESCE(c.data ? 'onboarding_em', FALSE) AS cadastro_ok, -- sem linha de perfil = cadastro incompleto
                reg.ultimo_registro, COALESCE(reg.dias_semana, 0) AS dias_semana,
                COALESCE(duv.n, 0) AS duvidas_pendentes,

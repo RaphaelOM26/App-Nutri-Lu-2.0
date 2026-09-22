@@ -112,6 +112,17 @@ try {
   const st1 = await chamar(tCli, 'GET', '/me/whatsapp');
   check(st1.vinculado && st1.numero?.endsWith(WA.slice(-4)), 'número vinculado à conta, mostrado mascarado');
   check((await saidas(WA, 2)).some((m) => /Luna/.test(m.texto)), 'boas-vindas da Luna depois do vínculo');
+  // Nome: vale o do cadastro ("Paciente Zap" → "Paciente"), e a Luna pergunta
+  // antes de adotar — nome de cadastro é chute igual ao da compra.
+  check((await saidas(WA, 2)).some((m) => /posso te chamar de \*Paciente\*/.test(m.texto)), 'no vínculo por código a Luna também pergunta como chamar');
+  await botao(WA, 'nome:outro', 'Prefiro outro');
+  check(/Como você prefere que eu te chame/.test((await ultima(WA)).texto), '"Prefiro outro" → pergunta aberta');
+  await texto(WA, 'pode me chamar de Mari');
+  const { rows: [apMari] } = await pool.query(`SELECT apelido FROM users WHERE email = $1`, [CLIENTE]);
+  check(apMari?.apelido === 'Mari', 'ela responde o apelido em texto livre e ele fica gravado');
+  await texto(WA, 'meu nome é Duda');
+  const { rows: [apDuda] } = await pool.query(`SELECT apelido FROM users WHERE email = $1`, [CLIENTE]);
+  check(apDuda?.apelido === 'Duda', '"meu nome é ..." troca o apelido a qualquer momento');
   await texto(WA_ESTRANHO, `código ${cod.codigo}`);
   const { rows: [estranho] } = await pool.query(`SELECT user_id FROM whatsapp_contatos WHERE wa_id = $1`, [WA_ESTRANHO]);
   check(!estranho.user_id, 'o mesmo código não vincula um segundo número (uso único)');
@@ -191,12 +202,13 @@ try {
 
   // 9b. Compra na Hotmart → convite por modelo → toque em "Começar" → vínculo + onboarding
   const hotmart = (transaction, buyer) => fetch(`${BASE}/billing/hotmart`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-hotmart-hottok': 'hottok-local-de-desenvolvimento' }, body: JSON.stringify({ event: 'PURCHASE_APPROVED', version: '2.0.0', data: { buyer, purchase: { transaction, status: 'APPROVED' } } }) });
-  const compra = await hotmart(TRANSACAO, { email: COMPRADORA, name: 'Julia Teste', first_name: 'Julia', checkout_phone_code: '31', checkout_phone: FONE_COMPRA });
+  // Nome como vem MESMO da Hotmart: tudo em maiúscula, nome completo.
+  const compra = await hotmart(TRANSACAO, { email: COMPRADORA, name: 'JULIA DA SILVA SANTOS', first_name: 'JULIA DA SILVA SANTOS', checkout_phone_code: '31', checkout_phone: FONE_COMPRA });
   check(compra.status === 200, 'webhook da Hotmart aceita a compra aprovada');
   check(await esperarSaida(WA_COMPRA, (m) => m.tipo === 'template' && /boas_vindas/.test(m.texto)), 'a compradora recebe o modelo boas_vindas no telefone do checkout');
   const { rows: [antesDoToque] } = await pool.query(`SELECT user_id FROM whatsapp_contatos WHERE wa_id = $1`, [WA_COMPRA]);
   check(antesDoToque && !antesDoToque.user_id, 'o telefone do checkout, sozinho, NÃO vincula conta nenhuma');
-  await hotmart(TRANSACAO, { email: COMPRADORA, first_name: 'Julia', checkout_phone_code: '31', checkout_phone: FONE_COMPRA });
+  await hotmart(TRANSACAO, { email: COMPRADORA, first_name: 'JULIA DA SILVA SANTOS', checkout_phone_code: '31', checkout_phone: FONE_COMPRA });
   const { rows: [nConv] } = await pool.query(`SELECT COUNT(*)::int AS n FROM whatsapp_convites WHERE email = $1`, [COMPRADORA]);
   check(nConv.n === 1, 'a Hotmart repetindo o evento não gera segundo convite');
   await receber(WA_ESTRANHO, { type: 'button', button: { text: 'Começar', payload: 'Começar' } });
@@ -205,6 +217,16 @@ try {
   await receber(WA_COMPRA, { type: 'button', button: { text: 'Começar', payload: 'Começar' } });
   const boas = await saidas(WA_COMPRA, 4);
   check(boas.some((m) => /compra do acompanhamento está confirmada/.test(m.texto)) && boas.some((m) => /primeiro passo/.test(m.texto) && /te••/.test(m.texto) && !m.texto.includes(COMPRADORA)), 'toque em "Começar" → boas-vindas + primeiro passo, com o e-mail mascarado');
+  // Nome: o da compra entra limpo ("JULIA DA SILVA SANTOS" → "Julia") e a
+  // Luna PERGUNTA se pode chamar assim, com botão — sem segurar o onboarding.
+  const abertura = boas.find((m) => /compra do acompanhamento está confirmada/.test(m.texto));
+  check(/Que bom te ver por aqui, Julia!/.test(abertura?.texto || '') && /posso te chamar de \*Julia\*/.test(abertura?.texto || '') && abertura?.tipo === 'interactive',
+    'boas-vindas tratam o nome da compra e perguntam se pode chamar assim');
+  check(boas.some((m) => /primeiro passo/.test(m.texto)), 'a pergunta do nome não segura o primeiro passo');
+  await botao(WA_COMPRA, 'nome:ok', 'Pode sim');
+  const { rows: [apJulia] } = await pool.query(`SELECT apelido, display_name FROM users WHERE email = $1`, [COMPRADORA]);
+  check(apJulia?.apelido === 'Julia' && apJulia?.display_name === 'JULIA DA SILVA SANTOS',
+    '"Pode sim" grava o apelido e NÃO mexe no nome da compra');
   const compradora = await login(COMPRADORA);
   const stCompra = await chamar(compradora.token, 'GET', '/me/whatsapp');
   check(stCompra.vinculado && stCompra.numero?.endsWith(WA_COMPRA.slice(-4)), 'ao entrar na área de membros com o e-mail da compra, a conta já está com o WhatsApp vinculado');
@@ -226,6 +248,7 @@ try {
   await texto(WA, 'lista de compras');
   const saidaLista = await ultima(WA);
   check(/Lista de compras/.test(saidaLista.texto) && /iogurte/i.test(saidaLista.texto) && saidaLista.tipo === 'interactive', '"lista de compras" → lista geral com ingredientes do livro e botões por dia / por refeição');
+  check(/Lista de compras de Duda/.test(saidaLista.texto), 'a lista sai com o apelido que ela escolheu');
   await botao(WA, `lista:dia:${ws}`, 'Ver por dia');
   check(/\*Segunda\*/.test((await ultima(WA)).texto) && /\*Domingo\*/.test((await ultima(WA)).texto), 'botão "Ver por dia" → lista dia a dia');
   const pelaLuna = await chamar(tCli, 'POST', '/me/lista-compras/whatsapp', { week_start: ws, modo: 'refeicao' });

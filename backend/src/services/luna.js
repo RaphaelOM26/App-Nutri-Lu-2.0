@@ -9,6 +9,7 @@ import { getPool } from '../db.js';
 import { openai, MODEL } from './openai.js';
 import { motivoClinico } from './triagem.js';
 import { montarDia } from './diario.js';
+import { primeiroNome, nomeDe } from '../utils/nomes.js';
 
 const SYSTEM_PROMPT = `Você é a Luna, assistente de IA da Nutri Luciana (Luciana Alves, nutricionista) no app Nutri Lu. Conversa em português brasileiro, de forma calorosa, direta e prática. Você NÃO é nutricionista e nunca diz que é.
 
@@ -24,6 +25,12 @@ Regras:
 - Use os dados do "Contexto do dia" pra personalizar respostas — referencie macros, refeições registradas, etc.
 - NUNCA invente dados de macros — use só o que está no contexto.
 - Pode usar emojis com moderação (1-2 por resposta).
+
+COMO CHAMAR ELA PELO NOME:
+- O nome está no contexto, em "Chame ela de". Use SÓ esse nome, nunca o nome completo, e nunca invente um apelido.
+- Use o nome quando ele significa alguma coisa: na sua PRIMEIRA fala da conversa, quando elogia ou incentiva, e quando a notícia é ruim (ela passou da meta, bateu num limite, algo deu errado).
+- NÃO repita o nome em toda mensagem nem duas vezes na mesma mensagem. Uma sequência de respostas curtas com o nome em todas soa robô, e no WhatsApp soa disparo automático.
+- Se o contexto não trouxer nome, escreva a frase sem nome nenhum. Nunca use "você aí", "querida", "amiga" ou parecidos pra tapar o buraco.
 
 QUANDO ENCAMINHAR PRA NUTRI LUCIANA (campo "encaminhar" = true):
 - Saúde: doença, remédio, suplemento, exame, gestação, sintoma. Não responda o mérito: diga em uma frase que isso é com a Nutri Luciana e ofereça mandar a pergunta pra ela.
@@ -97,8 +104,13 @@ function buildContextMessage(ctx) {
   if (!ctx) return null;
   const parts = [];
   if (ctx.profile) {
+    // O nome vem tratado (primeiro nome, caixa arrumada) do `nomes.js`: aqui
+    // só entra o que a Luna pode dizer em voz alta. Sem nome, a linha some —
+    // e o prompt manda escrever a frase sem nome nenhum.
+    const nome = primeiroNome(ctx.profile.name);
+    if (nome) parts.push(`Chame ela de: ${nome}`);
     parts.push(
-      `Perfil: ${ctx.profile.name || 'Usuária'}, objetivo "${ctx.profile.goal || 'não definido'}", ` +
+      `Perfil: objetivo "${ctx.profile.goal || 'não definido'}", ` +
         `${ctx.profile.weightKg || '?'}kg → meta ${ctx.profile.goalWeightKg || '?'}kg.`,
     );
   }
@@ -217,13 +229,13 @@ const ROTULO_SLOT = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã',
 export async function contextoDoServidor(userId, date) {
   const [dia, { rows: [u] }, { rows: [perf] }] = await Promise.all([
     montarDia(userId, date),
-    getPool().query(`SELECT display_name FROM users WHERE id = $1`, [userId]),
+    getPool().query(`SELECT apelido, display_name FROM users WHERE id = $1`, [userId]),
     getPool().query(`SELECT data FROM client_profiles WHERE user_id = $1`, [userId]),
   ]);
   const p = perf?.data || {};
   const t = dia.targets || {};
   return {
-    profile: { name: u?.display_name || undefined, goal: p.objetivo, weightKg: dia.peso?.kg, goalWeightKg: p.meta_kg },
+    profile: { name: nomeDe(u) || undefined, goal: p.objetivo, weightKg: dia.peso?.kg, goalWeightKg: p.meta_kg },
     macros: {
       kcal: { value: dia.consumido.kcal, target: t.kcal ?? 0 }, p: { value: dia.consumido.p, target: t.p ?? 0 },
       c: { value: dia.consumido.c, target: t.c ?? 0 }, f: { value: dia.consumido.f, target: t.f ?? 0 },

@@ -476,6 +476,16 @@ export const MIGRACOES = [
       CREATE UNIQUE INDEX IF NOT EXISTS idx_notif_ref ON notificacoes(user_id, tipo, ref_id) WHERE ref_id IS NOT NULL;
     `,
   },
+  // Como ela quer ser chamada (21/09/2026). Fica SEPARADO de display_name de
+  // propósito: display_name é o nome da compra — é por ele que a Luciana acha
+  // a paciente no painel e que a gente bate com a Hotmart. `apelido` é
+  // preferência dela, confirmada no primeiro contato do WhatsApp ou digitada
+  // no Perfil, e vale nos dois canais (Luna da web, bot, modelos, e-mail).
+  {
+    id: '013-apelido',
+    descricao: 'Como a paciente prefere ser chamada',
+    sql: `ALTER TABLE users ADD COLUMN IF NOT EXISTS apelido TEXT;`,
+  },
 ];
 
 /**

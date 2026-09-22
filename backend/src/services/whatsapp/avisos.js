@@ -16,6 +16,7 @@ import { enfileirar } from './fila.js';
 import { contatoDaUsuaria, janelaAberta, mandar, mandarModelo, entregarGuardadas, atualizarEstado } from './contatos.js';
 import { planoDaLista, textosLista } from '../plano/listaCompras.js';
 import { dataBR, minutosBR, diaDaSemana, inicioDaSemana, somarDias } from '../../utils/datas.js';
+import { nomeDe } from '../../utils/nomes.js';
 
 const LINK_PLANO = process.env.MEMBROS_URL ? `${process.env.MEMBROS_URL.replace(/\/$/, '')}/plano` : 'https://nutrilualves.com.br/membros/plano';
 
@@ -53,7 +54,9 @@ export function avisarMensagemDaEquipe(contato) {
   enfileirar('aviso', contato.wa_id, { kind: 'equipe', contatoId: contato.id }).catch((e) => console.warn('[whatsapp] não enfileirei aviso:', e.message));
 }
 
-const primeiroNome = (s) => String(s || '').trim().split(/\s+/)[0] || 'tudo bem';
+// O {{1}} dos modelos. Sem nome nenhum, "Oi, {{1}}!" vira "Oi, tudo bem!" —
+// a Meta não aceita variável vazia, e isso lê melhor do que um nome torto.
+const paraModelo = (fontes) => nomeDe(fontes) || 'tudo bem';
 
 /** Executor do tipo 'aviso'. */
 export async function executarAviso({ kind, userId, contatoId }) {
@@ -62,15 +65,20 @@ export async function executarAviso({ kind, userId, contatoId }) {
     const { rows: [contato] } = await pool.query(`SELECT * FROM whatsapp_contatos WHERE id = $1`, [contatoId]);
     if (!contato) return;
     if (janelaAberta(contato)) { await entregarGuardadas(contato); return; }
-    await mandarModelo(contato, MODELOS.equipe, [primeiroNome(contato.nome_perfil)]);
+    // O apelido vale aqui também: sem isso, este era o único aviso que voltava
+    // a chamar pelo nome do perfil do WhatsApp. Contato sem conta fica no perfil.
+    const { rows: [u] } = contato.user_id
+      ? await pool.query(`SELECT apelido, display_name FROM users WHERE id = $1`, [contato.user_id])
+      : { rows: [] };
+    await mandarModelo(contato, MODELOS.equipe, [paraModelo({ ...u, nome_perfil: contato.nome_perfil })]);
     return;
   }
   const contato = await contatoDaUsuaria(userId);
   if (!contato) return; // sem WhatsApp vinculado: o e-mail e a área de membros continuam valendo
-  const { rows: [u] } = await pool.query(`SELECT display_name FROM users WHERE id = $1`, [userId]);
+  const { rows: [u] } = await pool.query(`SELECT apelido, display_name FROM users WHERE id = $1`, [userId]);
   if (kind === 'plano') await atualizarEstado(contato, { plano_pendente: true });
   if (janelaAberta(contato)) { await entregarPendentes(contato); return; }
-  await mandarModelo(contato, kind === 'plano' ? MODELOS.plano : kind === 'lista' ? MODELOS.lista : MODELOS.resposta, [primeiroNome(u?.display_name)]);
+  await mandarModelo(contato, kind === 'plano' ? MODELOS.plano : kind === 'lista' ? MODELOS.lista : MODELOS.resposta, [paraModelo({ ...u, nome_perfil: contato.nome_perfil })]);
 }
 
 /** A lista de compras que ficou esperando a janela (estado.lista_pendente). */
@@ -80,8 +88,8 @@ async function entregarLista(contato) {
   await atualizarEstado(contato, { lista_pendente: null });
   const { plano } = await planoDaLista(contato.user_id, p.week_start);
   if (!plano) { await mandar(contato, { texto: 'A lista de compras nasce do plano da semana, e ele ainda não está publicado. Te aviso quando sair. 😊' }, { autor: 'sistema' }); return 1; }
-  const { rows: [u] } = await getPool().query(`SELECT display_name FROM users WHERE id = $1`, [contato.user_id]);
-  const partes = textosLista(plano, p.modo, primeiroNome(u?.display_name));
+  const { rows: [u] } = await getPool().query(`SELECT apelido, display_name FROM users WHERE id = $1`, [contato.user_id]);
+  const partes = textosLista(plano, p.modo, nomeDe({ ...u, nome_perfil: contato.nome_perfil }));
   for (const [i, texto] of partes.entries()) {
     const ultima = i === partes.length - 1;
     await mandar(contato, ultima && p.modo === 'geral'

@@ -29,6 +29,7 @@ import { comContextoDeUso } from '../uso.js';
 import { montarDia, normalizarItens, SLOTS } from '../diario.js';
 import { gravar, ler, apagar, urlDeLeitura, novaChaveWhatsapp, extensaoDe, r2Configurado } from '../r2.js';
 import { dataBR, slotPelaHora, somarDias } from '../../utils/datas.js';
+import { nomeDe, vocativo, apelidoDoTexto } from '../../utils/nomes.js';
 import { baixarMidia, marcarLida } from './api.js';
 import { contatoPorWaId, mandar, entregarGuardadas, atualizarEstado, tentarVinculo, chamarEquipe, devolverPraLuna, janelaAberta } from './contatos.js';
 import { entregarPendentes } from './avisos.js';
@@ -153,18 +154,54 @@ async function semVinculo(contato, msg) {
 
 /** `compra` vem de aceitarConvite(): ela chegou pelo convite da Hotmart e pode nem ter entrado na área de membros ainda. */
 async function boasVindas(contato, compra = null) {
-  const { rows: [u] } = await getPool().query(`SELECT display_name FROM users WHERE id = $1`, [contato.user_id]);
-  const nome = String(u?.display_name || compra?.nome || '').trim().split(/\s+/)[0];
-  if (compra) {
-    await mandar(contato, { texto: `Que bom te ver por aqui${nome ? `, ${nome}` : ''}! 🌿 Sua compra do acompanhamento está confirmada e este WhatsApp já ficou ligado à sua conta.\n\nEu sou a *Luna*, assistente de IA da Nutri Luciana. Não sou nutricionista: eu te ajudo no dia a dia, e o que for de saúde eu passo pra ela.` }, { autor: 'sistema' });
-    if (!compra.cadastroFeito) {
-      await mandar(contato, { texto: `*Seu primeiro passo* 👇\n\n1. Entra na área de membros: ${MEMBROS}\n2. Usa o e-mail da compra (${emailMascarado(compra.email)}). Eu mando um código de 6 números pra ele, sem senha.\n3. Responde o questionário. Leva uns 10 minutos.\n\nCom as suas respostas, a Nutri Luciana monta o seu plano alimentar, e eu te aviso por aqui assim que ele ficar pronto.` }, { autor: 'sistema' });
-    }
+  const { rows: [u] } = await getPool().query(`SELECT apelido, display_name FROM users WHERE id = $1`, [contato.user_id]);
+  // O nome da compra na Hotmart é chute: vem "MARIA DA SILVA", vem o nome de
+  // quem pagou. Por isso a gente USA ele aqui e, na mesma mensagem, PERGUNTA
+  // se pode chamar ela assim (um toque, sem digitar). Se ela não responder,
+  // seguimos com esse nome mesmo: a pergunta nunca segura o onboarding.
+  const nome = nomeDe({ ...u, nome: compra?.nome, nome_perfil: contato.nome_perfil });
+  const jaConfirmado = Boolean(nomeDe({ apelido: u?.apelido }));
+  const perguntarNome = !jaConfirmado;
+  const apresentacao = '\n\nEu sou a *Luna*, assistente de IA da Nutri Luciana. Não sou nutricionista: eu te ajudo no dia a dia, e o que for de saúde eu passo pra ela.';
+  const primeira = compra
+    ? `Que bom te ver por aqui${vocativo(nome)}! 🌿 Sua compra do acompanhamento está confirmada e este WhatsApp já ficou ligado à sua conta.${apresentacao}`
+    : `Pronto${vocativo(nome)}! ✅ Seu WhatsApp está ligado à sua conta do Nutri Lu.${apresentacao}`;
+
+  if (perguntarNome && nome) {
+    await mandar(contato, {
+      texto: `${primeira}\n\nAntes de começar: posso te chamar de *${nome}*?`,
+      botoes: [{ id: 'nome:ok', titulo: 'Pode sim' }, { id: 'nome:outro', titulo: 'Prefiro outro' }],
+    }, { autor: 'sistema' });
   } else {
-    await mandar(contato, { texto: `Pronto${nome ? `, ${nome}` : ''}! ✅ Seu WhatsApp está ligado à sua conta do Nutri Lu.\n\nEu sou a *Luna*, assistente de IA da Nutri Luciana. Não sou nutricionista: eu te ajudo no dia a dia, e o que for de saúde eu passo pra ela.` }, { autor: 'sistema' });
+    await mandar(contato, { texto: primeira }, { autor: 'sistema' });
+    // Sem nenhum nome utilizável (compra sem nome, perfil vazio): pergunta aberta.
+    if (perguntarNome) {
+      await atualizarEstado(contato, { aguardando: 'apelido' });
+      await mandar(contato, { texto: 'Como você prefere que eu te chame? Pode mandar só o primeiro nome. 😊' }, { autor: 'sistema' });
+    }
+  }
+
+  if (compra && !compra.cadastroFeito) {
+    await mandar(contato, { texto: `*Seu primeiro passo* 👇\n\n1. Entra na área de membros: ${MEMBROS}\n2. Usa o e-mail da compra (${emailMascarado(compra.email)}). Eu mando um código de 6 números pra ele, sem senha.\n3. Responde o questionário. Leva uns 10 minutos.\n\nCom as suas respostas, a Nutri Luciana monta o seu plano alimentar, e eu te aviso por aqui assim que ele ficar pronto.` }, { autor: 'sistema' });
   }
   await mandar(contato, { texto: `${MENU}\n\nTudo que você registrar aqui aparece na área de membros, em Meu plano.\n\n_Avisos importantes (plano pronto, resposta da Nutri Luciana) chegam por aqui. Pra não receber, manda PARAR._` }, { autor: 'sistema' });
   await entregarPendentes(contato);
+}
+
+/** Guarda como ela quer ser chamada. `display_name` (o nome da compra) fica intocado. */
+async function guardarApelido(contato, nome) {
+  await getPool().query(`UPDATE users SET apelido = $2 WHERE id = $1`, [contato.user_id, nome]);
+  await atualizarEstado(contato, { aguardando: null });
+}
+
+/**
+ * O nome que a Luna usa nas frases fixas. Uma consulta curta, só onde o nome
+ * muda alguma coisa: abertura de conversa, elogio e notícia ruim. Confirmação
+ * de um toque ("Feito! ✅") NÃO leva nome — repetir soa disparo automático.
+ */
+async function nomeDoContato(contato) {
+  const { rows: [u] } = await getPool().query(`SELECT apelido, display_name FROM users WHERE id = $1`, [contato.user_id]);
+  return nomeDe({ ...u, nome_perfil: contato.nome_perfil });
 }
 
 // ─── 3. Botões ────────────────────────────────────────────────────────────
@@ -191,6 +228,18 @@ async function tratarBotao(contato, acao, msg) {
     if (!pergunta) return mandar(contato, { texto: 'Não achei mais a pergunta. Escreve *dúvida pra nutri* e manda de novo, por favor.' });
     return enviarPraLuciana(contato, pergunta);
   }
+  if (tipo === 'nome') {
+    if (a === 'ok') {
+      // Confirmar grava o nome que ela viu na tela: a partir daqui é escolha
+      // dela, não chute da Hotmart, e vale também na área de membros.
+      const { rows: [u] } = await getPool().query(`SELECT apelido, display_name FROM users WHERE id = $1`, [contato.user_id]);
+      const nome = nomeDe({ ...u, nome_perfil: contato.nome_perfil });
+      if (nome) await guardarApelido(contato, nome);
+      return mandar(contato, { texto: `Combinado${vocativo(nome)}! 😊` }, { autor: 'sistema' });
+    }
+    await atualizarEstado(contato, { aguardando: 'apelido' });
+    return mandar(contato, { texto: 'Claro! Como você prefere que eu te chame? Pode mandar só o primeiro nome. 😊' }, { autor: 'sistema' });
+  }
   if (tipo === 'humano') return irPraEquipe(contato, a === 'comercial' ? 'comercial' : 'suporte');
   if (tipo === 'lista' && ['dia', 'refeicao'].includes(a)) return enviarLista(contato, a, b || null);
   if (tipo === 'mat' && uuid(a)) return mandarMaterial(contato, a);
@@ -215,14 +264,17 @@ async function enviarPraLuciana(contato, pergunta) {
 // ─── 4. Foto e áudio ──────────────────────────────────────────────────────
 
 /** Pode gastar IA agora? Mesma regra das rotas HTTP: acesso (se a trava estiver ligada) e teto da conta. */
-async function podeUsarIA(contato, nome) {
+async function podeUsarIA(contato, recurso) {
+  // Notícia ruim leva o nome: é onde ele faz diferença de verdade.
   if (premiumObrigatorio() && !(await temAcesso(contato.user_id)).acesso) {
-    await mandar(contato, { texto: `Seu acesso ao acompanhamento não está ativo, então não consigo registrar por aqui. Dá uma olhada em ${MEMBROS}/perfil ou escreve *atendente* que o time te ajuda.` }, { autor: 'sistema' });
+    const quem = await nomeDoContato(contato);
+    await mandar(contato, { texto: `${quem ? `${quem}, seu` : 'Seu'} acesso ao acompanhamento não está ativo, então não consigo registrar por aqui. Dá uma olhada em ${MEMBROS}/perfil ou escreve *atendente* que o time te ajuda.` }, { autor: 'sistema' });
     return false;
   }
-  const t = await consumirTeto(nome, contato.user_id);
+  const t = await consumirTeto(recurso, contato.user_id);
   if (t.ok) return true;
-  await mandar(contato, { texto: t.motivo === 'dia' ? `Você chegou no limite de hoje (${t.limite}) pra esse tipo de registro. Amanhã libera de novo. 🙏 Na área de membros dá pra registrar pela tabela de alimentos.` : `Você chegou no limite deste mês (${t.limite}). Na área de membros dá pra registrar pela tabela de alimentos.` }, { autor: 'sistema' });
+  const quem = await nomeDoContato(contato);
+  await mandar(contato, { texto: t.motivo === 'dia' ? `${quem ? `${quem}, você` : 'Você'} chegou no limite de hoje (${t.limite}) pra esse tipo de registro. Amanhã libera de novo. 🙏 Na área de membros dá pra registrar pela tabela de alimentos.` : `${quem ? `${quem}, você` : 'Você'} chegou no limite deste mês (${t.limite}). Na área de membros dá pra registrar pela tabela de alimentos.` }, { autor: 'sistema' });
   return false;
 }
 
@@ -345,12 +397,38 @@ const RE_LISTA = /lista (de |das |de compras|do mercado|da feira)|\bcompras\b|\b
 const RE_ATENDENTE =/\b(atendente|atendimento humano|humano|suporte)\b|falar com (alguem|uma pessoa|a equipe|o time|gente)/;
 const RE_FINANCEIRO = /\b(reembolso|estorno|cobranca|cobrado|cobraram|pagamento|boleto|fatura|nota fiscal|hotmart)\b|cancelar (a |o |minha |meu )?(assinatura|compra|plano|acompanhamento)|nao consigo (entrar|acessar|logar)/;
 const RE_NUTRI = /^(quero |preciso |posso )?(falar|mandar|enviar|fazer|tirar)?\s*(uma |minha )?(duvida|pergunta|mensagem|recado)?\s*(com|pra|para|a|pro)?\s*(a )?(nutri|nutricionista|luciana|dra\.? luciana|lu)( luciana)?$/;
+// Como ela quer ser chamada: "meu nome é Mari", "pode me chamar de Mari".
+// O "de" é obrigatório no "chama de" de propósito — sem ele, "me chama o
+// atendente" viraria um pedido de apelido (e RE_ATENDENTE nunca rodaria).
+const RE_NOME = /^(o )?(meu )?(nome|apelido)( e| eh)?\b|^(pode |podes )?(me )?cham(a|ar) de\b|^prefiro (ser chamada )?de\b/;
 const PARAR = new Set(['parar', 'pare', 'sair', 'stop', 'cancelar avisos', 'parar avisos', 'nao quero receber']);
 const VOLTAR_AVISOS = new Set(['avisos', 'voltar avisos', 'ativar avisos', 'quero avisos']);
 
 async function tratarTexto(contato, texto, { msg, entregues = 0 } = {}) {
   if (!texto) return;
   const t = norm(texto).replace(/[!?.,;]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Ela está respondendo ao "como prefere que eu te chame?". Limpa o estado
+  // ANTES de tratar (como o pergunta_nutri logo abaixo): a pergunta do nome
+  // vale UMA resposta, não fica armada esperando a próxima mensagem. Comando
+  // de sistema (PARAR, cancelar, saudação) vence: senão "PARAR" vira apelido.
+  if (contato.estado?.aguardando === 'apelido') {
+    await atualizarEstado(contato, { aguardando: null });
+    const comando = PARAR.has(t) || VOLTAR_AVISOS.has(t) || SAUDACOES.has(t) || t === 'cancelar' || t === 'deixa';
+    const nome = comando ? null : apelidoDoTexto(texto);
+    if (nome) {
+      await guardarApelido(contato, nome);
+      return mandar(contato, { texto: `Perfeito, ${nome}! 😊 É assim que eu te chamo daqui pra frente. Pra trocar depois, é só escrever *meu nome é ...*` }, { autor: 'sistema' });
+    }
+    // Resposta curta que não virou nome ("M4ri!!"): ela tentou; avisa uma vez
+    // só. Insistir num nome é pior do que seguir com o da compra.
+    // Frase inteira ("quanto de proteína comi hoje?") não era resposta ao
+    // nome: cai pro fluxo normal, que responde a pergunta dela.
+    if (!comando && t.split(' ').length <= 2) {
+      await mandar(contato, { texto: 'Não consegui entender o nome. 😅 Por enquanto sigo com o que está no seu cadastro — quando quiser, escreve *meu nome é ...* que eu troco na hora.' }, { autor: 'sistema' });
+      return;
+    }
+  }
 
   // A pessoa está respondendo ao "escreve a pergunta que eu mando pra Nutri Luciana".
   if (contato.estado?.aguardando === 'pergunta_nutri') {
@@ -370,6 +448,16 @@ async function tratarTexto(contato, texto, { msg, entregues = 0 } = {}) {
   if (SAUDACOES.has(t)) { if (!entregues) await mandar(contato, { texto: `Oi! 😊 Aqui é a Luna.\n\n${MENU}` }); return; }
 
   const curto = t.split(' ').length <= 10;
+  // "meu nome é Mari" / "pode me chamar de Mari", a qualquer momento.
+  if (curto && RE_NOME.test(t) && !RE_ATENDENTE.test(t)) {
+    const nome = apelidoDoTexto(texto);
+    if (nome) {
+      await guardarApelido(contato, nome);
+      return mandar(contato, { texto: `Anotado, ${nome}! 😊 É assim que eu te chamo daqui pra frente.` }, { autor: 'sistema' });
+    }
+    await atualizarEstado(contato, { aguardando: 'apelido' });
+    return mandar(contato, { texto: 'Como você prefere que eu te chame? Pode mandar só o primeiro nome. 😊' }, { autor: 'sistema' });
+  }
   if (RE_ATENDENTE.test(t) && curto) return irPraEquipe(contato, 'suporte');
   if (RE_FINANCEIRO.test(t)) {
     return mandar(contato, { texto: 'Isso é com o nosso time de suporte (pagamento, acesso e cadastro). Quer que eu chame uma pessoa pra te ajudar?', botoes: [{ id: 'humano:suporte', titulo: 'Chamar o suporte' }] });
@@ -398,8 +486,7 @@ async function tratarTexto(contato, texto, { msg, entregues = 0 } = {}) {
 async function enviarLista(contato, modo = 'geral', weekStart = null) {
   const { plano, proxima } = await planoDaLista(contato.user_id, weekStart);
   if (!plano) return mandar(contato, { texto: 'A lista de compras nasce do plano da semana, e o seu ainda não está publicado. Assim que a Nutri Luciana publicar, eu monto pra você. 😊' }, { autor: 'sistema' });
-  const { rows: [u] } = await getPool().query(`SELECT display_name FROM users WHERE id = $1`, [contato.user_id]);
-  const partes = textosLista(plano, modo, String(u?.display_name || '').split(' ')[0]);
+  const partes = textosLista(plano, modo, await nomeDoContato(contato));
   if (proxima && modo === 'geral') partes[0] = `Como já é fim de semana, essa é a lista da *semana que vem*. 😉\n\n${partes[0]}`;
   for (const [i, texto] of partes.entries()) {
     const ultima = i === partes.length - 1;
