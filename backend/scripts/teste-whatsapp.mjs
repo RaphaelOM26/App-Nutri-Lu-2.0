@@ -259,7 +259,7 @@ try {
   await botao(WA, `lista:dia:${ws}`, 'Ver por dia');
   check(/\*Segunda\*/.test((await ultima(WA)).texto) && /\*Domingo\*/.test((await ultima(WA)).texto), 'botão "Ver por dia" → lista dia a dia');
   const listaJson = await chamar(tCli, 'GET', `/me/lista-compras?week_start=${ws}`);
-  check(listaJson.week_start === ws && Array.isArray(listaJson.secoes) && listaJson.secoes.some((s) => s.id === 'laticinios' && s.itens.some((i) => i.nome === 'Iogurte proteico' && i.principal === '8 potes')) && typeof listaJson.texto === 'string', 'GET /me/lista-compras → seções, dias e texto, a MESMA lista da Luna');
+  check(listaJson.week_start === ws && Array.isArray(listaJson.secoes) && listaJson.secoes.some((s) => s.id === 'laticinios' && s.itens.some((i) => i.nome === 'Iogurte proteico' && i.principal === '8 potes')) && typeof listaJson.texto === 'string' && Array.isArray(listaJson.cardapio) && listaJson.cardapio[0]?.refeicoes?.length > 0 && listaJson.cardapio.every((d) => d.refeicoes.every((r) => r !== r.toUpperCase())), 'GET /me/lista-compras → seções, dias e texto, a MESMA lista da Luna');
   await chamar(tCli, 'GET', '/me/lista-compras?week_start=2030-01-07', undefined, 404);
   await chamar(tCli, 'POST', '/me/lista-compras/whatsapp', { week_start: ws }, 404);
 

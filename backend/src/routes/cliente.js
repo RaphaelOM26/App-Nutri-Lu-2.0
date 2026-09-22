@@ -21,7 +21,7 @@ import { temAcesso } from '../services/billing.js';
 import { novaChave, urlDeUpload, urlDeLeitura, apagar, r2Configurado } from '../services/r2.js';
 import { exigirData, mesValido, dataValida, diaDaSemana } from '../utils/datas.js';
 import { primeiroNome, nomeDe } from '../utils/nomes.js';
-import { planoDaLista, listaGeral, listaPorDia, textosLista } from '../services/plano/listaCompras.js';
+import { planoDaLista, dadosDaLista } from '../services/plano/listaCompras.js';
 import { listar, marcarLidas } from '../services/notificacoes.js';
 import { agendarRascunho } from '../services/triagem.js';
 import { numeroDoBot, mascarar } from '../services/whatsapp/api.js';
@@ -442,13 +442,7 @@ router.get('/lista-compras', async (req, res, next) => {
     const { plano, proxima } = await planoDaLista(req.user.userId, ws);
     if (!plano) throw erro('Não há plano publicado nessa semana.', 404, 'SEM_PLANO');
     const { rows: [u] } = await getPool().query(`SELECT apelido, display_name FROM users WHERE id = $1`, [req.user.userId]);
-    res.json({
-      week_start: plano.week_start,
-      proxima,
-      secoes: listaGeral(plano),
-      dias: listaPorDia(plano),
-      texto: textosLista(plano, 'geral', nomeDe(u)).join('\n\n'),
-    });
+    res.json(dadosDaLista(plano, u, { proxima, nome: nomeDe(u) }));
   } catch (e) { next(e); }
 });
 

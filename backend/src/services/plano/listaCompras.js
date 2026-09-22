@@ -77,6 +77,35 @@ export function listaPorDia(plano) {
   return dias(plano).map((d) => ({ weekday: d.weekday, date: d.date, itens: somar(d.meals.flatMap(ingredientesDe)).filter((i) => i.secao !== 'despensa') }));
 }
 
+/** Cardápio resumido pra folha impressa: [{ weekday, date, refeicoes: [café, almoço, jantar] }]. */
+const PRINCIPAIS = ['cafe', 'almoco', 'jantar'];
+/** O livro escreve alguns nomes em CAIXA ALTA; na folha vai tudo em frase. */
+const emFrase = (nome) => { const s = String(nome || '').trim(); return s && s === s.toUpperCase() ? s.charAt(0) + s.slice(1).toLowerCase() : s; };
+export function cardapioDe(plano) {
+  return dias(plano).map((d) => ({
+    weekday: d.weekday, date: d.date,
+    refeicoes: PRINCIPAIS.map((slot) => emFrase(d.meals.find((m) => m.slot === slot)?.name)).filter(Boolean),
+  }));
+}
+
+/**
+ * Tudo que a folha (web e PDF) precisa, num objeto só. `u` é a linha de
+ * users (apelido, display_name). É o JSON de GET /me/lista-compras.
+ */
+export function dadosDaLista(plano, u, { proxima = false, nome = '' } = {}) {
+  return {
+    week_start: plano.week_start,
+    week_index: plano.week_index ?? null,
+    week_total: plano.week_total ?? null,
+    proxima,
+    nome,
+    cardapio: cardapioDe(plano),
+    secoes: listaGeral(plano),
+    dias: listaPorDia(plano),
+    texto: textosLista(plano, 'geral', nome).join('\n\n'),
+  };
+}
+
 const linha = (i) => `• ${i.nome}${i.principal ? ` — ${i.principal}` : ''}${i.secundario ? ` (${i.secundario})` : ''}`;
 const periodo = (ws) => `${ws.slice(8, 10)}/${ws.slice(5, 7)} a ${somarDias(ws, 6).slice(8, 10)}/${somarDias(ws, 6).slice(5, 7)}`;
 const cabecalho = (plano, nome) => `🛒 *Lista de compras${nome ? ` de ${nome}` : ''}*\nSemana de ${periodo(plano.week_start)} · plano da Nutri Luciana`;
