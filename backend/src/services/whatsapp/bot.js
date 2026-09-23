@@ -10,9 +10,10 @@
 //   3. Botão tocado → ação do botão.
 //   4. Foto → pergunta "refeição ou evolução?" ANTES de qualquer IA. Foto de
 //      corpo nunca vai pra IA. Áudio → transcreve; se for comida, registra.
-//   5. Texto → DICIONÁRIO primeiro (macros, plano, peso, materiais, atendente,
-//      PARAR…): custa zero e responde na hora. Saúde, por dicionário, vai pra
-//      Nutri Luciana sem passar por modelo. Só o resto chega na Luna.
+//   5. Texto → comandos de SISTEMA por dicionário (PARAR, atendente, saúde →
+//      Nutri Luciana, comando exato tipo "macros"): custa zero. Todo o resto
+//      vai pra CONVERSA (conversa.js): o modelo lê o histórico e o contexto,
+//      responde como gente e chama ações de uma lista fechada (23/09).
 //
 // Regras do projeto que valem aqui: a anamnese clínica nunca é lida; restrição
 // e alergia não são decididas por modelo (no WhatsApp a Luna nem sugere
@@ -21,7 +22,7 @@
 import { getPool } from '../../db.js';
 import { norm } from '../dashboard.js';
 import { motivoClinico, agendarRascunho } from '../triagem.js';
-import { responderLuna, contextoDoServidor, RESPOSTA_SAUDE } from '../luna.js';
+import { RESPOSTA_SAUDE } from '../luna.js';
 import { analisarPrato, transcrever, estruturarRefeicaoFalada, itensDoDiario } from '../refeicaoIA.js';
 import { consumirTeto } from '../limites.js';
 import { temAcesso, premiumObrigatorio } from '../billing.js';
@@ -37,6 +38,7 @@ import { aceitarConvite, emailMascarado } from './convites.js';
 import { planoDaLista, textosLista, dadosDaLista } from '../plano/listaCompras.js';
 import { gerarPdfLista, nomeDoArquivo } from '../plano/listaPdf.js';
 import { criarLink } from '../loginPorLink.js';
+import { conversar, bonito } from './conversa.js';
 
 const MEMBROS = (process.env.MEMBROS_URL || 'https://nutrilualves.com.br/membros').replace(/\/$/, '');
 const ROTULO = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã', almoco: 'Almoço', lanche_tarde: 'Lanche da tarde', jantar: 'Jantar', ceia: 'Ceia' };
@@ -366,15 +368,29 @@ async function gravarRefeicao(userId, { quando, slot, itens, photoKey, confidenc
   return rows[0];
 }
 
+// Padrão de mensagem "registro" (23/09): título curto, um item por linha com
+// porção e kcal, totais numa linha, e o dia numa linha. Sem repetir rótulo.
 async function confirmarRegistro(contato, entry, poucaConfianca) {
   const dia = await montarDia(contato.user_id, entry.date);
-  const itens = entry.items.map((i) => `• ${i.name}${i.portion ? ` (${i.portion})` : ''}: ${n0(i.kcal)} kcal`).join('\n');
+  const itens = entry.items.map((i) => `• ${bonito(i.name)}${i.portion ? `, ${i.portion}` : ''} · ${n0(i.kcal)} kcal`).join('\n');
   const meta = dia.targets?.kcal;
-  const total = meta ? `Seu dia: *${n0(dia.consumido.kcal)}* de ${n0(meta)} kcal${meta > dia.consumido.kcal ? ` · faltam ${n0(meta - dia.consumido.kcal)}` : ''}` : `Seu dia até agora: *${n0(dia.consumido.kcal)} kcal*`;
+  const total = meta ? `Dia: ${n0(dia.consumido.kcal)} de ${n0(meta)} kcal${meta > dia.consumido.kcal ? ` (faltam ${n0(meta - dia.consumido.kcal)})` : ' ✅'}` : `Dia até agora: ${n0(dia.consumido.kcal)} kcal`;
   await mandar(contato, {
-    texto: `Registrei no *${ROTULO[entry.slot]}*: ✅\n\n${itens}\n\n*${n0(entry.kcal)} kcal* · P ${n0(entry.p)} g · C ${n0(entry.c)} g · G ${n0(entry.f)} g\n\n${total}${poucaConfianca ? '\n\n_Essa estimativa saiu com pouca confiança. Dá pra ajustar as porções na área de membros, em Meu plano._' : ''}`,
+    texto: `*${ROTULO[entry.slot]} registrado* ✅\n${itens}\n\n*${n0(entry.kcal)} kcal* · P ${n0(entry.p)} · C ${n0(entry.c)} · G ${n0(entry.f)}\n${total}${poucaConfianca ? '\n\n_Estimativa com pouca confiança: dá pra ajustar as porções em Meu plano._' : ''}`,
     botoes: [{ id: `slot:${entry.id}`, titulo: 'Mudar refeição' }, { id: `del:${entry.id}`, titulo: 'Apagar' }],
   });
+}
+
+/** Refeição contada em TEXTO ("comi 2 ovos e um pão"): a mesma IA do áudio estrutura os itens. */
+async function registrarRefeicaoTexto(contato, descricao, slot) {
+  const dito = String(descricao || '').trim();
+  if (!dito) return;
+  const r = await comContextoDeUso({ rota: '/whatsapp/chat', userId: contato.user_id }, () => estruturarRefeicaoFalada(dito));
+  const itens = itensDoDiario(r.items);
+  if (!itens.length) return mandar(contato, { texto: 'Não consegui montar a refeição com isso. Me conta de novo com as quantidades? Ex.: "2 ovos mexidos e um pão francês".' });
+  const quando = new Date();
+  const entry = await gravarRefeicao(contato.user_id, { quando, slot: (SLOTS.includes(slot) && slot) || SLOT_DA_VOZ[r.mealType] || slotPelaHora(quando), itens, confidence: r.confidence, nota: `texto pelo WhatsApp: ${dito}`.slice(0, 500) });
+  await confirmarRegistro(contato, entry, r.confidence === 'low');
 }
 
 const SLOT_DA_VOZ = { breakfast: 'cafe', lunch: 'almoco', dinner: 'jantar' };
@@ -404,11 +420,7 @@ async function receberAudio(contato, msg, mensagemId) {
 // ─── 5. Texto: dicionário antes de IA ─────────────────────────────────────
 
 const SAUDACOES = new Set(['oi', 'oii', 'oie', 'ola', 'opa', 'bom dia', 'boa tarde', 'boa noite', 'menu', 'ajuda', 'help', 'inicio', 'comecar', 'oi luna', 'ola luna']);
-const RE_MACROS = /\bmacros?\b|quant[oa]s? (calorias? )?(ainda )?(ja )?(comi|consumi|falta|faltam|resta|restam|sobra|sobrou|posso (comer|consumir|ingerir)|consigo (comer|consumir))|(ainda )?(posso|consigo) (comer|consumir) quant|resumo d[oe] (dia|hoje)|como (esta|ta|anda) (o )?meu dia|meu dia/;
-const RE_PLANO = /o que (eu )?(como|vou comer|tem|e|devo comer|posso comer) .{0,12}\b(hoje|amanha|agora)\b|\b(plano|cardapio|refeicoes|refeicao) (alimentar )?(de |do |da |pra |para )?(hoje|amanha|agora)\b|\b(cafe|almoco|jantar|janta|lanche|ceia) (da manha |da tarde )?(de |do |pra |para )?(hoje|amanha)\b|^(meu )?(plano|cardapio)$/;
 const RE_PESO = /^(?:(?:meu )?peso|pesei|pesando|to com|estou com)\D{0,6}(\d{2,3}(?:[.,]\d{1,2})?)\s*(?:kg|kilos?|quilos?)?$|^(\d{2,3}(?:[.,]\d{1,2})?)\s*(?:kg|kilos?|quilos?)$/;
-const RE_MATERIAIS = /^(quero |ver |me manda |manda |os |meus )*(materia(l|is)|pdfs?|apostilas?|videos?|aulas?|ebooks?)( da (nutri|luciana|lu))?$/;
-const RE_LISTA = /lista (de |das |de compras|do mercado|da feira)|\bcompras\b|\bmercado\b|o que (eu )?(preciso|tenho que) comprar|ingredientes da semana/;
 const RE_ATENDENTE =/\b(atendente|atendimento humano|humano|suporte)\b|falar com (alguem|uma pessoa|a equipe|o time|gente)/;
 const RE_FINANCEIRO = /\b(reembolso|estorno|cobranca|cobrado|cobraram|pagamento|boleto|fatura|nota fiscal|hotmart)\b|cancelar (a |o |minha |meu )?(assinatura|compra|plano|acompanhamento)|nao consigo (entrar|acessar|logar)/;
 const RE_NUTRI = /^(quero |preciso |posso )?(falar|mandar|enviar|fazer|tirar)?\s*(uma |minha )?(duvida|pergunta|mensagem|recado)?\s*(com|pra|para|a|pro)?\s*(a )?(nutri|nutricionista|luciana|dra\.? luciana|lu)( luciana)?$/;
@@ -460,7 +472,10 @@ async function tratarTexto(contato, texto, { msg, entregues = 0 } = {}) {
     await getPool().query(`UPDATE whatsapp_contatos SET opt_out_em = NULL WHERE id = $1`, [contato.id]);
     return mandar(contato, { texto: 'Avisos ligados de novo. ✅' }, { autor: 'sistema' });
   }
-  if (SAUDACOES.has(t)) { if (!entregues) await mandar(contato, { texto: `Oi! 😊 Aqui é a Luna.\n\n${MENU}` }); return; }
+  // "menu" e "ajuda" mostram o que dá pra fazer. Cumprimento ("oi", "bom
+  // dia") vai pra conversa: a Luna responde como gente, não despeja menu.
+  if (t === 'menu' || t === 'ajuda' || t === 'help') { await mandar(contato, { texto: MENU }); return; }
+  if (SAUDACOES.has(t) && entregues) return; // acabou de receber o que estava guardado: não empilha um "oi" em cima
 
   const curto = t.split(' ').length <= 10;
   // "meu nome é Mari" / "pode me chamar de Mari", a qualquer momento.
@@ -486,13 +501,17 @@ async function tratarTexto(contato, texto, { msg, entregues = 0 } = {}) {
     await atualizarEstado(contato, { pergunta_pendente: texto.slice(0, 2000) });
     return mandar(contato, { texto: RESPOSTA_SAUDE, botoes: [{ id: 'nutri:enviar', titulo: 'Mandar pra nutri' }, { id: 'nutri:nao', titulo: 'Não precisa' }] }, { clinico: true });
   }
-  // `t` perdeu vírgula e ponto (viraram espaço); o peso precisa deles.
+  // Comando EXATO ("macros", "peso 72,4", "o que como hoje", "lista de
+  // compras", "materiais") continua por dicionário: custa zero e responde na
+  // hora. Qualquer variação ("quanto já comi?", "87", "tô com 90 hoje") vai
+  // pra conversa, que entende pelo contexto e chama a mesma ação.
   const peso = curto ? RE_PESO.exec(norm(texto).replace(/[!?]+/g, '').replace(/\s+/g, ' ').trim().replace(/(\d),(\d)/, '$1.$2')) : null;
-  if (peso) return registrarPeso(contato, Number(peso[1] || peso[2]));
-  if (curto && RE_MACROS.test(t)) return resumoDoDia(contato);
-  if (curto && RE_PLANO.test(t)) return planoDoDia(contato, /\bamanha\b/.test(t) ? 1 : 0, /\bagora\b/.test(t));
-  if (RE_MATERIAIS.test(t)) return listarMateriais(contato);
-  if (curto && RE_LISTA.test(t)) return /\bdia\b/.test(t) ? entregarLista(contato, 'dia') : perguntarLista(contato);
+  if (peso && /\b(peso|pesei|kg|kilos?|quilos?)\b/.test(t)) return registrarPeso(contato, Number(peso[1] || peso[2]));
+  if (t === 'macros' || t === 'resumo do dia' || t === 'meu dia') return resumoDoDia(contato);
+  if (/^(o que (eu )?como (hoje|amanha|agora)|(meu )?(plano|cardapio)( de (hoje|amanha))?)$/.test(t)) return planoDoDia(contato, /\bamanha\b/.test(t) ? 1 : 0, /\bagora\b/.test(t));
+  if (/^(materiais?|videos|pdfs?)$/.test(t)) return listarMateriais(contato);
+  if (/^lista( de compras)?$/.test(t)) return perguntarLista(contato);
+  if (t === 'lista do dia' || t === 'lista de compras do dia') return entregarLista(contato, 'dia');
 
   return conversarComLuna(contato, texto, msg);
 }
@@ -558,14 +577,15 @@ async function entregarLista(contato, formato, weekStart = null) {
 }
 
 async function registrarPeso(contato, kg) {
-  if (!Number.isFinite(kg) || kg < 20 || kg > 400) return mandar(contato, { texto: 'Não entendi esse peso. Manda assim: *peso 72,4*' });
+  if (!Number.isFinite(kg) || kg < 20 || kg > 400) return mandar(contato, { texto: 'Esse número não parece um peso em kg. Manda de novo, tipo *72,4*?' });
   const hoje = dataBR();
   const { rows: [antes] } = await getPool().query(`SELECT kg FROM weight_log WHERE user_id = $1 AND date < $2 ORDER BY date DESC LIMIT 1`, [contato.user_id, hoje]);
   await getPool().query(
     `INSERT INTO weight_log (user_id, date, kg) VALUES ($1, $2, $3) ON CONFLICT (user_id, date) DO UPDATE SET kg = EXCLUDED.kg`, [contato.user_id, hoje, kg]);
   const dif = antes ? kg - Number(antes.kg) : null;
   const f = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
-  await mandar(contato, { texto: `Peso de hoje registrado: *${f(kg)} kg* ✅${dif != null && Math.abs(dif) >= 0.1 ? `\n${dif < 0 ? '⬇️' : '⬆️'} ${f(Math.abs(dif))} kg em relação ao último registro.` : ''}\n\nO gráfico está em Evolução, na área de membros.` }, { autor: 'sistema' });
+  const variacao = dif != null && Math.abs(dif) >= 0.1 ? ` ${dif < 0 ? '⬇️' : '⬆️'} ${f(Math.abs(dif))} kg desde o último.` : '';
+  await mandar(contato, { texto: `Anotado: *${f(kg)} kg*.${variacao}` }, { autor: 'sistema' });
 }
 
 async function resumoDoDia(contato) {
@@ -585,9 +605,9 @@ async function resumoDoDia(contato) {
     return `${rotulo}: *${n0(v)}* de ${n0(lo)} a ${n0(hi)} ${un}${resto}`;
   };
   const feitas = [...new Set(dia.entries.map((e) => ROTULO[e.slot]))];
-  const referencia = est ? '\n\n_Faixa provisória, calculada no seu cadastro. Vale até a Nutri Luciana publicar o seu plano._' : '';
+  const referencia = est ? '\n\n_Faixa provisória do cadastro, até a Nutri Luciana publicar o plano._' : '';
   await mandar(contato, {
-    texto: `*Seu dia até agora* (${dataCurta(hoje)})\n\n🔥 ${linha('Calorias', c.kcal, t.kcal, 'kcal')}\n🥩 ${linha('Proteína', c.p, t.p, 'g')}\n🍚 ${linha('Carboidrato', c.c, t.c, 'g')}\n🥑 ${linha('Gordura', c.f, t.f, 'g')}\n💧 Água: ${n0(dia.water_ml)} ml${t.water_ml ? ` de ${n0(t.water_ml)}` : ''}\n\n${feitas.length ? `Registrado: ${feitas.join(' · ')}` : 'Nada registrado hoje ainda. Manda a foto do próximo prato que eu registro. 📸'}${referencia}`,
+    texto: `*Seu dia até agora* · ${dataCurta(hoje)}\n${linha('Calorias', c.kcal, t.kcal, 'kcal')}\n${linha('Proteína', c.p, t.p, 'g')}\n${linha('Carboidrato', c.c, t.c, 'g')}\n${linha('Gordura', c.f, t.f, 'g')}\nÁgua: ${n0(dia.water_ml)} ml${t.water_ml ? ` de ${n0(t.water_ml)}` : ''}\n\n${feitas.length ? `Registrado: ${feitas.join(', ')}.` : 'Nada registrado ainda. Manda a foto do próximo prato que eu registro.'}${referencia}`,
   }, { autor: 'sistema' });
 }
 
@@ -599,11 +619,18 @@ async function planoDoDia(contato, maisDias, soAgora) {
     return mandar(contato, { texto: dia.plano ? `Não há refeições no plano pra ${maisDias ? 'amanhã' : 'hoje'}.` : `A Nutri Luciana ainda não publicou o plano ${maisDias ? 'dessa semana' : 'desta semana'}. Assim que sair, eu te aviso por aqui. 😊` }, { autor: 'sistema' });
   }
   if (soAgora && !maisDias) { const s = slotPelaHora(); refeicoes = refeicoes.filter((m) => m.slot === s).length ? refeicoes.filter((m) => m.slot === s) : refeicoes; }
+  // Padrão "plano do dia" (23/09): uma linha por refeição. Os itens só
+  // aparecem quando são mais de um ou diferentes do nome (uma receita só
+  // repetia o próprio nome logo abaixo).
+  const EMOJI = { cafe: '☕', lanche_manha: '🍎', almoco: '🍽️', lanche_tarde: '🥪', jantar: '🌙', ceia: '🍵' };
   const blocos = refeicoes.map((m) => {
-    const itens = (m.items || []).slice(0, 8).map((i) => `   • ${i.name}${i.portion ? ` (${i.portion})` : ''}`).join('\n');
-    return `*${ROTULO[m.slot] || m.slot}*${m.time ? ` · ${m.time}` : ''}\n${m.name} · ${n0(m.kcal)} kcal${m.trocada ? ' _(você trocou)_' : ''}${itens ? `\n${itens}` : ''}${m.subs ? `\n   _Pode trocar: ${m.subs}_` : ''}`;
+    const itens = (m.items || []);
+    const soEla = itens.length === 1 && norm(itens[0].name) === norm(m.name);
+    const porcao = soEla && itens[0].portion ? ` · ${itens[0].portion}` : '';
+    const lista = soEla ? '' : itens.slice(0, 8).map((i) => `\n   • ${bonito(i.name)}${i.portion ? `, ${i.portion}` : ''}`).join('');
+    return `${EMOJI[m.slot] || '•'} *${m.time || ROTULO[m.slot]}* ${bonito(m.name)} · ${n0(m.kcal)} kcal${porcao}${m.trocada ? ' _(trocada)_' : ''}${lista}${m.subs ? `\n   _Pode trocar por: ${m.subs}_` : ''}`;
   });
-  await mandar(contato, { texto: `*Plano de ${maisDias ? 'amanhã' : 'hoje'}* (${dataCurta(data)})\n\n${blocos.join('\n\n')}\n\nPra trocar uma refeição ou ver a lista de compras: ${await linkLogado(contato, '/plano')}` }, { autor: 'sistema' });
+  await mandar(contato, { texto: `*Plano de ${maisDias ? 'amanhã' : 'hoje'}* · ${dataCurta(data)}\n\n${blocos.join('\n')}\n\nTrocar uma refeição ou ver a lista: ${await linkLogado(contato, '/plano')}` }, { autor: 'sistema' });
 }
 
 async function listarMateriais(contato) {
@@ -626,24 +653,32 @@ async function mandarMaterial(contato, id) {
   await mandar(contato, { texto: `*${m.title}*\n${m.url || await linkLogado(contato, '/materiais')}` }, { autor: 'sistema' });
 }
 
+/**
+ * A conversa de verdade (conversa.js): o modelo responde e escolhe ações;
+ * cada ação abaixo é uma função já existente deste arquivo. Lista FECHADA.
+ */
 async function conversarComLuna(contato, texto, msg) {
   if (!(await podeUsarIA(contato, 'chat-lu'))) return;
   await marcarLida(msg?.id, true);
-  // Memória curta: as últimas falas das últimas 3 horas, só texto, nada marcado como saúde.
-  const { rows } = await getPool().query(
-    `SELECT autor, texto FROM whatsapp_mensagens
-      WHERE contato_id = $1 AND criado_em > NOW() - interval '3 hours' AND NOT clinico AND NOT sessao_humana
-        AND autor IN ('cliente', 'luna') AND tipo IN ('text', 'interactive', 'audio') AND texto IS NOT NULL AND texto <> ''
-      ORDER BY criado_em DESC LIMIT 9`, [contato.id]);
-  const historico = rows.reverse().map((m) => ({ role: m.autor === 'luna' ? 'lu' : 'user', text: m.texto.replace(/^\[áudio\] /, '') }));
-  // A mensagem de agora já está no histórico (o webhook gravou); áudio transcrito entra pelo UPDATE do texto.
-  if (!historico.length || historico[historico.length - 1].role !== 'user') historico.push({ role: 'user', text: texto });
-
-  const r = await comContextoDeUso({ rota: '/whatsapp/chat', userId: contato.user_id }, async () =>
-    responderLuna({ messages: historico, context: await contextoDoServidor(contato.user_id, dataBR()), canal: 'whatsapp' }));
-  if (r.encaminhar) {
-    await atualizarEstado(contato, { pergunta_pendente: texto.slice(0, 2000) });
-    return mandar(contato, { texto: r.reply || 'Essa é com a Nutri Luciana. Quer que eu mande a sua pergunta pra ela?', botoes: [{ id: 'nutri:enviar', titulo: 'Mandar pra nutri' }, { id: 'nutri:nao', titulo: 'Não precisa' }] });
-  }
-  await mandar(contato, { texto: r.reply || 'Não consegui pensar numa resposta agora. 😕 Pode perguntar de outro jeito?' });
+  const acoes = {
+    registrar_peso: ({ kg }) => registrarPeso(contato, Number(String(kg).replace(',', '.'))),
+    registrar_refeicao: ({ descricao, refeicao }) => registrarRefeicaoTexto(contato, descricao, refeicao),
+    resumo_do_dia: () => resumoDoDia(contato),
+    plano_do_dia: ({ dia, so_agora }) => planoDoDia(contato, dia === 'amanha' ? 1 : 0, so_agora === true),
+    lista_de_compras: () => perguntarLista(contato),
+    materiais: () => listarMateriais(contato),
+    mandar_para_nutri: async ({ pergunta }) => {
+      // A pessoa confirma com um toque: nada vai pra Luciana sem ela querer.
+      await atualizarEstado(contato, { pergunta_pendente: String(pergunta || texto).slice(0, 2000) });
+      await mandar(contato, { texto: 'Quer que eu mande essa pergunta pra Nutri Luciana? Ela responde em até 2 dias úteis.', botoes: [{ id: 'nutri:enviar', titulo: 'Mandar pra nutri' }, { id: 'nutri:nao', titulo: 'Não precisa' }] });
+    },
+    chamar_atendente: () => irPraEquipe(contato, 'suporte'),
+    mudar_apelido: async ({ nome }) => {
+      const limpo = apelidoDoTexto(String(nome || ''));
+      if (!limpo) return mandar(contato, { texto: 'Não consegui entender o nome. Manda só o primeiro nome?' });
+      await guardarApelido(contato, limpo);
+      await mandar(contato, { texto: `Fechou, ${limpo}. É assim que eu te chamo daqui pra frente.` }, { autor: 'sistema' });
+    },
+  };
+  await comContextoDeUso({ rota: '/whatsapp/chat', userId: contato.user_id }, () => conversar({ contato, texto, acoes, mandar }));
 }

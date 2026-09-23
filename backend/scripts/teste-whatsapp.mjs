@@ -158,7 +158,7 @@ try {
   const nutri = await login(NUTRI);
   await pool.query(`UPDATE users SET role = 'nutri' WHERE email = $1`, [NUTRI]);
   await chamar(nutri.token, 'POST', `/nutri/pacientes/${cli.user.id}/recados`, { text: 'Pode sim, o brócolis à noite não atrapalha o remédio da manhã.', reply_to: perg.id }, 201);
-  const resp = await esperarSaida(WA, (m) => /respondeu a sua dúvida/.test(m.texto));
+  const resp = await esperarSaida(WA, (m) => /Nutri Luciana respondeu/.test(m.texto));
   check(resp && /brócolis/.test(resp.texto) && resp.clinico, 'resposta da Luciana entregue no WhatsApp, fora da visão do suporte');
 
   // 8. Atendimento humano
@@ -189,7 +189,7 @@ try {
   check(env.enviada && doTime.autor === 'equipe' && /Ana · time Nutri Lu/.test(doTime.texto), 'mensagem do time sai assinada com o nome de quem atende');
   await chamar(sup.token, 'POST', `/atendimento/conversas/${conv.id}/encerrar`, {});
   await texto(WA, 'oi');
-  check(/Luna/.test((await ultima(WA)).texto), 'atendimento encerrado → a Luna volta a responder');
+  check((await ultima(WA)).autor === 'luna', 'atendimento encerrado → a Luna volta a responder');
 
   // 9. Janela fechada: mensagem do time fica guardada, sai um modelo, e é entregue quando ela escreve
   await pool.query(`UPDATE whatsapp_contatos SET ultima_msg_cliente_em = NOW() - interval '30 hours', ultimo_aviso_em = NULL WHERE wa_id = $1`, [WA]);

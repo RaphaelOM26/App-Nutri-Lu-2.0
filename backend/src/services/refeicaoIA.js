@@ -4,6 +4,7 @@
 // services/openai.js); canal novo não pode virar prompt novo.
 
 import { openai, MODEL, FOOD_MODEL, FOOD_ANALYSIS_SCHEMA, FOOD_SYSTEM_PROMPT, MEAL_VOICE_SCHEMA, MEAL_VOICE_PROMPT } from './openai.js';
+import { sanitizeText } from '../utils/recipeSanity.js';
 
 const erroIA = () => Object.assign(new Error('Resposta vazia da IA.'), { status: 502, code: 'AI_EMPTY_RESPONSE' });
 
@@ -64,8 +65,10 @@ export async function estruturarRefeicaoFalada(transcript) {
 /** Itens da IA (portion_grams, protein_g…) → formato do diário (grams, p, c, f). */
 export function itensDoDiario(itensIA) {
   const n = (v) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0);
+  // sanitizeText: o modelo às vezes injeta um pedaço em árabe/CJK no nome
+  // ("pão الفرنسي", visto em 23/09) — mesmo filtro da importação de receita.
   return (Array.isArray(itensIA) ? itensIA : []).map((it) => ({
-    name: String(it.name || 'Item').slice(0, 120),
+    name: (sanitizeText(String(it.name || '')) || 'Item').slice(0, 120),
     portion: `${Math.round(n(it.portion_grams))} g`,
     grams: n(it.portion_grams),
     kcal: n(it.kcal), p: n(it.protein_g), c: n(it.carbs_g), f: n(it.fat_g),

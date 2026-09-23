@@ -90,9 +90,11 @@ export async function entregarPendentes(contato) {
       ORDER BY m.created_at LIMIT 10`,
     [contato.user_id, contato.vinculado_em || new Date(0)]);
   for (const m of rows) {
+    // Padrão (23/09): título curto; a pergunta dela em itálico só se ajudar a
+    // lembrar; a resposta como a Luciana escreveu.
     const texto = m.kind === 'resposta'
-      ? `*A Nutri Luciana respondeu a sua dúvida*${m.pergunta ? `\n\n_Você perguntou:_ ${String(m.pergunta).slice(0, 300)}` : ''}\n\n${m.text}`
-      : `*Recado da Nutri Luciana*\n\n${m.text}`;
+      ? `*Nutri Luciana respondeu* 💬${m.pergunta ? `\n_"${String(m.pergunta).slice(0, 200)}${String(m.pergunta).length > 200 ? '…' : ''}"_` : ''}\n\n${m.text}`
+      : `*Recado da Nutri Luciana* 💬\n\n${m.text}`;
     // Marca ANTES de mandar (e desmarca se falhar): duas entregas concorrentes
     // não mandam a mesma resposta duas vezes.
     const { rowCount } = await pool.query(`UPDATE lu_messages SET wa_entregue_em = NOW() WHERE id = $1 AND wa_entregue_em IS NULL`, [m.id]);
