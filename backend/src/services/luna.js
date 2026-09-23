@@ -97,7 +97,7 @@ const RESPOSTA_SCHEMA = {
   },
 };
 
-export const RESPOSTA_SAUDE = 'Essa pergunta envolve saúde, e isso é com a Nutri Luciana, não comigo. Quer que eu mande a sua pergunta pra ela? Ela responde pessoalmente, em até 1 dia útil.';
+export const RESPOSTA_SAUDE = 'Essa pergunta envolve saúde, e isso é com a Nutri Luciana, não comigo. Quer que eu mande a sua pergunta pra ela? Ela responde pessoalmente, em até 2 dias úteis.';
 
 // Constrói o contexto do dia a partir do payload do cliente.
 function buildContextMessage(ctx) {

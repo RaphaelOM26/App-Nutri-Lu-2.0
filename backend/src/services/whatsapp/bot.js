@@ -273,7 +273,7 @@ async function enviarPraLuciana(contato, pergunta) {
     `INSERT INTO lu_messages (user_id, kind, author, text) VALUES ($1, 'pergunta', 'cliente', $2) RETURNING id`, [contato.user_id, texto]);
   // A mesma triagem da web: saúde vai direto pra ela; o resto chega com rascunho.
   agendarRascunho(rows[0].id);
-  await mandar(contato, { texto: 'Enviei pra *Nutri Luciana*. ✅ Ela responde pessoalmente, em até 1 dia útil, e a resposta chega por aqui e na área de membros.' }, { autor: 'sistema', clinico: true });
+  await mandar(contato, { texto: 'Enviei pra *Nutri Luciana*. ✅ Ela responde pessoalmente, em até 2 dias úteis, e a resposta chega por aqui e na área de membros.' }, { autor: 'sistema', clinico: true });
 }
 
 // ─── 4. Foto e áudio ──────────────────────────────────────────────────────
@@ -479,7 +479,7 @@ async function tratarTexto(contato, texto, { msg, entregues = 0 } = {}) {
   }
   if (RE_NUTRI.test(t)) {
     await atualizarEstado(contato, { aguardando: 'pergunta_nutri' });
-    return mandar(contato, { texto: 'Claro! Escreve a sua pergunta na próxima mensagem que eu mando pra *Nutri Luciana*. Ela responde pessoalmente, em até 1 dia útil.\n\n_Se for algo do dia a dia (trocar um ingrediente, como registrar, o que tem no plano), eu respondo na hora: é só perguntar. Pra desistir, escreve cancelar._' });
+    return mandar(contato, { texto: 'Claro! Escreve a sua pergunta na próxima mensagem que eu mando pra *Nutri Luciana*. Ela responde pessoalmente, em até 2 dias úteis.\n\n_Se for algo do dia a dia (trocar um ingrediente, como registrar, o que tem no plano), eu respondo na hora: é só perguntar. Pra desistir, escreve cancelar._' });
   }
   // Saúde: por DICIONÁRIO, antes de qualquer modelo. A Luna não responde o mérito.
   if (motivoClinico(texto)) {
