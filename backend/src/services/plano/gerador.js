@@ -187,25 +187,64 @@ function alvoDoSlot(alvoDia, slots, slot, noPrato) {
 }
 
 /**
- * @param {{alvo:{kcal:number,p:number,c:number,f:number}, slots?:string[], restricoes:string[], naoGosta?:string, alergias?:string, indispensavel?:string, semente?:number}} op
+ * @param {{alvo:{kcal:number,p:number,c:number,f:number}, slots?:string[], restricoes:string[], naoGosta?:string, alergias?:string, indispensavel?:string, variedade?:'simples'|'media'|'variada', semente?:number}} op
  * @returns {{weekday:number, meals:{slot:string,time:string,name:string,code:string|null,items:object[]}[]}[]}
  */
+// ─── Variedade (pedido do Raphael, 23/09) ─────────────────────────────────
+// No dia a dia a gente repete: o jantar é o almoço, e muita gente cozinha
+// pra dois dias. A escolha vem do onboarding (perfil.variedade) e vira REGRA:
+//   simples  → jantar = almoço; seg=ter, qua=qui, sex=sáb (dom sozinho):
+//              4 pratos principais na semana; café e lanches em 2 opções.
+//   media    → jantar = almoço; seg=ter, qua=qui; sex, sáb e dom diferentes:
+//              5 pratos principais (padrão de quem não escolheu).
+//   variada  → como sempre foi: evita repetir.
+// A porção do jantar espelhado é recalculada pra fatia do jantar (mesmo
+// prato, quantidade dele). "Não abro mão" e restrições valem antes de tudo.
+export const VARIEDADES = ['simples', 'media', 'variada'];
+const REGRA_VARIEDADE = {
+  simples: { pares: [[1, 2], [3, 4], [5, 6]], jantarIgual: true, opcoesLanche: 2 },
+  media: { pares: [[1, 2], [3, 4]], jantarIgual: true, opcoesLanche: null },
+  variada: { pares: [], jantarIgual: false, opcoesLanche: null },
+};
+const LANCHES = ['cafe', 'lanche_manha', 'lanche_tarde', 'ceia'];
+export const regraDeVariedade = (v) => REGRA_VARIEDADE[v] || REGRA_VARIEDADE.media;
+
 export function gerarRascunho(op) {
   const rnd = prng(op.semente ?? 1);
   const termos = termosExcluidos(op.naoGosta, op.alergias);
   const pedidos = pedidosDe(op.indispensavel);
   const slots = op.slots?.length ? op.slots : SLOTS_PADRAO;
+  const regra = regraDeVariedade(op.variedade);
+  const copiaDe = new Map(regra.pares.map(([a, b]) => [b, a]));
   const usadas = new Map();
+  const porSlot = {};
   const pool = Object.fromEntries(slots.map((s) => [s, candidatosPara(s, op.restricoes, termos)]));
   const dias = [];
   for (let wd = 1; wd <= 7; wd++) {
+    // Segundo dia do par: o mesmo dia inteiro (cozinhou uma vez, come duas).
+    if (copiaDe.has(wd)) {
+      const origem = dias.find((d) => d.weekday === copiaDe.get(wd));
+      if (origem) { dias.push({ weekday: wd, meals: origem.meals.map((m) => ({ ...m, items: m.items.map((it) => ({ ...it })) })) }); continue; }
+    }
     const meals = [];
     for (const slot of slots) {
       const alvo = alvoDoSlot(op.alvo, slots, slot, []);
-      const cands = soComPedidos(pool[slot], slot, wd, pedidos);
+      let cands = soComPedidos(pool[slot], slot, wd, pedidos);
+      // Jantar espelha o almoço do dia, se a receita do almoço também serve de jantar.
+      if (regra.jantarIgual && slot === 'jantar') {
+        const almoco = meals.find((m) => m.slot === 'almoco');
+        const mesma = almoco?.code ? cands.find((r) => r.id === almoco.code) : null;
+        if (mesma) cands = [mesma];
+      }
+      // Café e lanches com poucas opções: depois das N primeiras, só elas voltam (alternando).
+      if (regra.opcoesLanche && LANCHES.includes(slot)) {
+        const ja = porSlot[slot] || [];
+        if (ja.length >= regra.opcoesLanche) cands = cands.filter((r) => ja.includes(r.id));
+      }
       const melhor = cands.length && alvo.kcal >= 80 ? escolher(cands, alvo, { slot, wd, pedidos, usadas, rnd }) : null;
       if (!melhor) continue;
       usadas.set(melhor.r.id, (usadas.get(melhor.r.id) || 0) + 1);
+      if (!(porSlot[slot] || []).includes(melhor.r.id)) porSlot[slot] = [...(porSlot[slot] || []), melhor.r.id];
       meals.push({ slot, time: SLOT_HORA[slot], name: melhor.r.name, code: melhor.r.id, items: [receitaComoItem(melhor.r, melhor.m)] });
     }
     dias.push({ weekday: wd, meals });

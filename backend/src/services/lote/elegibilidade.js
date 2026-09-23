@@ -41,6 +41,7 @@ export async function dadosDaPaciente(userId) {
     sexo: p.sexo || null, objetivo: p.objetivo || null, atividade: p.atividade || null, metaKg: p.meta_kg != null ? Number(p.meta_kg) : null,
     restricoes: Array.isArray(p.restricoes) ? p.restricoes : [], alergias: typeof p.alergias === 'string' ? p.alergias : '',
     naoGosta: typeof p.nao_gosta === 'string' ? p.nao_gosta : '', indispensavel: typeof p.indispensavel === 'string' ? p.indispensavel : '',
+    variedade: ['simples', 'media', 'variada'].includes(p.variedade) ? p.variedade : 'media',
     onboardingFeito: Boolean(p.onboarding_em),
   };
 }
@@ -142,7 +143,11 @@ export function checarPlano(semanas, targets, d) {
         }
       }
     }
-    for (const [code, n] of usos) if (n > R.repeticaoMaxSemana) motivos.push(`semana ${i + 1}: ${PRATICA_POR_CODIGO.get(code)?.name || code} repete ${n}×`);
+    // Repetição é regra quando ela escolheu "simples" ou "meio-termo" (jantar
+    // = almoço, e dois dias iguais): um prato principal aparece até 4× na
+    // semana de propósito. Só "variada" segue o limite apertado.
+    const maxRep = d.variedade === 'variada' ? R.repeticaoMaxSemana : Math.max(R.repeticaoMaxSemana, 4);
+    for (const [code, n] of usos) if (n > maxRep) motivos.push(`semana ${i + 1}: ${PRATICA_POR_CODIGO.get(code)?.name || code} repete ${n}×`);
   }
   if (diasFora) motivos.push(`${diasFora} dia${diasFora > 1 ? 's' : ''} fora da meta de calorias (até ${Math.round(maiorDesvio * 100)}% de diferença)`);
   if (pedidos && pedidos.length >= 3 && !semanas.some((s) => (s.days || []).some((dia) => (dia.meals || []).some((m) => m.items?.some((it) => { const r = PRATICA_POR_CODIGO.get(it.code || m.code); return r && pedidos.split(/[,; e]+/).filter((x) => x.length >= 3).some((t) => normalizar(r.name + ' ' + r.ingredients.map((i) => i.name).join(' ')).includes(t)); }))))) {

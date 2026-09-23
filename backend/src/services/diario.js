@@ -196,6 +196,8 @@ export const CAMPOS_PERFIL = new Set([
   // Gestante ou amamentando: 'nao' | 'gravida' | 'amamentando'. Tira do lote
   // de aprovação (services/lote); não é dado clínico, é do cadastro.
   'gestante',
+  // Variedade das refeições (23/09): 'simples' | 'media' | 'variada'. Regra do gerador.
+  'variedade',
 ]);
 
 /** Campos clínicos (dado de saúde). Só a dona e o painel da nutri (papel nutri) leem. */

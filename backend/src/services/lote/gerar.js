@@ -73,7 +73,7 @@ export async function gerarPlanoAutomatico({ userId }) {
     // assim o que o sistema grava é byte a byte o que a web devolveria sem
     // mexer, e "a Luciana alterou?" vira uma comparação simples.
     semanas = Array.from({ length: N }, (_, i) => ({
-      days: ajustarPorcoes(gerarRascunho({ alvo: targets, restricoes: d.restricoes, naoGosta: d.naoGosta, alergias: d.alergias, indispensavel: d.indispensavel, semente: i + 1 }), targets, REGRAS.toleranciaMeta)
+      days: ajustarPorcoes(gerarRascunho({ alvo: targets, restricoes: d.restricoes, naoGosta: d.naoGosta, alergias: d.alergias, indispensavel: d.indispensavel, variedade: d.variedade, semente: i + 1 }), targets, REGRAS.toleranciaMeta)
         .map((dia) => ({ weekday: dia.weekday, meals: dia.meals.map((m) => { const { itens, tot } = normalizarItens(m.items); return { slot: m.slot, time: m.time, name: m.name, code: m.code, items: itens, ...tot }; }) })),
     }));
     if (semanas.some((s) => s.days.some((dia) => !dia.meals.length))) motivos.push('o gerador não achou receita pra algum dia');
