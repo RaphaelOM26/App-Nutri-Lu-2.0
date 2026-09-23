@@ -39,6 +39,7 @@ import { planoDaLista, textosLista, dadosDaLista } from '../plano/listaCompras.j
 import { gerarPdfLista, nomeDoArquivo } from '../plano/listaPdf.js';
 import { criarLink } from '../loginPorLink.js';
 import { conversar, bonito } from './conversa.js';
+import { PRATICA_POR_CODIGO } from '../plano/receitas.js';
 
 const MEMBROS = (process.env.MEMBROS_URL || 'https://nutrilualves.com.br/membros').replace(/\/$/, '');
 const ROTULO = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã', almoco: 'Almoço', lanche_tarde: 'Lanche da tarde', jantar: 'Jantar', ceia: 'Ceia' };
@@ -611,7 +612,8 @@ async function resumoDoDia(contato) {
   }, { autor: 'sistema' });
 }
 
-async function planoDoDia(contato, maisDias, soAgora) {
+/** `apenas`: só estas refeições (ex.: o que ainda falta no dia). */
+async function planoDoDia(contato, maisDias, soAgora, apenas = null) {
   const data = somarDias(dataBR(), maisDias);
   const dia = await montarDia(contato.user_id, data);
   let refeicoes = dia.plano?.dia?.meals || [];
@@ -619,6 +621,10 @@ async function planoDoDia(contato, maisDias, soAgora) {
     return mandar(contato, { texto: dia.plano ? `Não há refeições no plano pra ${maisDias ? 'amanhã' : 'hoje'}.` : `A Nutri Luciana ainda não publicou o plano ${maisDias ? 'dessa semana' : 'desta semana'}. Assim que sair, eu te aviso por aqui. 😊` }, { autor: 'sistema' });
   }
   if (soAgora && !maisDias) { const s = slotPelaHora(); refeicoes = refeicoes.filter((m) => m.slot === s).length ? refeicoes.filter((m) => m.slot === s) : refeicoes; }
+  const filtro = Array.isArray(apenas) ? apenas.filter((s) => SLOTS.includes(s)) : [];
+  const parcial = filtro.length > 0 && filtro.length < refeicoes.length;
+  if (filtro.length) refeicoes = refeicoes.filter((m) => filtro.includes(m.slot));
+  if (!refeicoes.length) return mandar(contato, { texto: 'Não achei essas refeições no plano de hoje.' }, { autor: 'sistema' });
   // Padrão "plano do dia" (23/09): uma linha por refeição. Os itens só
   // aparecem quando são mais de um ou diferentes do nome (uma receita só
   // repetia o próprio nome logo abaixo).
@@ -630,7 +636,44 @@ async function planoDoDia(contato, maisDias, soAgora) {
     const lista = soEla ? '' : itens.slice(0, 8).map((i) => `\n   • ${bonito(i.name)}${i.portion ? `, ${i.portion}` : ''}`).join('');
     return `${EMOJI[m.slot] || '•'} *${m.time || ROTULO[m.slot]}* ${bonito(m.name)} · ${n0(m.kcal)} kcal${porcao}${m.trocada ? ' _(trocada)_' : ''}${lista}${m.subs ? `\n   _Pode trocar por: ${m.subs}_` : ''}`;
   });
-  await mandar(contato, { texto: `*Plano de ${maisDias ? 'amanhã' : 'hoje'}* · ${dataCurta(data)}\n\n${blocos.join('\n')}\n\nTrocar uma refeição ou ver a lista: ${await linkLogado(contato, '/plano')}` }, { autor: 'sistema' });
+  await mandar(contato, { texto: `*${parcial ? 'Ainda falta' : `Plano de ${maisDias ? 'amanhã' : 'hoje'}`}* · ${dataCurta(data)}\n\n${blocos.join('\n')}\n\nQuer o modo de preparo de alguma? É só pedir. Trocar ou ver a lista: ${await linkLogado(contato, '/plano')}` }, { autor: 'sistema' });
+}
+
+/**
+ * A receita inteira aqui no chat (pedido do Raphael, 23/09: ninguém cozinha
+ * com a plataforma aberta). Acha pelo código ou pela refeição do plano de
+ * hoje; manda ingredientes e modo de preparo. Só do livro PR, que é de onde
+ * o plano sai; o livro da nutri (NL) fica na área de membros.
+ */
+async function mandarReceita(contato, { code, refeicao, dia } = {}) {
+  let codigo = code ? String(code).toUpperCase().trim() : null;
+  let refeicaoDoPlano = null;
+  if (!codigo || refeicao) {
+    const data = somarDias(dataBR(), dia === 'amanha' ? 1 : 0);
+    const d = await montarDia(contato.user_id, data);
+    const meals = d.plano?.dia?.meals || [];
+    const slot = SLOTS.includes(refeicao) ? refeicao : slotPelaHora();
+    refeicaoDoPlano = meals.find((m) => m.slot === slot) || null;
+    if (!codigo) codigo = refeicaoDoPlano?.code || refeicaoDoPlano?.items?.find((i) => i.code)?.code || null;
+  }
+  const r = codigo ? PRATICA_POR_CODIGO.get(codigo) : null;
+  if (!r) {
+    return mandar(contato, { texto: refeicaoDoPlano ? `Essa refeição (${bonito(refeicaoDoPlano.name)}) não é uma receita do livro, então não tem modo de preparo pra mandar.` : 'Não achei essa receita no plano. Me diz qual refeição (café, almoço, jantar…) ou o nome dela?' }, { autor: 'sistema' });
+  }
+  const porcoes = refeicaoDoPlano?.items?.find((i) => i.code === r.id)?.portion;
+  const ingredientes = (r.ingredients || []).map((i) => `• ${i.name}${i.quantity ? ` · ${String(i.quantity).replace('.', ',')} ${i.unit || ''}`.trimEnd() : ''}`).join('\n');
+  const passos = (r.steps || []).map((s, i) => `${i + 1}. ${s}`).join('\n');
+  const cabeca = `*${bonito(r.name)}*\n${[r.time && r.time !== '—' ? r.time.replace('min', ' min') : null, `rende ${r.servings} ${r.servings === 1 ? 'porção' : 'porções'}`, `${n0(r.macros.kcal)} kcal por porção`].filter(Boolean).join(' · ')}${porcoes ? `\n_No seu plano: ${porcoes}._` : ''}`;
+  const ressalvas = (r.ressalvas || []).length ? `\n\n_${r.ressalvas.join(' ')}_` : '';
+  const texto = `${cabeca}\n\n*Ingredientes*\n${ingredientes}\n\n*Modo de preparo*\n${passos || 'Sem modo de preparo cadastrado: é montar e servir.'}${ressalvas}`;
+  // O WhatsApp corta em 4.096 caracteres: receita longa vai em duas.
+  const partes = [];
+  for (let s = texto; s.length; ) {
+    if (s.length <= 3800) { partes.push(s); break; }
+    const corte = s.lastIndexOf('\n', 3800);
+    partes.push(s.slice(0, corte)); s = s.slice(corte + 1);
+  }
+  for (const p of partes) await mandar(contato, { texto: p }, { autor: 'sistema' });
 }
 
 async function listarMateriais(contato) {
@@ -664,7 +707,8 @@ async function conversarComLuna(contato, texto, msg) {
     registrar_peso: ({ kg }) => registrarPeso(contato, Number(String(kg).replace(',', '.'))),
     registrar_refeicao: ({ descricao, refeicao }) => registrarRefeicaoTexto(contato, descricao, refeicao),
     resumo_do_dia: () => resumoDoDia(contato),
-    plano_do_dia: ({ dia, so_agora }) => planoDoDia(contato, dia === 'amanha' ? 1 : 0, so_agora === true),
+    plano_do_dia: ({ dia, so_agora, refeicoes }) => planoDoDia(contato, dia === 'amanha' ? 1 : 0, so_agora === true, Array.isArray(refeicoes) ? refeicoes : null),
+    receita: (args) => mandarReceita(contato, args || {}),
     lista_de_compras: () => perguntarLista(contato),
     materiais: () => listarMateriais(contato),
     mandar_para_nutri: async ({ pergunta }) => {
