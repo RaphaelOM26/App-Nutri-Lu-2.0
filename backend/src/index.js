@@ -18,7 +18,6 @@ import chatRouter from './routes/chat.js';
 import insightRouter from './routes/insight.js';
 import dayReviewRouter from './routes/dayReview.js';
 import transcribeMealRouter from './routes/transcribeMeal.js';
-import daySnapshotRouter from './routes/daySnapshot.js';
 import generateRecipeImageRouter from './routes/generateRecipeImage.js';
 import authRouter from './routes/auth.js';
 import communityRouter from './routes/community.js';
@@ -118,10 +117,31 @@ app.use((req, res, next) => {
 // fundo do handler, longe do req. Não faz I/O nem atrasa a requisição.
 app.use(contextoDeUso);
 
-// Healthcheck — útil pra confirmar que o Expo Go consegue alcançar o backend
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
+// Healthcheck. É o que o Railway consulta no deploy e o que o monitor externo
+// consulta a cada poucos minutos. Toca o banco (SELECT 1) porque "processo de
+// pé" não diz nada: com o Postgres fora, todas as rotas devolvem 500 e este
+// endpoint continuava dizendo ok. Com o banco fora responde 503 — é isso que
+// faz o monitor avisar. Timeout curto pra não segurar o monitor quando o pool
+// está travado. Nunca devolve a mensagem do pg (pode trazer host/usuário).
+// Custo em 10 mil pacientes: zero — o monitor bate a cada 5 min, não a cliente.
+const HEALTH_DB_TIMEOUT_MS = 3000;
+app.get('/health', async (req, res) => {
+  let db = 'ausente';
+  if (process.env.DATABASE_URL) {
+    try {
+      await Promise.race([
+        getPool().query('SELECT 1'),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), HEALTH_DB_TIMEOUT_MS).unref()),
+      ]);
+      db = 'ok';
+    } catch (e) {
+      console.error('[health] banco não respondeu:', e.message);
+      db = 'erro';
+    }
+  }
+  res.status(db === 'erro' ? 503 : 200).json({
+    status: db === 'erro' ? 'degradado' : 'ok',
+    db,
     model: process.env.OPENAI_MODEL || 'gpt-5.4-mini',
     timestamp: new Date().toISOString(),
   });
@@ -131,16 +151,16 @@ app.get('/health', (req, res) => {
 // APP_API_KEY existir no ambiente (ver services/chaveDoApp.js pra ordem de
 // implantação; ligar antes da frota atualizar derruba quem está em build velho).
 //
-// /day-snapshot fica FORA: ela não chama IA, não custa por uso, e é o que
-// guarda o diário. Trancá-la junto faria o app perder o histórico do dia de
-// quem estiver numa versão antiga, por um ganho que não existe.
+// /day-snapshot (diário anônimo por device_id do app das lojas) foi APOSENTADA
+// em 23/09/2026: era a única rota sem autenticação do backend e só o app a
+// usava — e o app saiu do escopo do lançamento (decisão de 22/09). A tabela
+// day_snapshots fica no banco, sem rota que a leia ou grave.
 app.use('/extract-recipe', exigirChaveDoApp, extractRecipeRouter);
 app.use('/analyze-food', exigirChaveDoApp, analyzeFoodRouter);
 app.use('/chat', exigirChaveDoApp, chatRouter);
 app.use('/insight', exigirChaveDoApp, insightRouter);
 app.use('/day-review', exigirChaveDoApp, dayReviewRouter);
 app.use('/transcribe-meal', exigirChaveDoApp, transcribeMealRouter);
-app.use('/day-snapshot', daySnapshotRouter);
 app.use('/generate-recipe-image', exigirChaveDoApp, generateRecipeImageRouter);
 app.use('/auth', authRouter);
 app.use('/community', communityRouter);
@@ -175,7 +195,7 @@ if (!process.env.OPENAI_API_KEY) {
 
 // Bootstrap do DB e listen. Se DATABASE_URL não estiver configurada, logamos
 // warning mas seguimos com o servidor de pé — endpoints de IA continuam OK,
-// só /day-snapshot vai devolver 500 até a env ser configurada. Isso garante
+// as rotas com banco devolvem 500 até a env ser configurada. Isso garante
 // que um restart do Railway durante config inicial não trave tudo.
 async function start() {
   if (process.env.DATABASE_URL) {
@@ -208,7 +228,7 @@ async function start() {
       console.error('[boot] falha ao inicializar schema:', e.message);
     }
   } else {
-    console.warn('[boot] DATABASE_URL ausente — endpoints /day-snapshot vão falhar');
+    console.warn('[boot] DATABASE_URL ausente — as rotas com banco vão falhar');
   }
 
   app.listen(PORT, '0.0.0.0', () => {
