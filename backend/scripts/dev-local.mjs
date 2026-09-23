@@ -18,6 +18,9 @@ process.env.JWT_SECRET ||= 'segredo-local-de-desenvolvimento-nao-usar-em-produca
 process.env.PORT = process.env.PORT || '3101';
 delete process.env.SMTP_HOST;
 delete process.env.APP_API_KEY;
+// Sem Turnstile local: os testes pedem código de login sem navegador. Pra
+// exercitar a conferência de propósito: TURNSTILE_SECRET=... TURNSTILE_REAL=1.
+if (process.env.TURNSTILE_REAL !== '1') delete process.env.TURNSTILE_SECRET;
 // WhatsApp em MODO SIMULADO: o servidor local nunca fala com a Meta (mesmo que
 // o .env tenha o token de produção), e o webhook aceita mensagem sem assinatura.
 // Pra testar contra o número de TESTE da Meta de propósito: WHATSAPP_REAL=1.

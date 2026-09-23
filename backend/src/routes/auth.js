@@ -26,6 +26,7 @@ import { getPool } from '../db.js';
 import { criarCodigo, conferirCodigo, emailValido } from '../services/loginPorEmail.js';
 import { trocarLink } from '../services/loginPorLink.js';
 import { enviarCodigoLogin } from '../services/email.js';
+import { turnstileLigado, verificarTurnstile } from '../services/turnstile.js';
 
 const router = Router();
 
@@ -40,7 +41,12 @@ const router = Router();
 // é pública. Quem não comprou recebe o código do mesmo jeito e, ao entrar, vê
 // a tela de ativação em vez do plano — o acesso é decidido por temAcesso().
 
+// Teto por IP: freio contra script de UMA máquina. Não é a defesa principal
+// (essa é o Turnstile, abaixo): operadora de celular no Brasil põe milhares de
+// pessoas atrás do mesmo IP (CGNAT), então um teto apertado aqui derrubaria
+// gente de verdade no dia do lançamento. Em memória, por instância.
 const pedidosPorIp = new Map();
+const PEDIDOS_POR_IP_HORA = 60;
 function ipExcedeu(ip) {
   const agora = Date.now();
   const r = pedidosPorIp.get(ip);
@@ -49,7 +55,7 @@ function ipExcedeu(ip) {
     return false;
   }
   r.n += 1;
-  return r.n > 30;
+  return r.n > PEDIDOS_POR_IP_HORA;
 }
 
 router.post('/email/request', async (req, res, next) => {
@@ -60,6 +66,13 @@ router.post('/email/request', async (req, res, next) => {
     }
     if (ipExcedeu(req.ip)) {
       return res.status(429).json({ error: 'Muitos pedidos. Tente mais tarde.', code: 'RATE_LIMITED' });
+    }
+    // Turnstile ANTES de gravar código e mandar e-mail: é o e-mail que custa.
+    if (turnstileLigado()) {
+      const t = await verificarTurnstile(req.body?.turnstile_token, req.ip);
+      if (!t.ok) {
+        return res.status(400).json({ error: 'Não consegui confirmar que é você. Recarrega a página e tenta de novo.', code: 'TURNSTILE' });
+      }
     }
     const { codigo } = await criarCodigo(email);
     const { rows } = await getPool().query(
