@@ -11,6 +11,7 @@ import { requirePremium } from '../services/billing.js';
 import { teto } from '../services/limites.js';
 import { openai, MODEL, RECIPE_SCHEMA, RECIPE_SYSTEM_PROMPT } from '../services/openai.js';
 import { reconcileServings, estimateTotalKcal, sanitizeRecipe } from '../utils/recipeSanity.js';
+import { fetchSeguro, validarUrlPublica } from '../utils/urlSegura.js';
 
 const router = Router();
 
@@ -37,7 +38,10 @@ router.post('/', requirePremium, teto('importar-receita', { gratis: 2, assinante
     if (source === 'image') {
       recipe = await extractFromImage(data);
     } else if (source === 'url') {
-      recipe = await extractFromUrl(data);
+      // Link colado pela pessoa: só site público (ver utils/urlSegura.js).
+      // Valida ANTES do teto consumir? Não: o teto já foi consumido pelo
+      // middleware; link inválido é erro da pessoa, conta igual.
+      recipe = await extractFromUrl(await validarUrlPublica(data));
     } else {
       return res.status(400).json({
         error: `source inválido: "${source}". Use "image", "url" ou "video".`,
@@ -321,7 +325,9 @@ async function extractFromUrl(url) {
   // sem contexto e a IA não sabe que é TikTok/Instagram.
   let effectiveUrl = url;
   try {
-    const response = await fetch(url, {
+    // fetchSeguro: segue redirect à mão conferindo cada salto (um link
+    // público que redireciona pra dentro da rede não passa), corpo até 2 MB.
+    const response = await fetchSeguro(url, {
       headers: {
         // User-Agent mobile real ajuda redes sociais a servirem caption pública
         'User-Agent':
@@ -329,8 +335,6 @@ async function extractFromUrl(url) {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
       },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(15000),
     });
     if (!response.ok) {
       throw Object.assign(
@@ -341,6 +345,9 @@ async function extractFromUrl(url) {
     effectiveUrl = response.url || url;
     html = await response.text();
   } catch (err) {
+    // Redirect pra dentro da rede é erro em qualquer caso, com ou sem
+    // extractor dedicado: não se contorna.
+    if (err.code === 'URL_INVALIDA') throw err;
     if (!hasDedicatedExtractor) {
       if (err.code === 'URL_FETCH_FAILED') throw err;
       throw Object.assign(
