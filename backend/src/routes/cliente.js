@@ -19,7 +19,7 @@ import { getPool } from '../db.js';
 import { requireAuth } from '../services/auth.js';
 import { temAcesso } from '../services/billing.js';
 import { novaChave, urlDeUpload, urlDeLeitura, apagar, r2Configurado } from '../services/r2.js';
-import { exigirData, mesValido, dataValida, diaDaSemana } from '../utils/datas.js';
+import { exigirData, mesValido, dataValida, diaDaSemana, inicioDaSemana } from '../utils/datas.js';
 import { primeiroNome, nomeDe } from '../utils/nomes.js';
 import { planoDaLista, dadosDaLista } from '../services/plano/listaCompras.js';
 import { gerarPdfLista, nomeDoArquivo } from '../services/plano/listaPdf.js';
@@ -242,11 +242,17 @@ router.post('/plano/troca', validar(S.trocaDePlano), async (req, res, next) => {
     const plano = await planoDaData(req.user.userId, date);
     if (!plano) throw erro('Não há plano ativo nessa semana.', 404, 'NOT_FOUND');
     const override = { name: String(nova.name).slice(0, 120), code: nova.code || null, items: itens, ...tot };
+    // A troca é individual; `tambem` propaga pras refeições que ela marcou,
+    // só dentro da mesma semana do plano (outra semana é outro plano).
+    const chaves = { [`${date}:${slot}`]: override };
+    for (const t of req.body?.tambem || []) {
+      if (inicioDaSemana(t.date) === plano.week_start) chaves[`${t.date}:${t.slot}`] = override;
+    }
     await getPool().query(
       `UPDATE meal_plans SET overrides = overrides || $3::jsonb, updated_at = NOW() WHERE id = $1 AND user_id = $2`,
-      [plano.id, req.user.userId, JSON.stringify({ [`${date}:${slot}`]: override })],
+      [plano.id, req.user.userId, JSON.stringify(chaves)],
     );
-    res.json({ ok: true, meal: override });
+    res.json({ ok: true, meal: override, trocadas: Object.keys(chaves).length });
   } catch (e) { next(e); }
 });
 

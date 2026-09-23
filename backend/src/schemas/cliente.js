@@ -63,6 +63,9 @@ export const trocaDePlano = z.object({
     code: z.string().max(12).nullable().optional(),
     items: itensRefeicao,
   }).passthrough(),
+  // Propagar a mesma troca pra outras refeições da MESMA semana (ela escolhe
+  // quais, 23/09). Máximo 14 = 7 dias × almoço e jantar.
+  tambem: z.array(z.object({ date: data, slot })).max(14).optional(),
 });
 
 export const suplementoTomado = z.object({ date: data, taken: z.boolean().optional() });
