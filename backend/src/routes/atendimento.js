@@ -28,6 +28,8 @@ import { mascarar, whatsappConfigurado, numeroDoBot } from '../services/whatsapp
 import { contatoPorId, janelaAberta, mandar, chamarEquipe, devolverPraLuna } from '../services/whatsapp/contatos.js';
 import { avisarMensagemDaEquipe } from '../services/whatsapp/avisos.js';
 import { notificar } from '../services/notificacoes.js';
+import { validar } from '../utils/validar.js';
+import * as S from '../schemas/outros.js';
 
 const router = Router();
 router.use(requirePapel('nutri', 'admin', 'suporte'));
@@ -178,7 +180,7 @@ router.post('/conversas/:id/assumir', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/conversas/:id/mensagens', async (req, res, next) => {
+router.post('/conversas/:id/mensagens', validar(S.mensagemDaEquipe), async (req, res, next) => {
   try {
     const texto = String(req.body?.text || '').trim();
     if (texto.length < 1) throw erro('Escreve a mensagem antes de enviar.');
@@ -196,7 +198,7 @@ router.post('/conversas/:id/mensagens', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/conversas/:id/encerrar', async (req, res, next) => {
+router.post('/conversas/:id/encerrar', validar(S.encerrarAtendimento), async (req, res, next) => {
   try {
     const c = await exigirContato(req.params.id);
     if (c.atendimento === 'humano') {

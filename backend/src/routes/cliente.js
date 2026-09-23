@@ -33,6 +33,8 @@ import {
   planoDaData, planoResumido, montarDia, montarEvolucao,
   CAMPOS_PERFIL, CAMPOS_CLINICOS, perfilComFoto,
 } from '../services/diario.js';
+import { validar } from '../utils/validar.js';
+import * as S from '../schemas/cliente.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -50,7 +52,7 @@ router.get('/dia', async (req, res, next) => {
 
 // ─── Refeições ────────────────────────────────────────────────────────────
 
-router.post('/refeicoes', async (req, res, next) => {
+router.post('/refeicoes', validar(S.criarRefeicao), async (req, res, next) => {
   try {
     const { date, slot, source, items, photo_key, confidence, note, logged_at } = req.body || {};
     exigirData(date); exigirSlot(slot);
@@ -67,7 +69,7 @@ router.post('/refeicoes', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.put('/refeicoes/:id', async (req, res, next) => {
+router.put('/refeicoes/:id', validar(S.editarRefeicao), async (req, res, next) => {
   try {
     const { items, slot, note } = req.body || {};
     const { itens, tot } = normalizarItens(items);
@@ -95,7 +97,7 @@ router.delete('/refeicoes/:id', async (req, res, next) => {
 });
 
 // Copia as refeições de um dia pra outro (o "copiar o dia de ontem").
-router.post('/refeicoes/copiar', async (req, res, next) => {
+router.post('/refeicoes/copiar', validar(S.copiarRefeicoes), async (req, res, next) => {
   try {
     const de = exigirData(req.body?.from); const para = exigirData(req.body?.to);
     if (de === para) throw erro('Origem e destino são o mesmo dia.');
@@ -112,7 +114,7 @@ router.post('/refeicoes/copiar', async (req, res, next) => {
 
 // ─── Água ─────────────────────────────────────────────────────────────────
 
-router.put('/agua', async (req, res, next) => {
+router.put('/agua', validar(S.agua), async (req, res, next) => {
   try {
     const date = exigirData(req.body?.date);
     const delta = Number(req.body?.delta_ml);
@@ -139,7 +141,7 @@ router.get('/peso', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/peso', async (req, res, next) => {
+router.post('/peso', validar(S.peso), async (req, res, next) => {
   try {
     const date = exigirData(req.body?.date);
     const kg = Number(String(req.body?.kg ?? '').replace(',', '.'));
@@ -153,7 +155,7 @@ router.post('/peso', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/medidas', async (req, res, next) => {
+router.post('/medidas', validar(S.medidas), async (req, res, next) => {
   try {
     const date = exigirData(req.body?.date);
     const m = req.body?.measures;
@@ -175,7 +177,7 @@ router.post('/medidas', async (req, res, next) => {
 
 // ─── Fotos (progresso e prato) ────────────────────────────────────────────
 
-router.post('/fotos/upload-url', async (req, res, next) => {
+router.post('/fotos/upload-url', validar(S.uploadUrl), async (req, res, next) => {
   try {
     const pasta = ['prato', 'perfil', 'progresso'].includes(req.body?.pasta) ? req.body.pasta : 'progresso';
     const key = novaChave(req.user.userId, pasta, req.body?.content_type);
@@ -194,7 +196,7 @@ router.get('/fotos', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/fotos', async (req, res, next) => {
+router.post('/fotos', validar(S.fotoProgresso), async (req, res, next) => {
   try {
     const date = exigirData(req.body?.date);
     const key = String(req.body?.photo_key || '');
@@ -231,7 +233,7 @@ router.get('/plano', async (req, res, next) => {
 
 // Troca de refeição pela cliente. Fica em `overrides`, separado do que a Lu
 // montou — ela vê o que foi trocado, e o plano original continua íntegro.
-router.post('/plano/troca', async (req, res, next) => {
+router.post('/plano/troca', validar(S.trocaDePlano), async (req, res, next) => {
   try {
     const date = exigirData(req.body?.date); const slot = exigirSlot(req.body?.slot);
     const nova = req.body?.meal;
@@ -250,7 +252,7 @@ router.post('/plano/troca', async (req, res, next) => {
 
 // ─── Suplementos ──────────────────────────────────────────────────────────
 
-router.post('/suplementos/:id/tomado', async (req, res, next) => {
+router.post('/suplementos/:id/tomado', validar(S.suplementoTomado), async (req, res, next) => {
   try {
     const date = exigirData(req.body?.date);
     const tomado = req.body?.taken !== false;
@@ -314,7 +316,7 @@ router.get('/perfil', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.put('/perfil', async (req, res, next) => {
+router.put('/perfil', validar(S.perfil), async (req, res, next) => {
   try {
     const dados = req.body?.perfil;
     if (!dados || typeof dados !== 'object') throw erro('perfil obrigatório');
@@ -357,7 +359,7 @@ router.get('/anamnese-clinica', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.put('/anamnese-clinica', async (req, res, next) => {
+router.put('/anamnese-clinica', validar(S.anamneseClinica), async (req, res, next) => {
   try {
     if (req.body?.consentimento !== true) throw erro('É preciso consentir com o uso dos dados de saúde.', 400, 'CONSENT_REQUIRED');
     const dados = req.body?.data;
@@ -400,7 +402,7 @@ router.post('/recados/lidos', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/perguntas', async (req, res, next) => {
+router.post('/perguntas', validar(S.pergunta), async (req, res, next) => {
   try {
     const text = String(req.body?.text || '').trim();
     if (text.length < 3) throw erro('Escreve a pergunta antes de mandar.');
@@ -420,7 +422,7 @@ router.post('/perguntas', async (req, res, next) => {
 router.get('/notificacoes', async (req, res, next) => {
   try { res.json(await listar(req.user.userId, Math.min(50, parseInt(req.query.limite, 10) || 30))); } catch (e) { next(e); }
 });
-router.post('/notificacoes/lidas', async (req, res, next) => {
+router.post('/notificacoes/lidas', validar(S.notificacoesLidas), async (req, res, next) => {
   try {
     const ids = Array.isArray(req.body?.ids) ? req.body.ids.filter((x) => /^[0-9a-f-]{36}$/i.test(String(x))) : null;
     await marcarLidas(req.user.userId, ids);

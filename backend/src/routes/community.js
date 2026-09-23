@@ -17,6 +17,8 @@
 import { Router } from 'express';
 import { getPool } from '../db.js';
 import { requireAuth, optionalAuth } from '../services/auth.js';
+import { validar } from '../utils/validar.js';
+import * as S from '../schemas/outros.js';
 
 const router = Router();
 
@@ -41,7 +43,7 @@ const REPORT_REASONS = new Set(['ofensivo', 'spam', 'perigoso', 'plagio', 'outro
 // — dá pra reverter no banco se a denúncia for injusta.
 const AUTO_HIDE_REPORTS = 3;
 
-router.post('/recipes', requireAuth, async (req, res, next) => {
+router.post('/recipes', requireAuth, validar(S.receitaComunidade), async (req, res, next) => {
   try {
     const { title, payload, image_data_url: imageDataUrl, source_url: sourceUrl } = req.body || {};
     if (!title?.trim() || !payload || typeof payload !== 'object' || Array.isArray(payload)) {
@@ -146,7 +148,7 @@ router.get('/recipes', optionalAuth, async (req, res, next) => {
   }
 });
 
-router.post('/recipes/:id/rate', requireAuth, async (req, res, next) => {
+router.post('/recipes/:id/rate', requireAuth, validar(S.avaliarReceita), async (req, res, next) => {
   try {
     const { id } = req.params;
     const stars = parseInt(req.body?.stars, 10);
@@ -205,7 +207,7 @@ router.delete('/recipes/:id', requireAuth, async (req, res, next) => {
 
 // Denúncia de conteúdo (App Store 1.2). Idempotente por (receita, denunciante):
 // denunciar duas vezes só atualiza o motivo, não conta dobrado.
-router.post('/recipes/:id/report', requireAuth, async (req, res, next) => {
+router.post('/recipes/:id/report', requireAuth, validar(S.denunciarReceita), async (req, res, next) => {
   try {
     const { id } = req.params;
     const reason = String(req.body?.reason || 'outro');

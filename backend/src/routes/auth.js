@@ -27,6 +27,8 @@ import { criarCodigo, conferirCodigo, emailValido } from '../services/loginPorEm
 import { trocarLink } from '../services/loginPorLink.js';
 import { enviarCodigoLogin } from '../services/email.js';
 import { turnstileLigado, verificarTurnstile } from '../services/turnstile.js';
+import { validar } from '../utils/validar.js';
+import * as S from '../schemas/outros.js';
 
 const router = Router();
 
@@ -58,7 +60,7 @@ function ipExcedeu(ip) {
   return r.n > PEDIDOS_POR_IP_HORA;
 }
 
-router.post('/email/request', async (req, res, next) => {
+router.post('/email/request', validar(S.loginPedirCodigo), async (req, res, next) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase();
     if (!emailValido(email)) {
@@ -92,7 +94,7 @@ router.post('/email/request', async (req, res, next) => {
 // POST /auth/link — link mágico mandado pela Luna no WhatsApp (uso único,
 // 10 min). A página troca o token por sessão só depois de um toque em
 // "Entrar", por isso é POST: prévia de link (GET) não consome o acesso.
-router.post('/link', async (req, res, next) => {
+router.post('/link', validar(S.loginPorLink), async (req, res, next) => {
   try {
     if (ipExcedeu(req.ip)) {
       return res.status(429).json({ error: 'Muitos pedidos. Tente mais tarde.', code: 'RATE_LIMITED' });
@@ -114,7 +116,7 @@ router.post('/link', async (req, res, next) => {
   }
 });
 
-router.post('/email/verify', async (req, res, next) => {
+router.post('/email/verify', validar(S.loginConferirCodigo), async (req, res, next) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase();
     if (!emailValido(email)) {
@@ -150,7 +152,7 @@ router.post('/email/verify', async (req, res, next) => {
   }
 });
 
-router.post('/social', async (req, res, next) => {
+router.post('/social', validar(S.loginSocial), async (req, res, next) => {
   try {
     const { provider, identity_token: identityToken, display_name: displayName, device_id: deviceId } = req.body || {};
     if (!provider || !identityToken) {

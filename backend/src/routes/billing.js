@@ -13,6 +13,8 @@
 import { Router } from 'express';
 import { requireAuth } from '../services/auth.js';
 import { temAcesso, resgatarCodigo } from '../services/billing.js';
+import { validar } from '../utils/validar.js';
+import * as S from '../schemas/outros.js';
 
 const router = Router();
 
@@ -42,7 +44,7 @@ function excedeuTentativas(userId) {
   return registro.n > TENTATIVAS_MAX;
 }
 
-router.post('/redeem', requireAuth, async (req, res, next) => {
+router.post('/redeem', requireAuth, validar(S.resgatarCodigo), async (req, res, next) => {
   try {
     if (excedeuTentativas(req.user.userId)) {
       return res.status(429).json({
