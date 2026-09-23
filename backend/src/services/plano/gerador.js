@@ -110,6 +110,19 @@ export function pedidosDe(texto) {
 const pedidoVale = (p, slot, wd) => (!p.slots || p.slots.includes(slot)) && (!p.dias || wd == null || p.dias.includes(wd));
 const pedidoBate = (p, texto) => p.termos.filter((t) => texto.includes(t)).length;
 
+/**
+ * "Não abro mão" é REGRA, não bônus (decisão do Raphael, 23/09): se um pedido
+ * vale pra esta refeição/dia e existe receita permitida com todos os termos,
+ * só essas entram na escolha, mesmo repetindo na semana. Sem receita que
+ * case, cai na lista inteira. Mesma regra do lib/gerarPlano.ts da web.
+ */
+export function soComPedidos(cands, slot, wd, pedidos) {
+  const valem = pedidos.filter((p) => pedidoVale(p, slot, wd));
+  if (!valem.length) return cands;
+  const casam = cands.filter((r) => { const t = textoDa(r); return valem.some((p) => pedidoBate(p, t) === p.termos.length); });
+  return casam.length ? casam : cands;
+}
+
 function ajustePedidos(r, slot, wd, pedidos) {
   if (!pedidos.length) return 0;
   const t = textoDa(r); let a = 0;
@@ -189,7 +202,7 @@ export function gerarRascunho(op) {
     const meals = [];
     for (const slot of slots) {
       const alvo = alvoDoSlot(op.alvo, slots, slot, []);
-      const cands = pool[slot];
+      const cands = soComPedidos(pool[slot], slot, wd, pedidos);
       const melhor = cands.length && alvo.kcal >= 80 ? escolher(cands, alvo, { slot, wd, pedidos, usadas, rnd }) : null;
       if (!melhor) continue;
       usadas.set(melhor.r.id, (usadas.get(melhor.r.id) || 0) + 1);
