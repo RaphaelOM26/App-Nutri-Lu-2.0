@@ -40,6 +40,7 @@ import { gerarPdfLista, nomeDoArquivo } from '../plano/listaPdf.js';
 import { criarLink } from '../loginPorLink.js';
 import { conversar, bonito } from './conversa.js';
 import { PRATICA_POR_CODIGO } from '../plano/receitas.js';
+import { perguntasAposFoto, refeicaoDoPlanoDe, aplicarPlano, itensComTroca, atualizarRegistro, pistasDaPaciente, guardarCorrecao, medidaDe, membroDoPar } from './confirmacao.js';
 
 const MEMBROS = (process.env.MEMBROS_URL || 'https://nutrilualves.com.br/membros').replace(/\/$/, '');
 const ROTULO = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã', almoco: 'Almoço', lanche_tarde: 'Lanche da tarde', jantar: 'Jantar', ceia: 'Ceia' };
@@ -261,6 +262,9 @@ async function tratarBotao(contato, acao, msg) {
   if (tipo === 'lista' && a === 'geral') return perguntarLista(contato, b || null);
   if (tipo === 'lista' && ['web', 'pdf', 'chat', 'dia'].includes(a)) return entregarLista(contato, a, b || null);
   if (tipo === 'mat' && uuid(a)) return mandarMaterial(contato, a);
+  // Confirmação da foto (25/09): porção contra o plano, e ingrediente em dúvida.
+  if (tipo === 'plano' && uuid(a) && ['menos', 'igual', 'mais'].includes(b)) return ajustarPeloPlano(contato, a, b);
+  if (tipo === 'ing' && uuid(a)) { const [, , idx, slug] = String(acao).split(':'); return confirmarIngrediente(contato, a, Number(idx), slug); }
   await mandar(contato, { texto: `Esse botão não vale mais. 😊\n\n${MENU}` });
 }
 
@@ -321,8 +325,10 @@ async function pegarFoto(contato, mensagemId) {
   const { rows } = await getPool().query(
     `UPDATE whatsapp_mensagens SET status = 'processada'
       WHERE id = $1 AND contato_id = $2 AND direcao = 'in' AND media_key IS NOT NULL AND status = 'recebida'
-      RETURNING media_key, media_mime, criado_em`, [mensagemId, contato.id]);
-  return rows[0] || null;
+      RETURNING media_key, media_mime, criado_em, texto`, [mensagemId, contato.id]);
+  if (!rows[0]) return null;
+  // A legenda ficou gravada como "[foto] legenda": vira pista pra IA.
+  return { ...rows[0], legenda: String(rows[0].texto || '').replace(/^\[foto\]\s*/, '').trim() };
 }
 
 async function registrarFoto(contato, mensagemId, { msg, slot } = {}) {
@@ -335,8 +341,13 @@ async function registrarFoto(contato, mensagemId, { msg, slot } = {}) {
     }
     await marcarLida(msg?.id, true);
     const buffer = await ler(foto.media_key);
+    // Pistas: a legenda ("almoço: arroz, frango e abóbora") e o que ela já
+    // corrigiu em fotos anteriores. Valem mais que a impressão visual.
+    const pistas = [];
+    if (foto.legenda) pistas.push(`Legenda da foto: "${foto.legenda.slice(0, 160)}"`);
+    pistas.push(...await pistasDaPaciente(contato.user_id));
     const analise = await comContextoDeUso({ rota: '/whatsapp/foto', userId: contato.user_id }, () =>
-      analisarPrato(`data:${foto.media_mime || 'image/jpeg'};base64,${buffer.toString('base64')}`));
+      analisarPrato(`data:${foto.media_mime || 'image/jpeg'};base64,${buffer.toString('base64')}`, { pistas }));
     const itensIA = itensDoDiario(analise.items);
     if (!itensIA.length) {
       return mandar(contato, { texto: 'Não consegui identificar comida nessa foto. 🤔 Tenta outra, de cima e com o prato inteiro aparecendo. Se era foto de evolução, manda de novo e escolhe *Evolução*.' });
@@ -344,6 +355,7 @@ async function registrarFoto(contato, mensagemId, { msg, slot } = {}) {
     const quando = new Date(foto.criado_em);
     const entry = await gravarRefeicao(contato.user_id, { quando, slot: slot || slotPelaHora(quando), itens: itensIA, photoKey: foto.media_key, confidence: analise.confidence, nota: 'foto pelo WhatsApp' });
     await confirmarRegistro(contato, entry, analise.confidence === 'low');
+    await perguntarSePrecisar(contato, entry, analise.confidence);
   } catch (e) {
     // Devolve a foto pra "recebida": a nova tentativa da fila precisa achá-la.
     await getPool().query(`UPDATE whatsapp_mensagens SET status = 'recebida' WHERE id = $1`, [mensagemId]).catch(() => {});
@@ -369,17 +381,131 @@ async function gravarRefeicao(userId, { quando, slot, itens, photoKey, confidenc
   return rows[0];
 }
 
+/** "Dia: 1.240 de 1.600 kcal (faltam 360)": a linha que fecha toda mensagem de registro. */
+async function linhaDoDia(userId, date) {
+  const dia = await montarDia(userId, date);
+  const meta = dia.targets?.kcal;
+  return meta ? `Dia: ${n0(dia.consumido.kcal)} de ${n0(meta)} kcal${meta > dia.consumido.kcal ? ` (faltam ${n0(meta - dia.consumido.kcal)})` : ' ✅'}` : `Dia até agora: ${n0(dia.consumido.kcal)} kcal`;
+}
+
 // Padrão de mensagem "registro" (23/09): título curto, um item por linha com
 // porção e kcal, totais numa linha, e o dia numa linha. Sem repetir rótulo.
+// A porção sai em MEDIDA CASEIRA ("2 colheres de servir"), nunca em gramas:
+// é o que a paciente reconhece no prato e consegue corrigir (25/09).
 async function confirmarRegistro(contato, entry, poucaConfianca) {
-  const dia = await montarDia(contato.user_id, entry.date);
-  const itens = entry.items.map((i) => `• ${bonito(i.name)}${i.portion ? `, ${i.portion}` : ''} · ${n0(i.kcal)} kcal`).join('\n');
-  const meta = dia.targets?.kcal;
-  const total = meta ? `Dia: ${n0(dia.consumido.kcal)} de ${n0(meta)} kcal${meta > dia.consumido.kcal ? ` (faltam ${n0(meta - dia.consumido.kcal)})` : ' ✅'}` : `Dia até agora: ${n0(dia.consumido.kcal)} kcal`;
+  const itens = entry.items.map((i) => { const m = medidaDe(i); return `• ${bonito(i.name)}${m ? `, ${m}` : ''} · ${n0(i.kcal)} kcal`; }).join('\n');
   await mandar(contato, {
-    texto: `*${ROTULO[entry.slot]} registrado* ✅\n${itens}\n\n*${n0(entry.kcal)} kcal* · P ${n0(entry.p)} · C ${n0(entry.c)} · G ${n0(entry.f)}\n${total}${poucaConfianca ? '\n\n_Estimativa com pouca confiança: dá pra ajustar as porções em Meu plano._' : ''}`,
+    texto: `*${ROTULO[entry.slot]} registrado* ✅\n${itens}\n\n*${n0(entry.kcal)} kcal* · P ${n0(entry.p)} · C ${n0(entry.c)} · G ${n0(entry.f)}\n${await linhaDoDia(contato.user_id, entry.date)}${poucaConfianca ? '\n\n_Se algo estiver diferente, me diz (tipo "eram 3 colheres de arroz") que eu corrijo._' : ''}`,
     botoes: [{ id: `slot:${entry.id}`, titulo: 'Mudar refeição' }, { id: `del:${entry.id}`, titulo: 'Apagar' }],
   });
+}
+
+const ARTIGO = { ceia: 'a' };
+const artigoDe = (slot) => ARTIGO[slot] || 'o';
+
+/**
+ * Depois do registro pela foto: UMA pergunta, só quando há sinal (ver
+ * confirmacao.js). Silêncio dela = está certo; o registro já existe.
+ */
+async function perguntarSePrecisar(contato, entry, confidence) {
+  const refeicaoDoPlano = await refeicaoDoPlanoDe(contato.user_id, entry.date, entry.slot);
+  const q = perguntasAposFoto({ itens: entry.items, confidence, refeicaoDoPlano, kcal: Number(entry.kcal) });
+  if (q.ingrediente) {
+    const { idx, par, atual } = q.ingrediente;
+    const este = par[atual], outro = par[atual === 'a' ? 'b' : 'a'];
+    return mandar(contato, {
+      texto: `Só confirma uma coisa: isso é *${este.nome.toLowerCase()}* ou *${outro.nome.toLowerCase()}*?`,
+      botoes: [{ id: `ing:${entry.id}:${idx}:${este.slug}`, titulo: este.nome }, { id: `ing:${entry.id}:${idx}:${outro.slug}`, titulo: outro.nome }],
+    });
+  }
+  if (q.plano) {
+    const m = q.plano.meal;
+    const quando = entry.date === dataBR() ? 'de hoje' : `de ${dataCurta(entry.date)}`;
+    return mandar(contato, {
+      texto: `No plano, ${artigoDe(entry.slot)} ${ROTULO[entry.slot].toLowerCase()} ${quando} era *${bonito(m.name)}* (${n0(m.kcal)} kcal). Pela foto ficou ${q.plano.direcao} disso. Se foi o do plano, me diz quanto:`,
+      botoes: [{ id: `plano:${entry.id}:menos`, titulo: 'Menos que o plano' }, { id: `plano:${entry.id}:igual`, titulo: 'Igual ao plano' }, { id: `plano:${entry.id}:mais`, titulo: 'Mais que o plano' }],
+    });
+  }
+}
+
+async function registroDela(contato, entryId) {
+  const { rows } = await getPool().query(`SELECT id, date, slot, items, kcal FROM meal_entries WHERE id = $1 AND user_id = $2`, [entryId, contato.user_id]);
+  return rows[0] || null;
+}
+
+/** Botão "menos / igual / mais que o plano". */
+async function ajustarPeloPlano(contato, entryId, escolha) {
+  const e = await registroDela(contato, entryId);
+  if (!e) return mandar(contato, { texto: 'Não achei mais esse registro. Ele pode ter sido apagado.' });
+  const meal = await refeicaoDoPlanoDe(contato.user_id, e.date, e.slot);
+  if (!meal) return mandar(contato, { texto: 'Não achei essa refeição no plano, então deixei o registro como estava. 😊' });
+  const novo = await atualizarRegistro(e.id, contato.user_id, aplicarPlano(meal, escolha, e.items), `ajustado pelo plano (${escolha})`);
+  const frase = escolha === 'igual' ? 'Ajustei pelo plano' : escolha === 'mais' ? 'Ajustei: um pouco mais que o plano' : 'Ajustei: um pouco menos que o plano';
+  await mandar(contato, { texto: `${frase}: *${n0(novo.kcal)} kcal*. ✅\n${await linhaDoDia(contato.user_id, novo.date)}` }, { autor: 'sistema' });
+}
+
+/** Botão "abóbora / batata-doce": troca o ingrediente e recalcula pelas gramas. */
+async function confirmarIngrediente(contato, entryId, idx, slug) {
+  const membro = membroDoPar(slug);
+  const e = await registroDela(contato, entryId);
+  if (!membro || !e) return mandar(contato, { texto: 'Não achei mais esse registro. Ele pode ter sido apagado.' });
+  const antes = e.items[idx];
+  if (!antes) return mandar(contato, { texto: 'Não achei mais esse item no registro.' });
+  if (membro.re.test(norm(antes.name))) return mandar(contato, { texto: 'Fechou, era isso mesmo. ✅' }, { autor: 'sistema' });
+  const novo = await atualizarRegistro(e.id, contato.user_id, itensComTroca(e.items, idx, membro), `ingrediente confirmado: ${membro.nome}`);
+  await guardarCorrecao(contato.user_id, { tipo: 'nome', item: antes.name, de: antes.name, para: membro.nome });
+  const it = novo.items[idx];
+  const m = medidaDe(it);
+  await mandar(contato, { texto: `Troquei pra *${membro.nome.toLowerCase()}*${m ? `, ${m}` : ''} · ${n0(it.kcal)} kcal. ${ROTULO[novo.slot]} agora: *${n0(novo.kcal)} kcal*. ✅` }, { autor: 'sistema' });
+}
+
+/**
+ * Correção por texto, vinda da conversa ("eram 3 colheres de arroz", "era
+ * batata-doce, não abóbora"). Age no último registro dela (até 8 h atrás).
+ * Nome novo de um par conhecido recalcula pela tabela; fora do par, ou
+ * porção nova, a IA de texto (a mesma do áudio) estima as gramas e os macros.
+ */
+async function corrigirUltimaRefeicao(contato, { item, novo_nome, quantidade } = {}) {
+  const { rows: [e] } = await getPool().query(
+    `SELECT id, date, slot, items, kcal FROM meal_entries WHERE user_id = $1 AND logged_at > NOW() - interval '8 hours' ORDER BY logged_at DESC LIMIT 1`, [contato.user_id]);
+  if (!e) return mandar(contato, { texto: 'Não achei um registro recente pra corrigir. Manda a foto de novo, ou me conta o que comeu que eu registro.' });
+  const alvo = norm(item || '');
+  let idx = alvo ? e.items.findIndex((i) => norm(i.name).includes(alvo) || alvo.includes(norm(i.name))) : -1;
+  if (idx < 0 && alvo) {
+    const palavras = alvo.split(' ').filter((w) => w.length > 3);
+    idx = e.items.findIndex((i) => palavras.some((w) => norm(i.name).includes(w)));
+  }
+  if (idx < 0 && e.items.length === 1) idx = 0;
+  if (idx < 0) return mandar(contato, { texto: `Não achei "${item}" no último registro (${e.items.map((i) => bonito(i.name)).join(', ')}). Qual deles você quer corrigir?` });
+  const antes = e.items[idx];
+  const itens = e.items.map((i) => ({ ...i }));
+  const nomeNovo = String(novo_nome || '').trim().slice(0, 80);
+  const qtd = String(quantidade || '').trim().slice(0, 60);
+  if (!nomeNovo && !qtd) return mandar(contato, { texto: `O que eu corrijo em ${bonito(antes.name)}: a quantidade ou o alimento?` });
+
+  if (nomeNovo) {
+    const membro = membroDoPar(nomeNovo);
+    if (membro && Number(antes.grams) > 0) itens[idx] = itensComTroca(itens, idx, membro)[idx];
+    else {
+      const r = await comContextoDeUso({ rota: '/whatsapp/chat', userId: contato.user_id }, () => estruturarRefeicaoFalada(`${qtd ? `${qtd} de ` : Number(antes.grams) > 0 ? `${Math.round(antes.grams)} g de ` : ''}${nomeNovo}`));
+      const it0 = itensDoDiario(r.items)[0];
+      if (!it0) return mandar(contato, { texto: `Não consegui entender "${nomeNovo}". Me diz de outro jeito?` });
+      itens[idx] = { ...antes, name: it0.name, ...(qtd ? { grams: it0.grams, portion: it0.portion, medida: qtd } : {}), kcal: it0.kcal, p: it0.p, c: it0.c, f: it0.f };
+    }
+  }
+  if (qtd && !(nomeNovo && !membroDoPar(nomeNovo))) {
+    const r = await comContextoDeUso({ rota: '/whatsapp/chat', userId: contato.user_id }, () => estruturarRefeicaoFalada(`${qtd} de ${itens[idx].name}`));
+    const it0 = itensDoDiario(r.items)[0];
+    if (!it0 || !(it0.grams > 0)) return mandar(contato, { texto: `Não consegui entender a quantidade "${qtd}". Me diz de outro jeito, tipo "3 colheres de servir"?` });
+    itens[idx] = { ...itens[idx], grams: it0.grams, portion: it0.portion, medida: qtd, kcal: it0.kcal, p: it0.p, c: it0.c, f: it0.f };
+  }
+  const novo = await atualizarRegistro(e.id, contato.user_id, itens, `corrigido: ${[nomeNovo, qtd].filter(Boolean).join(', ')}`);
+  await guardarCorrecao(contato.user_id, nomeNovo
+    ? { tipo: 'nome', item: antes.name, de: antes.name, para: itens[idx].name }
+    : { tipo: 'porcao', item: antes.name, de: medidaDe(antes), para: qtd });
+  const it = novo.items[idx];
+  const m = medidaDe(it);
+  await mandar(contato, { texto: `Corrigi: ${bonito(it.name)}${m ? `, ${m}` : ''} · ${n0(it.kcal)} kcal. ${ROTULO[novo.slot]} agora: *${n0(novo.kcal)} kcal*. ✅\n${await linhaDoDia(contato.user_id, novo.date)}` }, { autor: 'sistema' });
 }
 
 /** Refeição contada em TEXTO ("comi 2 ovos e um pão"): a mesma IA do áudio estrutura os itens. */
@@ -706,6 +832,7 @@ async function conversarComLuna(contato, texto, msg) {
   const acoes = {
     registrar_peso: ({ kg }) => registrarPeso(contato, Number(String(kg).replace(',', '.'))),
     registrar_refeicao: ({ descricao, refeicao }) => registrarRefeicaoTexto(contato, descricao, refeicao),
+    corrigir_refeicao: (args) => corrigirUltimaRefeicao(contato, args || {}),
     resumo_do_dia: () => resumoDoDia(contato),
     plano_do_dia: ({ dia, so_agora, refeicoes }) => planoDoDia(contato, dia === 'amanha' ? 1 : 0, so_agora === true, Array.isArray(refeicoes) ? refeicoes : null),
     receita: (args) => mandarReceita(contato, args || {}),

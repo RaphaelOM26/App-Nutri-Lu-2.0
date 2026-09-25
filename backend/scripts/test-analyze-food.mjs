@@ -121,7 +121,7 @@ async function main() {
       console.log(`   escala: ${r.scale_reference || '—'}`);
       for (const it of itens) {
         const u = it.unit_count != null ? `${it.unit_count} un · ` : '';
-        console.log(`   • ${it.name}: ${u}${Math.round(it.portion_grams)}g · ${Math.round(it.kcal)}kcal  ⟨${it.size_estimate || ''}⟩`);
+        console.log(`   • ${it.name}: ${u}${Math.round(it.portion_grams)}g${it.medida_caseira ? ` (${it.medida_caseira})` : ''} · ${Math.round(it.kcal)}kcal  ⟨${it.size_estimate || ''}⟩`);
       }
       console.log(`   TOTAL: ${Math.round(gramsTotal)}g · ${Math.round(r.total?.kcal || 0)}kcal · confiança ${r.confidence} · ${(ms / 1000).toFixed(1)}s · tokens ${tokens.in}+${tokens.out}${tokens.reasoning ? ` (${tokens.reasoning} raciocínio)` : ''}`);
 

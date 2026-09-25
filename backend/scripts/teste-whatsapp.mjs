@@ -284,6 +284,43 @@ try {
   await chamar(tCli, 'GET', '/me/lista-compras?week_start=2030-01-07', undefined, 404);
   await chamar(tCli, 'POST', '/me/lista-compras/whatsapp', { week_start: ws }, 404);
 
+  // 10c. Confirmação da foto (25/09), sem IA: o registro nasce como se viesse
+  // da foto (itens com medida caseira) e os botões ajustam pelo plano ou
+  // trocam o ingrediente. A decisão "perguntar ou não" está em
+  // scripts/teste-confirmacao.mjs (função pura).
+  const hojeBR = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const wdHoje = new Date(`${hojeBR}T12:00:00Z`).getUTCDay() || 7;
+  const almocoPlano = { slot: 'almoco', time: '12:30', name: 'FRANGO GRELHADO COM ARROZ E ABÓBORA', code: 'PR-010', items: [{ name: 'FRANGO GRELHADO COM ARROZ E ABÓBORA', portion: '1 porção', code: 'PR-010', kcal: 520, p: 40, c: 50, f: 15 }], kcal: 520, p: 40, c: 50, f: 15 };
+  const diasComAlmoco = diasLista.map((d) => (d.weekday === wdHoje ? { ...d, meals: [...d.meals, almocoPlano] } : d));
+  await pool.query(`UPDATE meal_plans SET days = $3 WHERE user_id = $1 AND week_start = $2`, [cli.user.id, ws, JSON.stringify(diasComAlmoco)]);
+  const criado = await chamar(tCli, 'POST', '/me/refeicoes', { date: hojeBR, slot: 'almoco', source: 'whatsapp', items: [
+    { name: 'Arroz branco cozido', portion: '150 g', grams: 150, medida: '2 colheres de servir', kcal: 190, p: 4, c: 42, f: 0.4 },
+    { name: 'Batata-doce assada', portion: '120 g', grams: 120, medida: '3 pedaços', kcal: 92, p: 1.5, c: 22, f: 0.1 },
+  ] }, 201);
+  const regId = criado.entry?.id;
+  check(Boolean(regId) && criado.entry.items[0].medida === '2 colheres de servir', 'item registrado guarda a medida caseira ao lado das gramas');
+  await botao(WA, `ing:${regId}:1:abobora`, 'Abóbora');
+  const { rows: [aposIng] } = await pool.query(`SELECT items, kcal FROM meal_entries WHERE id = $1`, [regId]);
+  check(aposIng.items[1].name === 'Abóbora' && Math.round(Number(aposIng.items[1].kcal)) === 58 && aposIng.items[1].medida === '3 pedaços' && Math.round(Number(aposIng.kcal)) === 248, 'botão "Abóbora" troca o ingrediente e recalcula pelas gramas (120 g × 48 kcal/100 g = 58), mantendo a medida caseira');
+  check(/Troquei pra \*abóbora\*, 3 pedaços · 58 kcal\. Almoço agora: \*248 kcal\*/.test((await ultima(WA)).texto), 'resposta da troca em medida caseira, sem gramas');
+  const { rows: [memoria] } = await pool.query(`SELECT data->'correcoes_foto' AS c FROM client_profiles WHERE user_id = $1`, [cli.user.id]);
+  check(Array.isArray(memoria.c) && memoria.c.length === 1 && memoria.c[0].tipo === 'nome' && memoria.c[0].para === 'Abóbora', 'a correção vira memória da paciente (correcoes_foto)');
+  await botao(WA, `ing:${regId}:1:abobora`, 'Abóbora');
+  check(/era isso mesmo/.test((await ultima(WA)).texto), 'confirmar o que já está registrado não muda nada');
+  await botao(WA, `plano:${regId}:igual`, 'Igual ao plano');
+  const { rows: [aposIgual] } = await pool.query(`SELECT items, kcal FROM meal_entries WHERE id = $1`, [regId]);
+  check(Math.round(Number(aposIgual.kcal)) === 520 && aposIgual.items.length === 1 && aposIgual.items[0].code === 'PR-010', '"Igual ao plano" → o registro vira a refeição do plano (com o código da receita)');
+  check(/Ajustei pelo plano: \*520 kcal\*/.test((await ultima(WA)).texto) && /Dia: /.test((await ultima(WA)).texto), 'resposta do ajuste traz o total e a linha do dia');
+  await botao(WA, `plano:${regId}:mais`, 'Mais que o plano');
+  const { rows: [aposMais] } = await pool.query(`SELECT items, kcal FROM meal_entries WHERE id = $1`, [regId]);
+  check(Math.round(Number(aposMais.kcal)) === 650 && /1¼ porção/.test(aposMais.items[0].portion), '"Mais que o plano" (registro não apontava pra mais) → plano × 1,25');
+  await botao(WA, `plano:${regId}:menos`, 'Menos que o plano');
+  const { rows: [aposMenos] } = await pool.query(`SELECT kcal FROM meal_entries WHERE id = $1`, [regId]);
+  check(Math.round(Number(aposMenos.kcal)) === 390, '"Menos que o plano" → plano × 0,75');
+  await botao(WA, `plano:00000000-0000-0000-0000-000000000000:igual`, 'Igual ao plano');
+  check(/Não achei mais esse registro/.test((await ultima(WA)).texto), 'botão de registro que não é dela (ou sumiu) não mexe em nada');
+  await chamar(tCli, 'DELETE', `/me/refeicoes/${regId}`);
+
   // 11. Com IA de verdade
   if (COM_IA) {
     console.log('\n— Com IA (foto real de scripts/food-test)\n');
@@ -294,10 +331,20 @@ try {
     await botao(WA, `foto:r:${foto.id}`, 'Refeição');
     const { rows: [ref] } = await pool.query(`SELECT e.id, e.slot, e.kcal, e.source, e.photo_key, jsonb_array_length(e.items) AS itens FROM meal_entries e JOIN users u ON u.id = e.user_id WHERE u.email = $1 ORDER BY e.created_at DESC LIMIT 1`, [CLIENTE]);
     check(ref?.source === 'whatsapp' && Number(ref.kcal) > 50 && ref.itens > 0 && ref.photo_key, `foto → IA → diário (${ref?.itens} itens, ${Math.round(ref?.kcal)} kcal, em ${ref?.slot})`);
-    check(/Registrei no/.test((await ultima(WA)).texto), 'confirmação com itens, total do dia e botões');
+    // A confirmação pode vir seguida de UMA pergunta (ingrediente ou plano): procura a de registro.
+    const confirmacao = (await saidas(WA, 3)).find((m) => /registrado\* ✅/.test(m.texto));
+    check(Boolean(confirmacao) && !/\d+ g\b/.test(confirmacao.texto.split('\n\n')[0]), 'confirmação com itens em medida caseira (sem gramas), total do dia e botões');
     await botao(WA, `foto:r:${foto.id}`, 'Refeição');
     const { rows: [qt] } = await pool.query(`SELECT COUNT(*)::int AS n FROM meal_entries e JOIN users u ON u.id = e.user_id WHERE u.email = $1`, [CLIENTE]);
     check(qt.n === 1, 'toque duplo no botão não registra a refeição duas vezes');
+    // Correção por texto: a conversa chama corrigir_refeicao e a porção vira a medida dela.
+    await texto(WA, 'na verdade o arroz eram 3 colheres de servir');
+    const { rows: [corr] } = await pool.query(`SELECT items, note FROM meal_entries WHERE id = $1`, [ref.id]);
+    const arrozCorr = (corr?.items || []).find((i) => /arroz/i.test(i.name));
+    check(Boolean(arrozCorr) && /3 colheres/.test(arrozCorr.medida || '') && /corrigido/.test(corr.note || ''), `"eram 3 colheres de servir" → item corrigido (${arrozCorr ? `${arrozCorr.medida}, ${Math.round(arrozCorr.grams)} g` : 'não achou arroz'})`);
+    check(/Corrigi: /.test((await ultima(WA)).texto), 'resposta "Corrigi: …" com o novo total');
+    const { rows: [memCorr] } = await pool.query(`SELECT data->'correcoes_foto' AS c FROM client_profiles WHERE user_id = $1`, [cli.user.id]);
+    check(Array.isArray(memCorr.c) && memCorr.c.some((c) => c.tipo === 'porcao' && /3 colheres/.test(c.para)), 'a correção de porção também vira memória');
     await botao(WA, `slotset:${ref.id}:jantar`, 'Jantar');
     const { rows: [mud] } = await pool.query(`SELECT slot FROM meal_entries WHERE id = $1`, [ref.id]);
     check(mud.slot === 'jantar', 'botão "Mudar refeição" troca o slot');

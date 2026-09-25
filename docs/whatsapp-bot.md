@@ -41,7 +41,7 @@ acompanhamento").
 | Ela manda | O que acontece | Custa IA? |
 |---|---|---|
 | Código de vínculo | O número fica ligado à conta; a Luna dá as boas-vindas | não |
-| Foto | Pergunta "Refeição ou Evolução?" **antes de qualquer IA**. Refeição → IA → diário (com botões pra mudar de refeição ou apagar). Evolução → guarda em Evolução, sem IA | só refeição |
+| Foto | Pergunta "Refeição ou Evolução?" **antes de qualquer IA**. Refeição → IA → diário (com botões pra mudar de refeição ou apagar), porções em **medida caseira**; depois, se houver sinal, UMA pergunta de confirmação (ver "Confirmação da foto"). Evolução → guarda em Evolução, sem IA | só refeição |
 | Áudio | Transcreve. Se descreve comida, registra; se é pergunta, segue como texto | sim |
 | `macros` | Resumo do dia contra a meta | não |
 | `o que como hoje` / `amanhã` | O plano do dia, com as trocas | não |
@@ -80,6 +80,31 @@ inativo). Confirmação curta de um toque ("Feito! Passei pra Almoço ✅") NÃO
 leva nome: repetir em toda mensagem soa disparo automático, que é o que faz
 gente denunciar o número. A regra está no `SYSTEM_PROMPT` da Luna, então vale
 igual na web e aqui.
+
+## Confirmação da foto (25/09/2026)
+
+Medição de 25/09 (12 fotos pesadas, 2 rodadas): o modelo identifica bem
+(93–95% dos itens) e erra a **quantidade** (erro por item de 24% no gpt-5.4,
+41% no mini). A paciente não pesa comida, então a Luna **nunca pergunta em
+gramas**. O registro nasce na hora, e o código (`services/whatsapp/confirmacao.js`)
+decide se vale UMA pergunta:
+
+| Sinal | Pergunta | Resposta vira |
+|---|---|---|
+| Item de um par que a foto confunde (abóbora × batata-doce, batata × mandioca, frango × carne desfiada) **e** confiança baixa, nome hesitante ("abóbora/batata-doce") ou o plano daquele horário tem o outro lado | "Isso é *abóbora* ou *batata-doce*?" (2 botões) | troca o ingrediente e recalcula pelas gramas (tabela por 100 g) |
+| Refeição da foto difere >25% da refeição do **plano** naquele horário | "No plano, o almoço de hoje era X (520 kcal). Pela foto ficou abaixo. Se foi o do plano, me diz quanto:" (Menos / Igual / Mais que o plano) | igual → itens do plano; mais/menos → a foto, se ela já apontava pra esse lado; senão o plano × 1,25 / × 0,75 |
+| Nenhum | nada (silêncio = está certo) | — |
+
+- A porção sai como o modelo devolve em `medida_caseira` ("2 colheres de
+  servir"); as gramas ficam em `grams`/`portion` pra área de membros.
+- **Correção por texto** ("eram 3 colheres de arroz", "era batata-doce"): a
+  conversa chama `corrigir_refeicao`, que age no último registro (até 8 h).
+  Par conhecido recalcula pela tabela; o resto passa pela IA de texto do áudio.
+- **Memória**: cada correção entra em `client_profiles.data.correcoes_foto`
+  (até 20) e vira "Pistas da pessoa" nas próximas fotos dela, junto com a
+  legenda da foto. Só comida; nunca dado clínico.
+- A taxa de correção é a métrica de precisão real em produção: se cair com o
+  tempo, a foto está melhorando sem ninguém pesar prato.
 
 ## Lista de compras
 

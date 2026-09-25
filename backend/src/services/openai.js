@@ -115,9 +115,16 @@ export const FOOD_ANALYSIS_SCHEMA = {
         items: {
           type: 'object',
           additionalProperties: false,
-          required: ['name', 'size_estimate', 'unit_count', 'portion_grams', 'kcal', 'protein_g', 'carbs_g', 'fat_g'],
+          required: ['name', 'size_estimate', 'unit_count', 'medida_caseira', 'portion_grams', 'kcal', 'protein_g', 'carbs_g', 'fat_g'],
           properties: {
             name: { type: 'string', description: 'Nome do alimento em PT-BR.' },
+            // A paciente não pesa comida: é com ISTO que a Luna confirma a porção
+            // no WhatsApp ("2 colheres de servir"), nunca com gramas.
+            medida_caseira: {
+              type: 'string',
+              description:
+                'A porção como a nutricionista fala com a paciente, em PT-BR, no máximo 4 palavras, SEM gramas: "2 colheres de servir", "1 concha", "1 filé pequeno", "3 pedaços", "1 fatia", "2 unidades", "1 xícara", "meia porção". Coerente com portion_grams e com a calibração.',
+            },
             size_estimate: {
               type: 'string',
               description:
@@ -317,6 +324,10 @@ PROTOCOLO OBRIGATÓRIO do campo "scale_reference" (preencha nesta ordem, como um
    Os portion_grams dos itens devem ser consistentes com o VEREDITO, não com o número que for mais cômodo.
 
 6) MACROS — calcule a partir do valor por 100 g do alimento × (portion_grams / 100). Nunca invente macro sem passar pela gramatura.
+
+7) MEDIDA CASEIRA — em "medida_caseira", traduza a porção pra medida que a pessoa reconhece no próprio prato (colher de servir, concha, filé, fatia, unidade, pedaço, xícara, punhado), coerente com as gramas: 2 colheres de servir de arroz ≈ 120–160 g; 1 concha de feijão ≈ 130 g; 1 filé médio ≈ 120 g.
+
+PISTAS DA PESSOA — se o pedido trouxer "Pistas da pessoa", são fatos sobre este prato ou sobre como ela costuma comer (o que ela disse na legenda, correções que já fez antes). Valem MAIS do que a sua impressão visual pra identificar o alimento e pra calibrar a porção; mas nunca acrescente um item que não esteja visível na foto só porque a pista citou.
 
 CALIBRAÇÃO de pesos típicos (âncoras):
 - Arroz cozido: 1 colher de servir ≈ 60–80 g; monte de 1/4 do prato raso ≈ 100–150 g; metade de prato bem cheio ≈ 200 g.

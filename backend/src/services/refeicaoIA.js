@@ -8,8 +8,16 @@ import { sanitizeText } from '../utils/recipeSanity.js';
 
 const erroIA = () => Object.assign(new Error('Resposta vazia da IA.'), { status: 502, code: 'AI_EMPTY_RESPONSE' });
 
-/** @param {string} dataUrl  imagem como data URL (data:image/jpeg;base64,...) */
-export async function analisarPrato(dataUrl) {
+/**
+ * @param {string} dataUrl  imagem como data URL (data:image/jpeg;base64,...)
+ * @param {{ pistas?: string[] }} [opts]  frases sobre ESTE prato ou sobre a
+ *   pessoa (legenda da foto, correções que ela já fez): entram como "Pistas da
+ *   pessoa" e valem mais que a impressão visual. Nunca dado clínico.
+ */
+export async function analisarPrato(dataUrl, { pistas = [] } = {}) {
+  const limpas = (Array.isArray(pistas) ? pistas : []).map((p) => sanitizeText(String(p || '')).trim().slice(0, 200)).filter(Boolean).slice(0, 8);
+  const texto = 'Identifique os alimentos neste prato e estime os macros conforme o schema.'
+    + (limpas.length ? `\n\nPistas da pessoa:\n${limpas.map((p) => `- ${p}`).join('\n')}` : '');
   const completion = await openai.chat.completions.create({
     model: FOOD_MODEL,
     messages: [
@@ -17,7 +25,7 @@ export async function analisarPrato(dataUrl) {
       {
         role: 'user',
         content: [
-          { type: 'text', text: 'Identifique os alimentos neste prato e estime os macros conforme o schema.' },
+          { type: 'text', text: texto },
           { type: 'image_url', image_url: { url: dataUrl } },
         ],
       },
@@ -67,10 +75,16 @@ export function itensDoDiario(itensIA) {
   const n = (v) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0);
   // sanitizeText: o modelo às vezes injeta um pedaço em árabe/CJK no nome
   // ("pão الفرنسي", visto em 23/09) — mesmo filtro da importação de receita.
-  return (Array.isArray(itensIA) ? itensIA : []).map((it) => ({
-    name: (sanitizeText(String(it.name || '')) || 'Item').slice(0, 120),
-    portion: `${Math.round(n(it.portion_grams))} g`,
-    grams: n(it.portion_grams),
-    kcal: n(it.kcal), p: n(it.protein_g), c: n(it.carbs_g), f: n(it.fat_g),
-  }));
+  return (Array.isArray(itensIA) ? itensIA : []).map((it) => {
+    // `portion` segue em gramas (é o que a área de membros edita); `medida` é
+    // a medida caseira que a Luna mostra no WhatsApp. Só entra se veio limpa.
+    const medida = sanitizeText(String(it.medida_caseira || '')).trim().slice(0, 60);
+    return {
+      name: (sanitizeText(String(it.name || '')) || 'Item').slice(0, 120),
+      portion: `${Math.round(n(it.portion_grams))} g`,
+      grams: n(it.portion_grams),
+      ...(medida && !/\d\s*g\b/.test(medida) ? { medida } : {}),
+      kcal: n(it.kcal), p: n(it.protein_g), c: n(it.carbs_g), f: n(it.fat_g),
+    };
+  });
 }

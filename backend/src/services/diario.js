@@ -33,6 +33,9 @@ export function normalizarItens(bruto) {
       grams: num(it.grams),
       kcal: r1(kcal), p: r1(p), c: r1(c), f: r1(f),
       ...(it.code ? { code: String(it.code).slice(0, 12) } : {}),
+      // Medida caseira ("2 colheres de servir"): vem da foto pelo WhatsApp e
+      // é como a Luna fala da porção. Opcional; a web segue com `portion`.
+      ...(typeof it.medida === 'string' && it.medida.trim() ? { medida: it.medida.trim().slice(0, 60) } : {}),
     };
   });
   const tot = itens.reduce((a, it) => ({ kcal: a.kcal + it.kcal, p: a.p + it.p, c: a.c + it.c, f: a.f + it.f }), { kcal: 0, p: 0, c: 0, f: 0 });
