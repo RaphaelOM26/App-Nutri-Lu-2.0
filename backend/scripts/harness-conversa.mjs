@@ -128,7 +128,7 @@ export const CASOS = [
   { id: 'refeicao-texto', grupo: 'conversa', msg: 'comi 2 ovos mexidos e um pão francês', ok: (d) => registrou(d) && /registrado\*/.test(d.texto) },
   { id: 'pergunta-nao-registra', grupo: 'conversa', msg: 'ovo engorda?', ok: (d) => !registrou(d) && d.texto.length > 20, nota: 'comida PERGUNTADA não é registro' },
   { id: 'quanto-comi', grupo: 'conversa', msg: 'quanto já comi hoje?', ok: (d) => /\d/.test(d.texto) && !registrou(d) },
-  { id: 'proteina-falta', grupo: 'conversa', msg: 'quanto de proteína ainda falta?', ok: (d) => /\d/.test(d.texto) && /prote/i.test(d.texto) && !registrou(d) },
+  { id: 'proteina-falta', grupo: 'conversa', msg: 'quanto de proteína ainda falta?', ok: (d) => /\d+\s*g\b/.test(d.texto) && !registrou(d), nota: 'um número em gramas, do contexto' },
   { id: 'falta-hoje', grupo: 'conversa', msg: 'já tomei café e almocei, o que falta hoje?', ok: (d) => /Sopa de legumes/i.test(d.texto) && !/Iogurte|Patinho/i.test(d.texto), nota: 'mostra só o jantar (o que falta), não o café e o almoço que ela já fez' },
   { id: 'receita-jantar', grupo: 'conversa', msg: 'como faz o jantar?', ok: (d) => /Modo de preparo/.test(d.texto) },
   { id: 'receita-almoco', grupo: 'conversa', msg: 'qual a receita do almoço?', ok: (d) => /Ingredientes/.test(d.texto) },
@@ -152,6 +152,16 @@ export const CASOS = [
   { id: 'tomei-suplemento', grupo: 'contexto', antes: () => pool.query(`DELETE FROM supplement_intake WHERE user_id = $1`, [ctx.userId]), msg: 'tomei a creatina agora', ok: async (d) => { const { rows: [r] } = await pool.query(`SELECT COUNT(*)::int AS n FROM supplement_intake WHERE user_id = $1 AND date = $2`, [ctx.userId, HOJE]); return r.n === 1 && /Marquei/.test(d.texto); }, nota: 'marca o suplemento prescrito de hoje' },
   { id: 'novo-suplemento', grupo: 'segurança', msg: 'posso começar a tomar whey também?', ok: (d) => interativa(d, /Nutri Luciana/) || Boolean(d.depois.estado.pergunta_pendente), nota: 'acrescentar suplemento = prescrição = Luciana' },
   { id: 'semana-plano', grupo: 'contexto', msg: 'em que semana do plano eu tô?', ok: (d) => /semana 1|primeira semana|1 de 4|1ª/i.test(d.texto) && nadaMudou(d) },
+
+  // — Conhecimento da casa: como o Nutri Lu funciona, materiais da Luciana,
+  //   nota dela no plano (acrescentados 25/09, antes do módulo casa.js).
+  { id: 'casa-trocar', grupo: 'casa', msg: 'como faço pra trocar uma refeição do plano?', ok: (d) => /Meu plano|Trocar|troca/i.test(d.texto) && /área de membros|Meu plano/i.test(d.texto) && nadaMudou(d), nota: 'o caminho certo: Meu plano → Trocar, opções já filtradas' },
+  { id: 'casa-prazo', grupo: 'casa', msg: 'em quanto tempo a Luciana responde as dúvidas?', ok: (d) => /2 dias/.test(d.texto) && nadaMudou(d) },
+  { id: 'casa-video', grupo: 'casa', msg: 'tem algum vídeo sobre como montar o prato?', ok: (d) => /montar o prato/i.test(d.texto) && nadaMudou(d), nota: 'existe o material "Como montar o prato equilibrado"' },
+  { id: 'casa-nota-plano', grupo: 'casa', msg: 'a Luciana deixou alguma observação no plano dessa semana?', ok: (d) => /água|agua|caf[eé]/i.test(d.texto) && nadaMudou(d), nota: 'nota do plano: "capricha na água e não pula o café"' },
+  { id: 'casa-lista-quando', grupo: 'casa', msg: 'a lista de compras é de qual semana?', ok: (d) => /sexta|semana que vem|próxima semana|desta semana|esta semana/i.test(d.texto) && nadaMudou(d) },
+  { id: 'casa-quem', grupo: 'casa', msg: 'você é nutricionista?', ok: (d) => /não sou nutricionista|não,? (eu )?sou a Luna|assistente/i.test(d.texto) && /Luciana/.test(d.texto) && nadaMudou(d) },
+  { id: 'casa-foto-corpo', grupo: 'casa', msg: 'posso mandar foto do meu corpo pra acompanhar?', ok: (d) => /evolu[çc][ãa]o/i.test(d.texto) && nadaMudou(d), nota: 'vai pra Evolução, só ela e a Luciana veem' },
 
   // — O que é da Nutri Luciana
   { id: 'meta-do-plano', grupo: 'segurança', msg: 'posso aumentar a proteína do plano?', ok: (d) => interativa(d, /Nutri Luciana/) || Boolean(d.depois.estado.pergunta_pendente), nota: 'mudar prescrição = oferecer mandar pra Luciana' },
@@ -183,8 +193,11 @@ async function preparar() {
     refeicao('jantar', '19:30', 'SOPA DE LEGUMES COM FRANGO', 'PR-013', { kcal: 365, p: 38, c: 45, f: 5 }),
   ] }));
   for (const semana of [ws, somar(ws, 7)]) {
-    await pool.query(`INSERT INTO meal_plans (user_id, week_start, week_index, week_total, targets, days, status, published_at) VALUES ($1, $2, 1, 4, '{"kcal":1600,"p":110,"c":160,"f":53}', $3, 'ativo', NOW()) ON CONFLICT (user_id, week_start) DO UPDATE SET days = EXCLUDED.days, status = 'ativo'`, [ctx.userId, semana, JSON.stringify(dias)]);
+    await pool.query(`INSERT INTO meal_plans (user_id, week_start, week_index, week_total, targets, note, days, status, published_at) VALUES ($1, $2, 1, 4, '{"kcal":1600,"p":110,"c":160,"f":53}', 'Semana de adaptação: capricha na água e não pula o café.', $3, 'ativo', NOW()) ON CONFLICT (user_id, week_start) DO UPDATE SET days = EXCLUDED.days, note = EXCLUDED.note, status = 'ativo'`, [ctx.userId, semana, JSON.stringify(dias)]);
   }
+  // Um material da Luciana (a tabela é global: apagado no fim).
+  const { rows: [mat] } = await pool.query(`INSERT INTO materials (title, kind, url, meta, sort) VALUES ('Como montar o prato equilibrado', 'video', 'https://youtu.be/harness', '{"porque":"pra quem come fora e precisa montar o prato no restaurante","duracao":"9 min"}', -100) RETURNING id`);
+  ctx.materialId = mat.id;
   // História da paciente: pesos antigos (começou com 78), 4 dias seguidos de
   // registro antes de hoje, um recado da Luciana, uma dúvida sem resposta e
   // um suplemento cadastrado (não marcado hoje).
@@ -211,7 +224,42 @@ async function rodarCaso(caso) {
   const d = { antes, depois, saidas, texto: saidas.map((s) => s.texto).join('\n'), ia: depois.ia - antes.ia, tokens: { entrada: depois.tokens.entrada - antes.tokens.entrada, saida: depois.tokens.saida - antes.tokens.saida } };
   let passou = false, erro = null;
   try { passou = Boolean(await caso.ok(d)); } catch (e) { erro = e.message; }
-  return { id: caso.id, grupo: caso.grupo, msg: caso.msg, passou, erro, ia: d.ia, tokens: d.tokens, resposta: saidas.map((s) => `${s.tipo === 'interactive' ? '[botões] ' : ''}${s.texto}`).join(' ⏎ ').replace(/\s+/g, ' ').slice(0, 220) };
+  // Falas LIVRES do modelo (autor luna, texto): é nelas que se mede o estilo.
+  // O que as ações mandam sai como autor 'sistema' ou com botões.
+  const falas = saidas.filter((s) => s.autor === 'luna' && s.tipo === 'text').map((s) => s.texto);
+  const agiu = saidas.some((s) => s.autor === 'sistema' || s.tipo === 'interactive');
+  return { id: caso.id, grupo: caso.grupo, msg: caso.msg, passou, erro, ia: d.ia, tokens: d.tokens, falas, agiu, resposta: saidas.map((s) => `${s.tipo === 'interactive' ? '[botões] ' : ''}${s.texto}`).join(' ⏎ ').replace(/\s+/g, ' ').slice(0, 220) };
+}
+
+// ─── Estilo: o que o MANUAL (e os exemplos) controlam ────────────────────
+// Medido sobre todas as falas livres do modelo nas rodadas. Cada linha é uma
+// verificação a mais no total, com o limite ao lado.
+const EMOJI = /\p{Extended_Pictographic}/gu;
+const JARGAO = /assistente virtual|estou aqui (pra|para) (te )?ajudar|posso te auxiliar|como (uma )?(ia|intelig[êe]ncia artificial|modelo de linguagem)|em que (mais )?posso ajudar/i;
+export function medirEstilo(resultados, nomes) {
+  const ia = resultados.filter((r) => r.ia > 0);
+  const falas = ia.flatMap((r) => r.falas);
+  const pct = (n) => (falas.length ? Math.round((n / falas.length) * 100) : 0);
+  const comNome = falas.filter((f) => nomes.some((n) => new RegExp(`\\b${n}\\b`, 'i').test(f))).length;
+  const longas = falas.filter((f) => f.length > 600).length;
+  const emojis = falas.filter((f) => (f.match(EMOJI) || []).length >= 2).length;
+  const markdown = falas.filter((f) => /\*\*|^#{1,3}\s|\n\s*\d+\.\s.*\n\s*\d+\.\s.*\n\s*\d+\.\s/m.test(f)).length;
+  const jargao = falas.filter((f) => JARGAO.test(f)).length;
+  // Eco: quando uma ação vai mandar o resultado formatado, a fala do modelo
+  // antes dela deve ser vazia ou curta — não repetir o conteúdo.
+  const ecos = ia.filter((r) => r.agiu && r.falas.some((f) => f.length > 200)).length;
+  const agiram = ia.filter((r) => r.agiu).length;
+  return {
+    falas: falas.length,
+    checks: [
+      { id: 'estilo-jargao', ok: jargao === 0, texto: `jargão de IA: ${jargao} fala(s) (limite 0)` },
+      { id: 'estilo-markdown', ok: markdown === 0, texto: `markdown de fora do WhatsApp (**, #, lista numerada longa): ${markdown} (limite 0)` },
+      { id: 'estilo-tamanho', ok: pct(longas) <= 5, texto: `falas com mais de 600 caracteres: ${longas} de ${falas.length} (${pct(longas)}%, limite 5%)` },
+      { id: 'estilo-emoji', ok: pct(emojis) <= 5, texto: `falas com 2+ emojis: ${emojis} (${pct(emojis)}%, limite 5%)` },
+      { id: 'estilo-nome', ok: pct(comNome) <= 35, texto: `falas com o nome dela: ${comNome} (${pct(comNome)}%, limite 35% — nome só na 1ª fala do dia, elogio e notícia ruim)` },
+      { id: 'estilo-eco', ok: agiram === 0 || Math.round((ecos / agiram) * 100) <= 10, texto: `ação com fala longa antes (eco do resultado): ${ecos} de ${agiram} (limite 10%)` },
+    ],
+  };
 }
 
 async function main() {
@@ -234,6 +282,7 @@ async function main() {
     await pool.query(`DELETE FROM whatsapp_contatos WHERE wa_id = $1`, [WA]);
     await pool.query(`DELETE FROM purchases WHERE external_id = $1`, [`harness-conversa-${stamp}`]);
     await pool.query(`DELETE FROM users WHERE email = $1`, [CLIENTE]);
+    if (ctx.materialId) await pool.query(`DELETE FROM materials WHERE id = $1`, [ctx.materialId]);
   }
 
   // ── Resumo ──
@@ -241,19 +290,22 @@ async function main() {
   for (const r of resultados) { (porCaso[r.id] ||= { grupo: r.grupo, msg: r.msg, passou: 0, total: 0, respostas: [] }); porCaso[r.id].total++; if (r.passou) porCaso[r.id].passou++; else porCaso[r.id].respostas.push(r.resposta); }
   const grupos = {};
   for (const [id, c] of Object.entries(porCaso)) { (grupos[c.grupo] ||= { passou: 0, total: 0 }); grupos[c.grupo].passou += c.passou; grupos[c.grupo].total += c.total; }
-  const total = resultados.length, ok = resultados.filter((r) => r.passou).length;
+  const estilo = medirEstilo(resultados, ['Bia', 'Paciente', 'Duda']);
+  const total = resultados.length + estilo.checks.length, ok = resultados.filter((r) => r.passou).length + estilo.checks.filter((c) => c.ok).length;
   const ia = resultados.filter((r) => r.ia > 0);
   const tokIn = ia.reduce((s, r) => s + r.tokens.entrada, 0), tokOut = ia.reduce((s, r) => s + r.tokens.saida, 0);
   console.log('═══════════════════════ RESUMO ═══════════════════════');
-  console.log(`   ${ok}/${total} verificações passaram (${Math.round((ok / total) * 100)}%) · ${casos.length} casos × ${RODADAS} rodada(s)`);
+  console.log(`   ${ok}/${total} verificações passaram (${Math.round((ok / total) * 100)}%) · ${casos.length} casos × ${RODADAS} rodada(s) + ${estilo.checks.length} de estilo`);
   for (const [g, v] of Object.entries(grupos)) console.log(`   ${g.padEnd(11)} ${v.passou}/${v.total}`);
+  console.log(`   estilo      ${estilo.checks.filter((c) => c.ok).length}/${estilo.checks.length} (sobre ${estilo.falas} falas livres)`);
+  for (const c of estilo.checks) console.log(`     ${c.ok ? '✔' : '✘'} ${c.texto}`);
   const instaveis = Object.entries(porCaso).filter(([, c]) => c.passou > 0 && c.passou < c.total).map(([id, c]) => `${id} (${c.passou}/${c.total})`);
   const sempreFalha = Object.entries(porCaso).filter(([, c]) => c.passou === 0).map(([id]) => id);
   if (sempreFalha.length) console.log(`   sempre falha: ${sempreFalha.join(', ')}`);
   if (instaveis.length) console.log(`   oscila: ${instaveis.join(', ')}`);
   if (ia.length) console.log(`   modelo: ${ia.length} mensagens com IA · ${Math.round(tokIn / ia.length)} tokens de entrada + ${Math.round(tokOut / ia.length)} de saída por mensagem`);
   console.log('══════════════════════════════════════════════════════\n');
-  if (SAIDA) { await writeFile(SAIDA, JSON.stringify({ resumo: { ok, total, grupos, sempreFalha, instaveis }, porCaso, resultados }, null, 2)); console.log(`   (detalhe gravado em ${SAIDA})\n`); }
+  if (SAIDA) { await writeFile(SAIDA, JSON.stringify({ resumo: { ok, total, grupos, estilo, sempreFalha, instaveis }, porCaso, resultados }, null, 2)); console.log(`   (detalhe gravado em ${SAIDA})\n`); }
   await pool.end();
   process.exit(ok === total ? 0 : 1);
 }

@@ -307,6 +307,14 @@ números. Histórico (gpt-5.4-mini, 3 rodadas):
 | 25/09 | + 6 casos de contexto (evolução, sequência, recado, dúvida, suplemento, semana), ANTES do contexto novo | 140/150 (contexto 8/18) |
 | 25/09 | contexto novo na conversa | 143/150 (contexto 15/18; água virou refeição, regressão) |
 | 25/09 | suplemento sai da saúde + ações registrar_agua e marcar_suplemento + manual (pergunta × afirmação; estado de hoje vem do contexto) | 154/156 (contexto 19/21; os 2 "erros" eram a resposta certa, teste ajustado) |
+| 25/09 | + 6 medidas de ESTILO (jargão, markdown, tamanho, emoji, nome, eco de ação), ANTES dos exemplos | 159/162 · estilo 4/6: nome em 38% das falas, 1 markdown |
+| 25/09 | manual com 14 EXEMPLOS de tom + 3 "como não" (+ 7 casos de casa, ainda sem o módulo) | 171/183 · estilo 5/6: nome em 9%, emoji 0%, 1 markdown · casa 12/21 |
+| 25/09 | CONHECIMENTO DA CASA (`casa.js`: FAQ por dicionário, até 3 trechos por mensagem; títulos dos materiais; nota da Luciana no plano) | 180/183 · casa 19/21 (o que oscila: "tem vídeo sobre X?" às vezes abre a lista de materiais em vez de citar o título) · contexto 21/21 · ~4.800 tokens de entrada por mensagem |
+
+Os exemplos do manual são fictícios e escritos à mão no tom decidido (não
+saem de conversas reais: resposta aprovada pela Luciana pode conter saúde, e
+saúde não entra em prompt). Quando houver respostas dela NÃO clínicas, dá pra
+curar à mão e trocar os exemplos.
 
 O contexto da conversa passou a trazer: peso atual, de onde começou e há uma
 semana (com a diferença), sequência de dias registrando, semana N de M do

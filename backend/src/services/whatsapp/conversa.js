@@ -24,6 +24,7 @@ import { montarDia } from '../diario.js';
 import { nomeDe } from '../../utils/nomes.js';
 import { dataBR, minutosBR, somarDias } from '../../utils/datas.js';
 import { pistasDaPaciente } from './confirmacao.js';
+import { trechosDaCasa, materiaisDaCasa } from './casa.js';
 
 const ROTULO = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã', almoco: 'Almoço', lanche_tarde: 'Lanche da tarde', jantar: 'Jantar', ceia: 'Ceia' };
 
@@ -53,6 +54,7 @@ O QUE VOCÊ SABE
 - O estado de HOJE (o que está registrado, suplemento marcado ou não, água, peso) é o do CONTEXTO, sempre. Se o histórico da conversa diz "marquei" mas o contexto diz "ainda não marcou", vale o contexto: ela pode ter mudado na área de membros.
 - O CONTEXTO traz também a história dela: evolução do peso (de onde começou, quanto mudou), dias seguidos de registro, semana do plano, suplementos do dia, o último recado da Nutri Luciana e se há dúvida dela ainda sem resposta. "Quanto já perdi?", "o que a nutri me falou?", "ela já respondeu?", "já tomei a creatina?", "em que semana eu tô?" se respondem dali, com o número ou o texto que está lá. Recado da Luciana você cita, não reescreve.
 - Receita NOVA (fora do plano) você não sugere por aqui: as receitas ficam na área de membros, já filtradas pras restrições dela. Mas a receita das refeições DO PLANO você manda inteira pela ação receita. Pode falar de comida em geral à vontade.
+- COMO O NUTRI LU FUNCIONA (trocar refeição, prazo da Luciana, lista de compras, foto de evolução, materiais, suporte, quem é você): quando o CONTEXTO trouxer "Como funciona por aqui", responda POR ELE, do jeito da casa, e não por conhecimento geral. Se a pergunta for sobre um material, cite o título que está na lista de materiais do contexto e ofereça mandar (ação materiais). A nota da Luciana no plano da semana, quando existir, você cita.
 
 O QUE É DA NUTRI LUCIANA (use a ação mandar_para_nutri, e explique em uma frase por quê)
 - Remédio, sintoma, doença, gestação, exame.
@@ -75,7 +77,55 @@ AÇÕES
 
 FORMATO NO WHATSAPP
 - Negrito é *um asterisco* de cada lado (nunca dois). Sem títulos com #, sem listas numeradas longas, sem markdown de link.
-- Parágrafos curtos, no máximo 3. Quebra de linha entre eles.`;
+- Parágrafos curtos, no máximo 3. Quebra de linha entre eles.
+
+EXEMPLOS DO TOM (o contexto dos exemplos é fictício; use sempre o CONTEXTO real da conversa)
+Ela: "bom dia"
+Você: "Bom dia! Dormiu bem? Quando tomar café, me manda a foto que eu registro."
+
+Ela: "87"  (você tinha acabado de perguntar "quer registrar o peso de hoje?")
+Você: [ação registrar_peso kg=87] e nenhum texto — a ação já responde.
+
+Ela: "comi 2 ovos mexidos e um pão francês"
+Você: "Boa, já registro." + [ação registrar_refeicao descricao="2 ovos mexidos e um pão francês"]
+
+Ela: "ovo engorda?"
+Você: "Não. Um ovo tem uns 70 kcal e segura bem a fome. O que pesa é o que vai junto: manteiga, bacon, pão demais."
+
+Ela: "quanto de proteína ainda falta?"  (contexto: consumido P 48 g, meta P 110 g)
+Você: "Faltam 62 g. Um filé de frango no jantar já fecha mais da metade."
+
+Ela: "quanto eu já perdi?"  (contexto: começou com 78 kg, hoje 71 kg, meta 62)
+Você: "Você saiu de 78 e está com 71: 7 kg a menos desde 1º de setembro. Faltam 9 pra meta."
+
+Ela: "já tomei a creatina hoje?"  (contexto: Creatina — ainda não marcou)
+Você: "Ainda não marcou hoje. Tomou? Me diz que eu marco."
+
+Ela: "tomei a creatina agora"
+Você: [ação marcar_suplemento nome="Creatina"] e nenhum texto.
+
+Ela: "anota 500 ml de água"
+Você: [ação registrar_agua ml=500] e nenhum texto.
+
+Ela: "posso aumentar a proteína do plano?"
+Você: "Isso é decisão da Nutri Luciana, ela montou o plano olhando o seu caso. Quer que eu mande pra ela?" + [ação mandar_para_nutri]
+
+Ela: "tô sem fome, posso pular o almoço?"
+Você: "Pular de vez não é o ideal. Faz uma versão menor: metade do arroz e o frango. Se isso virar rotina, vale contar pra Luciana."
+
+Ela: "não gostei do almoço de hoje, tem outra opção?"
+Você: "Acontece. Em Meu plano, na área de membros, dá pra trocar por outra opção que a Luciana já liberou pra você. Quer o link?"
+
+Ela: "obrigada!"
+Você: "Por nada! Qualquer coisa é só chamar."
+
+Ela: "sim"  (você tinha oferecido "quer que eu mostre o plano de amanhã?")
+Você: [ação plano_do_dia dia="amanha"] e nenhum texto.
+
+Como NÃO responder:
+✗ "Olá! Como assistente virtual da Nutri Luciana, estou aqui para te ajudar. Em que posso auxiliar hoje?"  (jargão de IA)
+✗ "Bia, que ótimo, Bia! Parabéns pelo comprometimento, Bia! 🎉💪✨"  (nome repetido, fanfarra, emoji demais)
+✗ Repetir os números que a ação resumo_do_dia já vai mostrar.`;
 
 const FERRAMENTAS = [
   { type: 'function', function: { name: 'registrar_peso', description: 'Registra o peso de hoje em kg. Use quando ela informa o peso (com ou sem a palavra peso), inclusive respondendo a uma pergunta sua.', parameters: { type: 'object', properties: { kg: { type: 'number', description: 'Peso em kg, ex.: 87 ou 72.4' } }, required: ['kg'], additionalProperties: false } } },
@@ -114,9 +164,9 @@ const haDias = (data, hoje) => { const n = Math.round((new Date(`${hoje}T12:00:0
  * ela já corrigiu. Tudo em poucas linhas: contexto é o que faz o modelo
  * parecer inteligente sem custar mais modelo. Anamnese clínica nunca entra.
  */
-export async function contextoDaConversa(contato) {
+export async function contextoDaConversa(contato, texto = '') {
   const hoje = dataBR();
-  const [dia, { rows: [u] }, { rows: [perf] }, { rows: pesos }, { rows: [recado] }, { rows: [pendente] }, pistas] = await Promise.all([
+  const [dia, { rows: [u] }, { rows: [perf] }, { rows: pesos }, { rows: [recado] }, { rows: [pendente] }, pistas, materiais] = await Promise.all([
     montarDia(contato.user_id, hoje),
     getPool().query(`SELECT apelido, display_name FROM users WHERE id = $1`, [contato.user_id]),
     getPool().query(`SELECT data FROM client_profiles WHERE user_id = $1`, [contato.user_id]),
@@ -126,6 +176,7 @@ export async function contextoDaConversa(contato) {
       `SELECT text, created_at FROM lu_messages q WHERE q.user_id = $1 AND q.kind = 'pergunta'
           AND NOT EXISTS (SELECT 1 FROM lu_messages r WHERE r.reply_to = q.id) ORDER BY q.created_at DESC LIMIT 1`, [contato.user_id]),
     pistasDaPaciente(contato.user_id).catch(() => []),
+    materiaisDaCasa().catch(() => []),
   ]);
   const p = perf?.data || {};
   const t = dia.targets || {};
@@ -150,6 +201,7 @@ export async function contextoDaConversa(contato) {
   } else if (p.meta_kg) linhas.push(`Meta de peso: ${p.meta_kg} kg. Nenhum peso registrado ainda.`);
   if (dia.streak > 0) linhas.push(`Sequência: ${dia.streak} dia${dia.streak > 1 ? 's' : ''} seguido${dia.streak > 1 ? 's' : ''} registrando${dia.entries.length ? ' (hoje incluído)' : ' (hoje ainda não registrou)'}.`);
   if (dia.plano?.week_index && dia.plano?.week_total) linhas.push(`Semana ${dia.plano.week_index} de ${dia.plano.week_total} do plano (semana que começou em ${dia.plano.week_start}).`);
+  if (dia.plano?.note) linhas.push(`Nota da Nutri Luciana no plano desta semana: "${String(dia.plano.note).replace(/\s+/g, ' ').slice(0, 300)}".`);
   if (t.kcal) {
     linhas.push(`Plano da Nutri Luciana publicado. Meta do dia: ${n0(t.kcal)} kcal, P ${n0(t.p)} g, C ${n0(t.c)} g, G ${n0(t.f)} g.`);
     const meals = dia.plano?.dia?.meals || [];
@@ -168,6 +220,10 @@ export async function contextoDaConversa(contato) {
   if (recado) linhas.push(`Último ${recado.kind === 'resposta' ? 'recado (resposta a uma dúvida dela)' : 'recado'} da Nutri Luciana, ${haDias(recado.created_at, hoje)}: "${String(recado.text).replace(/\s+/g, ' ').slice(0, 240)}".`);
   if (pendente) linhas.push(`Dúvida dela pra Nutri Luciana AINDA SEM RESPOSTA, enviada ${haDias(pendente.created_at, hoje)}: "${String(pendente.text).replace(/\s+/g, ' ').slice(0, 160)}". Prazo dela: até 2 dias úteis; a resposta chega aqui e na área de membros.`);
   if (pistas.length) linhas.push(`O que ela já corrigiu em registros (vale como preferência): ${pistas.join(' ')}`);
+  if (materiais.length) linhas.push(`Materiais da Nutri Luciana disponíveis: ${materiais.join(' · ')}.`);
+  // Conhecimento da casa: só os trechos que a mensagem pede (casa.js).
+  const casa = trechosDaCasa(texto);
+  if (casa.length) linhas.push(`Como funciona por aqui (responda por isto):\n${casa.map((c) => `- ${c}`).join('\n')}`);
   if (contato.estado?.aguardando) linhas.push(`Você está esperando dela: ${contato.estado.aguardando}.`);
   return linhas.join('\n');
 }
@@ -189,7 +245,7 @@ export async function historicoDaConversa(contatoId, limite = 14) {
  * Devolve o que aconteceu, pra log e teste.
  */
 export async function conversar({ contato, texto, acoes, mandar }) {
-  const [contexto, historico] = await Promise.all([contextoDaConversa(contato), historicoDaConversa(contato.id)]);
+  const [contexto, historico] = await Promise.all([contextoDaConversa(contato, texto), historicoDaConversa(contato.id)]);
   if (!historico.length || historico[historico.length - 1].role !== 'user' || historico[historico.length - 1].content !== texto.slice(0, 600)) historico.push({ role: 'user', content: texto });
   const messages = [
     { role: 'system', content: MANUAL },
