@@ -319,6 +319,14 @@ try {
   check(Math.round(Number(aposMenos.kcal)) === 390, '"Menos que o plano" → plano × 0,75');
   await botao(WA, `plano:00000000-0000-0000-0000-000000000000:igual`, 'Igual ao plano');
   check(/Não achei mais esse registro/.test((await ultima(WA)).texto), 'botão de registro que não é dela (ou sumiu) não mexe em nada');
+  // "Não era do plano": volta pra estimativa da foto guardada no estado.
+  const { rows: [origEstado] } = await pool.query(`UPDATE whatsapp_contatos SET estado = COALESCE(estado, '{}'::jsonb) || $2::jsonb WHERE wa_id = $1 RETURNING estado`, [WA, JSON.stringify({ [`orig:${regId}`]: [{ name: 'Arroz branco', portion: '120 g', grams: 120, medida: '2 colheres de servir', kcal: 156, p: 3, c: 34, f: 0.3 }] })]);
+  check(Boolean(origEstado.estado[`orig:${regId}`]), 'estimativa da foto guardada no estado (como o registro ancorado faz)');
+  await botao(WA, `desanc:${regId}`, 'Não era do plano');
+  const { rows: [desanc] } = await pool.query(`SELECT items, kcal, note FROM meal_entries WHERE id = $1`, [regId]);
+  const { rows: [estDesanc] } = await pool.query(`SELECT estado FROM whatsapp_contatos WHERE wa_id = $1`, [WA]);
+  check(desanc.items.length === 1 && desanc.items[0].name === 'Arroz branco' && Math.round(Number(desanc.kcal)) === 156 && /voltou pra estimativa/.test(desanc.note) && !estDesanc.estado[`orig:${regId}`], '"Não era do plano" → registro volta pra estimativa da foto e a cópia some do estado');
+  check(/Almoço registrado\* ✅\n• Arroz branco, 2 colheres de servir · 120 g · 156 kcal/.test((await saidas(WA, 3)).map((m) => m.texto).join('\n')), 'reconfirma com a estimativa da foto (medida caseira · gramas)');
   await chamar(tCli, 'DELETE', `/me/refeicoes/${regId}`);
 
   // 10d. Calibração do prato/marmita (26/09), sem IA: o fluxo de estado.
@@ -341,6 +349,8 @@ try {
   // 11. Com IA de verdade
   if (COM_IA) {
     console.log('\n— Com IA (foto real de scripts/food-test)\n');
+    // O bloco 10d já pediu a calibração uma vez; aqui é como se fosse a primeira foto da vida dela.
+    await pool.query(`UPDATE whatsapp_contatos SET estado = COALESCE(estado, '{}'::jsonb) - 'calibracao_pedida' WHERE wa_id = $1`, [WA]);
     await receber(WA, { type: 'image', image: { id: 'sim:01-arroz-carne.jpeg', mime_type: 'image/jpeg' } });
     const pergunta = await ultima(WA);
     check(/Ela é de quê/.test(pergunta.texto), 'foto sem legenda → pergunta "refeição ou evolução?" antes de qualquer IA');

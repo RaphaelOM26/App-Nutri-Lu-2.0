@@ -40,7 +40,7 @@ import { gerarPdfLista, nomeDoArquivo } from '../plano/listaPdf.js';
 import { criarLink } from '../loginPorLink.js';
 import { conversar, bonito } from './conversa.js';
 import { PRATICA_POR_CODIGO } from '../plano/receitas.js';
-import { perguntasAposFoto, refeicaoDoPlanoDe, aplicarPlano, itensComTroca, atualizarRegistro, pistasDaPaciente, guardarCorrecao, medidaDe, porcaoTexto, gramasDoTexto, itemEmGramas, membroDoPar } from './confirmacao.js';
+import { perguntasAposFoto, refeicaoDoPlanoDe, aplicarPlano, itensComTroca, atualizarRegistro, pistasDaPaciente, guardarCorrecao, medidaDe, porcaoTexto, gramasDoTexto, itemEmGramas, membroDoPar, bateComPlano, itensDaRefeicaoDoPlano, habitosDaPaciente } from './confirmacao.js';
 import { medirRecipiente, recipientesDe, guardarRecipiente, descreverRecipiente, pistaDosRecipientes } from './calibracao.js';
 
 const MEMBROS = (process.env.MEMBROS_URL || 'https://nutrilualves.com.br/membros').replace(/\/$/, '');
@@ -265,6 +265,7 @@ async function tratarBotao(contato, acao, msg) {
   if (tipo === 'mat' && uuid(a)) return mandarMaterial(contato, a);
   // Confirmação da foto (25/09): porção contra o plano, e ingrediente em dúvida.
   if (tipo === 'plano' && uuid(a) && ['menos', 'igual', 'mais'].includes(b)) return ajustarPeloPlano(contato, a, b);
+  if (tipo === 'desanc' && uuid(a)) return desancorar(contato, a);
   if (tipo === 'ing' && uuid(a)) { const [, , idx, slug] = String(acao).split(':'); return confirmarIngrediente(contato, a, Number(idx), slug); }
   await mandar(contato, { texto: `Esse botão não vale mais. 😊\n\n${MENU}` });
 }
@@ -354,6 +355,7 @@ async function registrarFoto(contato, mensagemId, { msg, slot } = {}) {
     const pistaRecipiente = pistaDosRecipientes(recipientes);
     if (pistaRecipiente) pistas.push(pistaRecipiente);
     pistas.push(...await pistasDaPaciente(contato.user_id));
+    pistas.push(...await habitosDaPaciente(contato.user_id));
     const analise = await comContextoDeUso({ rota: '/whatsapp/foto', userId: contato.user_id }, () =>
       analisarPrato(`data:${foto.media_mime || 'image/jpeg'};base64,${buffer.toString('base64')}`, { pistas }));
     const itensIA = itensDoDiario(analise.items);
@@ -361,9 +363,20 @@ async function registrarFoto(contato, mensagemId, { msg, slot } = {}) {
       return mandar(contato, { texto: 'Não consegui identificar comida nessa foto. 🤔 Tenta outra, de cima e com o prato inteiro aparecendo. Se era foto de evolução, manda de novo e escolhe *Evolução*.' });
     }
     const quando = new Date(foto.criado_em);
-    const entry = await gravarRefeicao(contato.user_id, { quando, slot: slot || slotPelaHora(quando), itens: itensIA, photoKey: foto.media_key, confidence: analise.confidence, nota: 'foto pelo WhatsApp' });
-    await confirmarRegistro(contato, entry, analise.confidence === 'low');
-    await perguntarSePrecisar(contato, entry, analise.confidence);
+    const slotFinal = slot || slotPelaHora(quando);
+    // Foto parecida com a refeição do plano naquele horário: a porção do
+    // plano vale mais que o chute visual. Registra o plano em silêncio, com
+    // botão pra voltar à estimativa da foto (ancorar no plano, 26/09).
+    const meal = await refeicaoDoPlanoDe(contato.user_id, dataBR(quando), slotFinal);
+    const kcalFoto = itensIA.reduce((s, i) => s + (Number(i.kcal) || 0), 0);
+    const ancorado = Boolean(meal) && bateComPlano({ itens: itensIA, kcal: kcalFoto, meal });
+    const entry = await gravarRefeicao(contato.user_id, {
+      quando, slot: slotFinal, itens: ancorado ? itensDaRefeicaoDoPlano(meal) : itensIA, photoKey: foto.media_key, confidence: analise.confidence,
+      nota: ancorado ? 'foto pelo WhatsApp · bateu com o plano' : 'foto pelo WhatsApp',
+    });
+    if (ancorado) await guardarEstimativaDaFoto(contato, entry.id, itensIA);
+    await confirmarRegistro(contato, entry, analise.confidence === 'low', ancorado ? { ancorado: meal } : {});
+    if (!ancorado) await perguntarSePrecisar(contato, entry, analise.confidence);
     // Primeira foto de comida sem recipiente medido: pede a calibração UMA vez
     // (depois do registro, nunca antes — a foto dela já está anotada).
     if (!pistaRecipiente && !contato.estado?.calibracao_pedida) await pedirCalibracao(contato, 'primeira');
@@ -385,7 +398,7 @@ async function pedirCalibracao(contato, motivo) {
   const abertura = motivo === 'primeira'
     ? 'Uma coisa que me ajuda a acertar as porções nas suas fotos, só uma vez: '
     : 'Bora medir. ';
-  await mandar(contato, { texto: `${abertura}me manda uma foto do seu *prato vazio* com a sua *mão aberta* em cima, tirada de cima. 📏 Se você usa marmita, depois eu peço ela também.\n\n_Se não quiser agora, escreve *depois*._` }, { autor: 'sistema' });
+  await mandar(contato, { texto: `${abertura}me manda uma foto do seu *prato vazio* com a sua *mão aberta* em cima, tirada de cima. 📏 Se você usa marmita, depois eu peço ela também.\n\n_E se tiver balança de cozinha, deixa o visor aparecendo nas fotos de comida que eu acerto na grama._\n_Se não quiser agora, escreve *depois*._` }, { autor: 'sistema' });
 }
 
 /** A foto do recipiente vazio com a mão: mede, guarda e passa pro próximo (prato → marmita → fim). */
@@ -452,12 +465,35 @@ async function linhaDoDia(userId, date) {
 // confere pelas gramas, quem não pesa se acha pela colher; e a correção
 // pode vir em qualquer um dos dois (25/09).
 const DICA_CORRIGIR = '_Se algo estiver diferente, me diz em medida caseira ou em gramas (tipo "eram 3 colheres de arroz" ou "o arroz eram 150 g") que eu corrijo._';
-async function confirmarRegistro(contato, entry, poucaConfianca) {
+async function confirmarRegistro(contato, entry, poucaConfianca, { ancorado = null } = {}) {
   const itens = entry.items.map((i) => { const m = porcaoTexto(i); return `• ${bonito(i.name)}${m ? `, ${m}` : ''} · ${n0(i.kcal)} kcal`; }).join('\n');
+  const cabeca = ancorado
+    ? `*${ROTULO[entry.slot]} registrado* ✅ Bateu com o plano: *${bonito(ancorado.name)}*`
+    : `*${ROTULO[entry.slot]} registrado* ✅`;
   await mandar(contato, {
-    texto: `*${ROTULO[entry.slot]} registrado* ✅\n${itens}\n\n*${n0(entry.kcal)} kcal* · P ${n0(entry.p)} · C ${n0(entry.c)} · G ${n0(entry.f)}\n${await linhaDoDia(contato.user_id, entry.date)}${poucaConfianca ? `\n\n${DICA_CORRIGIR}` : ''}`,
-    botoes: [{ id: `slot:${entry.id}`, titulo: 'Mudar refeição' }, { id: `del:${entry.id}`, titulo: 'Apagar' }],
+    texto: `${cabeca}\n${itens}\n\n*${n0(entry.kcal)} kcal* · P ${n0(entry.p)} · C ${n0(entry.c)} · G ${n0(entry.f)}\n${await linhaDoDia(contato.user_id, entry.date)}${poucaConfianca && !ancorado ? `\n\n${DICA_CORRIGIR}` : ''}`,
+    botoes: [...(ancorado ? [{ id: `desanc:${entry.id}`, titulo: 'Não era do plano' }] : []), { id: `slot:${entry.id}`, titulo: 'Mudar refeição' }, { id: `del:${entry.id}`, titulo: 'Apagar' }],
   });
+}
+
+// A estimativa da foto fica guardada (só as 3 últimas) pra "Não era do plano" voltar a ela.
+async function guardarEstimativaDaFoto(contato, entryId, itens) {
+  const chaves = Object.keys(contato.estado || {}).filter((k) => k.startsWith('orig:'));
+  const patch = { [`orig:${entryId}`]: itens };
+  for (const k of chaves.slice(0, Math.max(0, chaves.length - 2))) patch[k] = null;
+  await atualizarEstado(contato, patch);
+}
+
+/** Botão "Não era do plano": volta pra estimativa da foto. */
+async function desancorar(contato, entryId) {
+  const itens = contato.estado?.[`orig:${entryId}`];
+  const e = await registroDela(contato, entryId);
+  if (!e) return mandar(contato, { texto: 'Não achei mais esse registro. Ele pode ter sido apagado.' });
+  if (!Array.isArray(itens) || !itens.length) return mandar(contato, { texto: 'Não guardei mais a estimativa da foto. Dá pra ajustar os itens em Meu plano, ou me diz o que era que eu corrijo.' }, { autor: 'sistema' });
+  const novo = await atualizarRegistro(e.id, contato.user_id, itens, 'voltou pra estimativa da foto');
+  await atualizarEstado(contato, { [`orig:${entryId}`]: null });
+  await confirmarRegistro(contato, novo, false);
+  await perguntarSePrecisar(contato, novo, 'medium');
 }
 
 const ARTIGO = { ceia: 'a' };

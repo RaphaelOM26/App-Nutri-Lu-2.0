@@ -29,6 +29,18 @@ console.log('mais (foto 282 < 650) → escala:', C.aplicarPlano(plano, 'mais', i
 const troca = C.itensComTroca(itens, 1, C.membroDoPar('abobora'));
 console.log('troca →', troca[1].name, Math.round(troca[1].kcal), 'kcal (120 g × 48/100 = 58)', 'medida', troca[1].medida);
 console.log('membroDoPar("era batata doce") →', C.membroDoPar('era batata doce')?.nome, '| "aipim" →', C.membroDoPar('aipim')?.nome, '| "purê de batata" →', C.membroDoPar('purê de batata')?.nome, '| "carne moída" →', C.membroDoPar('carne moída')?.nome);
+console.log('bateComPlano arroz+batata-doce 282 kcal × plano 520 →', C.bateComPlano({ itens, kcal: 282, meal: plano }), '(longe: não)');
+console.log('bateComPlano arroz+frango 480 × plano frango/arroz/abóbora 520 →', C.bateComPlano({ itens: [{ name: 'Arroz branco' }, { name: 'Frango grelhado' }], kcal: 480, meal: plano }), '(perto e com alimento em comum: sim)');
+console.log('bateComPlano pizza 500 × plano 520 →', C.bateComPlano({ itens: [{ name: 'Pizza de calabresa' }], kcal: 500, meal: plano }), '(kcal perto, comida diferente: não)');
+console.log('bateComPlano só preparo em comum ("grelhado") →', C.bateComPlano({ itens: [{ name: 'Peixe grelhado' }], kcal: 500, meal: plano }), '(não)');
+const entradas = [
+  { items: [{ name: 'Arroz branco cozido', grams: 140, medida: '2 colheres de servir' }, { name: 'Frango grelhado', grams: 110 }] },
+  { items: [{ name: 'arroz', grams: 160 }, { name: 'Feijão', grams: 90 }] },
+  { items: [{ name: 'Arroz integral', grams: 150 }], note: 'corrigido: 3 colheres' },
+  { items: [{ name: 'Arroz', grams: 500 }], note: 'foto · ajustado pelo plano (igual)' },
+  { items: [{ name: 'Ovos mexidos', grams: 100 }] },
+];
+console.log('habitosDe →', C.habitosDe(entradas), '(arroz 3× → mediana 150; frango/feijão/ovo com menos de 3 não entram; o "ajustado pelo plano" não conta)');
 console.log('medidaDe →', C.medidaDe(itens[0]), '|', C.medidaDe({ portion: '80 g' }));
 console.log('porcaoTexto →', C.porcaoTexto(itens[0]), '|', C.porcaoTexto({ portion: '80 g', grams: 80 }), '|', C.porcaoTexto({ portion: '1 porção' }));
 console.log('gramasDoTexto →', C.gramasDoTexto('150 g'), C.gramasDoTexto('150g'), C.gramasDoTexto('1,5 gramas'), C.gramasDoTexto('3 colheres'), C.gramasDoTexto('9000 g'));

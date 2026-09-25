@@ -124,6 +124,19 @@ decide se vale UMA pergunta:
   outra. Ressalva importante: 8 das 12 fotos têm BALANÇA no quadro, e o
   protocolo do visor domina a escala; paciente real quase nunca tem balança.
   O efeito de verdade se mede com a taxa de correção em produção.
+- **Ancorar no plano (26/09)**: se a foto é do horário de uma refeição do
+  plano, cai dentro de ±25% das kcal dela E tem pelo menos um alimento em
+  comum com o nome/itens da receita, a Luna registra a refeição DO PLANO
+  (com o código) em silêncio: "Bateu com o plano: X". Botão "Não era do plano"
+  volta pra estimativa da foto (guardada no estado do contato, as 3 últimas).
+  Kcal parecida de comida diferente (pizza × frango com arroz) não ancora.
+- **Porção habitual (26/09)**: dos registros por foto dos últimos 30 dias
+  (inclusive os corrigidos, que são o dado mais certo; fora os "ajustado pelo
+  plano"), a mediana por alimento com 3+ ocorrências vira pista: "Arroz: ela
+  costuma comer ~150 g (2 colheres de servir), em 5 registros recentes".
+- **Dica da balança (26/09)**: uma linha na pergunta da calibração: "se tiver
+  balança, deixa o visor aparecendo que eu acerto na grama" (na foto de teste
+  com visor legível o erro foi zero).
 - Prompt (25/09, tarde): pistas de identificação dos pares (casca, cor,
   textura), densidade de leguminosa solta, purê, tomate e peixe, e "só item
   visível e relevante". Com gpt-5.4, 12 fotos × 2 rodadas: erro do total 16%

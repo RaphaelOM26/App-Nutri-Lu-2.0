@@ -126,6 +126,68 @@ export function perguntasAposFoto({ itens, confidence, refeicaoDoPlano, kcal }) 
   return saida;
 }
 
+// ─── Ancorar no plano (26/09) ─────────────────────────────────────────────
+// Se a foto é da refeição do plano e a estimativa cai perto dela, a porção do
+// plano é referência melhor do que o chute visual: registra os itens do plano
+// (com o código da receita) em silêncio, com botão "Não era do plano" pra
+// voltar à estimativa da foto. Perto = kcal dentro de ±25% E pelo menos uma
+// palavra de alimento em comum (o nome da receita cita "arroz", a foto viu
+// arroz); kcal parecida de comida diferente não ancora.
+const PREPARO = /^(grelhad|assad|cozid|refogad|desfiad|frit|temperad|picad|fatiad|branc|integral|fresc|light|caseir|simples|natural)/;
+const palavrasDeAlimento = (s) => new Set(norm(s).split(/[^a-z]+/).filter((w) => w.length >= 4 && !PREPARO.test(w) && !['molho', 'salada', 'legumes', 'pedacos', 'fatias', 'colheres', 'porcao', 'porcoes'].includes(w)));
+
+export function bateComPlano({ itens, kcal, meal }) {
+  const meta = Number(meal?.kcal) || 0;
+  if (!meta || !Number.isFinite(kcal)) return false;
+  if (Math.abs(kcal - meta) / meta > LIMIAR_PLANO) return false;
+  const doPlano = palavrasDeAlimento([meal.name, ...(meal.items || []).map((i) => i.name)].join(' '));
+  const daFoto = palavrasDeAlimento((itens || []).map((i) => i.name).join(' '));
+  for (const w of daFoto) if (doPlano.has(w)) return true;
+  return false;
+}
+
+/** Os itens do plano como registro (exportado pro bot ancorar). */
+export const itensDaRefeicaoDoPlano = (meal) => itensDoPlano(meal);
+
+// ─── Porção habitual (26/09) ──────────────────────────────────────────────
+// Aprende com o que ela registra e NÃO corrige (e com o que corrige, que é o
+// dado mais certo): "arroz costuma ser ~150 g" vira pista na próxima foto.
+const BASE = [
+  ['Arroz', /\barroz\b/], ['Feijão', /\bfeij[aã]o\b/], ['Frango', /\bfrango\b/], ['Carne', /\bcarne\b/], ['Peixe', /\b(peixe|til[aá]pia|salm[aã]o)\b/],
+  ['Ovo', /\bovos?\b/], ['Batata-doce', /batata[ -]?doce/], ['Batata', /\bbatata\b(?![ -]?doce)/], ['Abóbora', /\bab[oó]bora\b/],
+  ['Macarrão', /\bmacarr[aã]o\b/], ['Pão', /\bp[aã]o\b/], ['Cuscuz', /\bcuscuz\b/], ['Tapioca', /\btapioca\b/], ['Salada', /\b(salada|alface|folhas)\b/],
+];
+const alimentoBase = (nome) => { const n = norm(nome); for (const [k, re] of BASE) if (re.test(n)) return k; return null; };
+
+/** Pura: dos registros (items com grams), a mediana por alimento com 3+ ocorrências, até 4 pistas. */
+export function habitosDe(entries) {
+  const por = {};
+  for (const e of entries || []) {
+    if (/ajustado pelo plano|voltou pra estimativa/.test(e.note || '')) continue; // itens do plano não são "o que ela come"
+    for (const i of e.items || []) {
+      const k = alimentoBase(i.name);
+      if (!k || !(Number(i.grams) > 0)) continue;
+      (por[k] ||= []).push({ g: Number(i.grams), medida: i.medida });
+    }
+  }
+  const pistas = [];
+  for (const [k, xs] of Object.entries(por).sort((a, b) => b[1].length - a[1].length)) {
+    if (xs.length < 3) continue;
+    const gs = xs.map((x) => x.g).sort((a, b) => a - b);
+    const mediana = gs[Math.floor(gs.length / 2)];
+    const medida = xs.map((x) => x.medida).find(Boolean);
+    pistas.push(`${k}: ela costuma comer ~${Math.round(mediana)} g${medida ? ` (${medida})` : ''}, em ${xs.length} registros recentes.`);
+    if (pistas.length >= 4) break;
+  }
+  return pistas;
+}
+
+export async function habitosDaPaciente(userId) {
+  const { rows } = await getPool().query(
+    `SELECT items, note FROM meal_entries WHERE user_id = $1 AND source IN ('whatsapp', 'foto') AND logged_at > NOW() - interval '30 days' ORDER BY logged_at DESC LIMIT 60`, [userId]);
+  return habitosDe(rows);
+}
+
 /** A refeição do plano publicado pra aquela data e horário (com a troca da cliente aplicada), ou null. */
 export async function refeicaoDoPlanoDe(userId, date, slot) {
   const plano = await planoDaData(userId, date);
