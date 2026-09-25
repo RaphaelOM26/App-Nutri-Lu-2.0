@@ -31,6 +31,12 @@ if (process.env.WHATSAPP_REAL !== '1') {
   process.env.WHATSAPP_TEMPLATES ||= 'resposta_nutri,plano_pronto,mensagem_equipe,boas_vindas_luna';
   process.env.WHATSAPP_BOAS_VINDAS ||= '1';
 }
+// Tetos de IA folgados SÓ aqui: os harnesses (conversa, foto) mandam dezenas
+// de mensagens do mesmo IP; com o teto de produção (60 chats/dia) a 3ª
+// rodada falha por limite, não por inteligência. Em produção os tetos valem.
+for (const t of ['LIMITE_CHAT', 'LIMITE_FOTO_IA', 'LIMITE_VOZ']) {
+  process.env[`${t}_DIA`] ||= '1000'; process.env[`${t}_DIA_ASSIN`] ||= '1000'; process.env[`${t}_MES_ASSIN`] ||= '100000';
+}
 // Webhook da Hotmart testável local (o hottok de verdade só existe no Railway).
 process.env.HOTMART_HOTTOK = 'hottok-local-de-desenvolvimento';
 process.env.MEMBROS_URL ||= 'http://localhost:5173/membros';

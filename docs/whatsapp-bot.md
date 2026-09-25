@@ -281,7 +281,26 @@ node scripts/dev-local.mjs                  # servidor local, modo simulado
 node scripts/teste-whatsapp.mjs             # 66 verificações, sem custo
 node scripts/teste-whatsapp.mjs --ia        # 76 verificações: + foto real → IA → diário (~US$ 0,02)
 node scripts/seed-whatsapp-demo.mjs         # conversas de mentira pra ver o painel
+node scripts/harness-conversa.mjs --rodadas 3   # a RÉGUA da Luna (abaixo)
+node scripts/teste-confirmacao.mjs          # decisão da confirmação da foto (puro, sem servidor)
 ```
+
+### Harness da conversa (25/09/2026)
+
+`scripts/harness-conversa.mjs` é a régua da inteligência da Luna: finge ser
+uma paciente pelo webhook, manda 44 mensagens típicas (comando por dicionário,
+conversa com contexto, saúde, correção, atendimento humano) e confere o
+**efeito** de cada uma no banco e nas saídas, não a frase exata. Como o modelo
+varia, `--rodadas 3` mostra o que oscila. Custa ~US$ 0,07 por 3 rodadas (66
+mensagens com IA, ~3.100 tokens de entrada cada, 60% em cache).
+
+Regra: **toda mudança no manual da Luna (conversa.js), no contexto ou no
+modelo de conversa roda o harness antes e depois**, e o commit traz os dois
+números. Linha de base de 25/09 (gpt-5.4-mini): 132/132. Isso significa que
+hoje a régua mede "não piorou"; pra medir "melhorou" é preciso acrescentar
+casos mais difíceis, tirados de conversas reais que a Luna errou.
+O `dev-local.mjs` afrouxa os tetos de IA (1.000/dia) só localmente, senão a
+3ª rodada falha por limite, não por inteligência.
 
 O servidor local **nunca** fala com a Meta, mesmo com o token no `.env`
 (`WHATSAPP_REAL=1` libera, pra testar contra o número de teste de propósito).

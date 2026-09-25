@@ -756,9 +756,12 @@ async function planoDoDia(contato, maisDias, soAgora, apenas = null) {
   if (!refeicoes.length) {
     return mandar(contato, { texto: dia.plano ? `Não há refeições no plano pra ${maisDias ? 'amanhã' : 'hoje'}.` : `A Nutri Luciana ainda não publicou o plano ${maisDias ? 'dessa semana' : 'desta semana'}. Assim que sair, eu te aviso por aqui. 😊` }, { autor: 'sistema' });
   }
+  // "Parcial" se mede contra o dia INTEIRO: à noite, "o que falta?" com só o
+  // jantar no filtro continua sendo "Ainda falta", não "Plano de hoje".
+  const noDia = refeicoes.length;
   if (soAgora && !maisDias) { const s = slotPelaHora(); refeicoes = refeicoes.filter((m) => m.slot === s).length ? refeicoes.filter((m) => m.slot === s) : refeicoes; }
   const filtro = Array.isArray(apenas) ? apenas.filter((s) => SLOTS.includes(s)) : [];
-  const parcial = filtro.length > 0 && filtro.length < refeicoes.length;
+  const parcial = filtro.length > 0 && filtro.length < noDia;
   if (filtro.length) refeicoes = refeicoes.filter((m) => filtro.includes(m.slot));
   if (!refeicoes.length) return mandar(contato, { texto: 'Não achei essas refeições no plano de hoje.' }, { autor: 'sistema' });
   // Padrão "plano do dia" (23/09): uma linha por refeição. Os itens só
