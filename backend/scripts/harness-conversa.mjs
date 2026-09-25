@@ -122,9 +122,9 @@ export const CASOS = [
   // — Conversa: o modelo lê o contexto e chama a ação certa (ou só responde)
   { id: 'bom-dia', grupo: 'conversa', msg: 'bom dia', ok: (d) => d.ia >= 1 && semMenu(d) && nadaMudou(d) && d.texto.length > 3 && d.texto.length < 400 },
   { id: 'oi-luna', grupo: 'conversa', msg: 'oi Luna, tudo bem?', ok: (d) => semMenu(d) && nadaMudou(d) && d.texto.length > 3 },
-  { id: 'peso-contexto', grupo: 'conversa', antes: () => lunaDisse('Quer registrar o peso de hoje?'), msg: '86,5', ok: (d) => pesoNovo(d, 86.5), nota: 'número solto depois da pergunta da Luna = peso, não idade' },
-  { id: 'peso-frase', grupo: 'conversa', msg: 'pesei 86,8 hoje', ok: (d) => pesoNovo(d, 86.8) },
-  { id: 'peso-ambiguo', grupo: 'conversa', msg: 'tô com 90 hoje', ok: (d) => pesoNovo(d, 90) || /peso/i.test(d.texto), nota: 'vale registrar OU confirmar antes; errado é ignorar' },
+  { id: 'peso-contexto', grupo: 'conversa', antes: () => lunaDisse('Quer registrar o peso de hoje?'), msg: '71,5', ok: (d) => pesoNovo(d, 71.5), nota: 'número solto depois da pergunta da Luna = peso, não idade' },
+  { id: 'peso-frase', grupo: 'conversa', msg: 'pesei 71,8 hoje', ok: (d) => pesoNovo(d, 71.8) },
+  { id: 'peso-ambiguo', grupo: 'conversa', msg: 'tô com 71 hoje', ok: (d) => pesoNovo(d, 71) || /peso/i.test(d.texto), nota: 'vale registrar OU confirmar antes; errado é ignorar' },
   { id: 'refeicao-texto', grupo: 'conversa', msg: 'comi 2 ovos mexidos e um pão francês', ok: (d) => registrou(d) && /registrado\*/.test(d.texto) },
   { id: 'pergunta-nao-registra', grupo: 'conversa', msg: 'ovo engorda?', ok: (d) => !registrou(d) && d.texto.length > 20, nota: 'comida PERGUNTADA não é registro' },
   { id: 'quanto-comi', grupo: 'conversa', msg: 'quanto já comi hoje?', ok: (d) => /\d/.test(d.texto) && !registrou(d) },
@@ -133,14 +133,25 @@ export const CASOS = [
   { id: 'receita-jantar', grupo: 'conversa', msg: 'como faz o jantar?', ok: (d) => /Modo de preparo/.test(d.texto) },
   { id: 'receita-almoco', grupo: 'conversa', msg: 'qual a receita do almoço?', ok: (d) => /Ingredientes/.test(d.texto) },
   { id: 'kcal-almoco-plano', grupo: 'conversa', msg: 'quantas calorias tem meu almoço do plano?', ok: (d) => /412/.test(d.texto), nota: 'número do CONTEXTO, sem inventar' },
-  { id: 'meu-peso', grupo: 'conversa', msg: 'qual é o meu peso?', ok: (d) => /\b(90|86,8|86\.8)\b/.test(d.texto), nota: 'o último registrado, do contexto' },
+  { id: 'meu-peso', grupo: 'conversa', msg: 'qual é o meu peso?', ok: (d) => /\b(71|71,8|71\.8)\b/.test(d.texto), nota: 'o último registrado, do contexto' },
   { id: 'banana', grupo: 'conversa', msg: 'quantas calorias tem uma banana?', ok: (d) => /\d{2,3}/.test(d.texto) && nadaMudou(d) },
-  { id: 'sim-contexto', grupo: 'conversa', antes: () => lunaDisse('Quer que eu mostre o plano de amanhã?'), msg: 'sim', ok: (d) => /Plano de amanhã/.test(d.texto), nota: '"sim" responde à última pergunta da Luna' },
+  { id: 'sim-contexto', grupo: 'conversa', antes: () => lunaDisse('Quer que eu mostre o plano de amanhã?'), msg: 'sim', ok: (d) => /Plano de amanhã/.test(d.texto) || (/Patinho|Sopa de legumes/i.test(d.texto) && /amanhã/i.test(d.texto)), nota: '"sim" responde à última pergunta da Luna (mostrar o plano de amanhã)' },
   { id: 'obrigada', grupo: 'conversa', msg: 'obrigada!', ok: (d) => semMenu(d) && nadaMudou(d) && d.texto.length < 250 },
   { id: 'nao-gostei', grupo: 'conversa', msg: 'não gostei do almoço de hoje, tem outra opção?', ok: (d) => nadaMudou(d) && /troc|plano|área de membros|Nutri Luciana/i.test(d.texto), nota: 'não inventa receita nova por aqui' },
   { id: 'sem-fome', grupo: 'conversa', msg: 'tô sem fome hoje, posso pular o almoço?', ok: (d) => nadaMudou(d) && d.texto.length > 20 },
-  { id: 'agua', grupo: 'conversa', msg: 'anota 500 ml de água', ok: (d) => nadaMudou(d) && d.texto.length > 10, nota: 'ação que não existe: não pode fingir que fez' },
+  { id: 'agua', grupo: 'conversa', msg: 'anota 500 ml de água', ok: async (d) => { const { rows: [w] } = await pool.query(`SELECT ml FROM water_log WHERE user_id = $1 AND date = $2`, [ctx.userId, HOJE]); return Number(w?.ml) >= 500 && !registrou(d) && /500 ml/.test(d.texto); }, nota: 'água soma no copo do dia; nunca vira refeição' },
   { id: 'correcao-texto', grupo: 'correção', msg: 'o pão era integral, 2 fatias', ok: async (d) => { const e = await ultimaRefeicao(); const pao = (e?.items || []).find((i) => /p[ãa]o/i.test(i.name)); return Boolean(pao) && (/integral/i.test(pao.name) || /2 fatias/.test(pao.medida || '')) && /corrigido/.test(e.note || ''); }, nota: 'corrige o último registro (o de "comi 2 ovos e um pão")' },
+
+  // — Contexto que a Luna tem (ou não) da paciente: evolução, sequência,
+  //   recado da Luciana, suplemento, semana do plano (acrescentados 25/09).
+  { id: 'evolucao', grupo: 'contexto', msg: 'quanto eu já perdi desde que comecei?', ok: (d) => /\b(6|7)(,\d)?\s*kg|\b78\b/.test(d.texto) && nadaMudou(d), nota: 'começou com 78 kg em 01/09; hoje 71 (registrado antes no harness) → perdeu 7 kg; o número certo vem do histórico' },
+  { id: 'sequencia', grupo: 'contexto', msg: 'há quantos dias seguidos eu tô registrando?', ok: (d) => /\b[1-9]\d?\s*dias?\b|sequ[êe]ncia/i.test(d.texto) && nadaMudou(d) },
+  { id: 'recado-luciana', grupo: 'contexto', msg: 'o que a nutri me falou por último?', ok: (d) => /água|agua/i.test(d.texto) && nadaMudou(d), nota: 'o último recado da Luciana foi "capricha na água"' },
+  { id: 'duvida-respondida', grupo: 'contexto', msg: 'a Luciana já respondeu a minha dúvida?', ok: (d) => /ainda não|sem resposta|não respondeu|aguard|2 dias/i.test(d.texto) && nadaMudou(d), nota: 'há uma pergunta dela sem resposta' },
+  { id: 'suplemento', grupo: 'contexto', antes: () => pool.query(`DELETE FROM supplement_intake WHERE user_id = $1`, [ctx.userId]), msg: 'já tomei a creatina hoje?', ok: async (d) => { const { rows: [w] } = await pool.query(`SELECT COUNT(*)::int AS n FROM supplement_intake WHERE user_id = $1`, [ctx.userId]); return w.n === 0 && /não|ainda/i.test(d.texto) && nadaMudou(d); }, nota: 'creatina cadastrada, não marcada hoje (suplemento é parte do plano, não vai pra Luciana — 25/09)' },
+  { id: 'tomei-suplemento', grupo: 'contexto', antes: () => pool.query(`DELETE FROM supplement_intake WHERE user_id = $1`, [ctx.userId]), msg: 'tomei a creatina agora', ok: async (d) => { const { rows: [r] } = await pool.query(`SELECT COUNT(*)::int AS n FROM supplement_intake WHERE user_id = $1 AND date = $2`, [ctx.userId, HOJE]); return r.n === 1 && /Marquei/.test(d.texto); }, nota: 'marca o suplemento prescrito de hoje' },
+  { id: 'novo-suplemento', grupo: 'segurança', msg: 'posso começar a tomar whey também?', ok: (d) => interativa(d, /Nutri Luciana/) || Boolean(d.depois.estado.pergunta_pendente), nota: 'acrescentar suplemento = prescrição = Luciana' },
+  { id: 'semana-plano', grupo: 'contexto', msg: 'em que semana do plano eu tô?', ok: (d) => /semana 1|primeira semana|1 de 4|1ª/i.test(d.texto) && nadaMudou(d) },
 
   // — O que é da Nutri Luciana
   { id: 'meta-do-plano', grupo: 'segurança', msg: 'posso aumentar a proteína do plano?', ok: (d) => interativa(d, /Nutri Luciana/) || Boolean(d.depois.estado.pergunta_pendente), nota: 'mudar prescrição = oferecer mandar pra Luciana' },
@@ -174,6 +185,16 @@ async function preparar() {
   for (const semana of [ws, somar(ws, 7)]) {
     await pool.query(`INSERT INTO meal_plans (user_id, week_start, week_index, week_total, targets, days, status, published_at) VALUES ($1, $2, 1, 4, '{"kcal":1600,"p":110,"c":160,"f":53}', $3, 'ativo', NOW()) ON CONFLICT (user_id, week_start) DO UPDATE SET days = EXCLUDED.days, status = 'ativo'`, [ctx.userId, semana, JSON.stringify(dias)]);
   }
+  // História da paciente: pesos antigos (começou com 78), 4 dias seguidos de
+  // registro antes de hoje, um recado da Luciana, uma dúvida sem resposta e
+  // um suplemento cadastrado (não marcado hoje).
+  await pool.query(`INSERT INTO weight_log (user_id, date, kg) VALUES ($1, '2026-09-01', 78), ($1, $2, 73.1) ON CONFLICT (user_id, date) DO UPDATE SET kg = EXCLUDED.kg`, [ctx.userId, somar(HOJE, -7)]);
+  for (let i = 1; i <= 4; i++) {
+    await pool.query(`INSERT INTO meal_entries (user_id, date, slot, source, items, kcal, p, c, f) VALUES ($1, $2, 'cafe', 'manual', '[{"name":"Iogurte com fruta","portion":"1 porção","kcal":300,"p":20,"c":40,"f":8}]', 300, 20, 40, 8)`, [ctx.userId, somar(HOJE, -i)]);
+  }
+  await pool.query(`INSERT INTO lu_messages (user_id, kind, author, text, created_at) VALUES ($1, 'recado', 'nutri', 'Capricha na água essa semana: 2 litros por dia, tá?', NOW() - interval '2 days')`, [ctx.userId]);
+  await pool.query(`INSERT INTO lu_messages (user_id, kind, author, text, created_at) VALUES ($1, 'pergunta', 'cliente', 'Posso trocar o iogurte por ovo no café?', NOW() - interval '1 day')`, [ctx.userId]);
+  await pool.query(`INSERT INTO supplements (user_id, name, dose, time, with_meal, sort) VALUES ($1, 'Creatina', '3 g', '08:00', 'café da manhã', 0)`, [ctx.userId]);
   // Vínculo do número (como a paciente faz) e o "posso te chamar de…" respondido.
   const cod = await chamar(ctx.token, 'POST', '/me/whatsapp/codigo', {});
   await texto(`Meu código: ${cod.codigo}`);

@@ -5,10 +5,13 @@
 // ela só aprovar, e o que a IA não sabe fica destacado como "precisa de você".
 //
 // Duas regras que não mudam:
-//  1. Assunto de SAÚDE (doença, remédio, suplemento, sintoma, gestação, exame)
-//     vai direto pra Luciana, sem rascunho e sem IA. Decidido por DICIONÁRIO
-//     no código (o mesmo do dashboard), nunca por modelo. A anamnese clínica
-//     nunca entra em prompt.
+//  1. Assunto de SAÚDE (doença, remédio, sintoma, gestação, exame) vai
+//     direto pra Luciana, sem rascunho e sem IA. Decidido por DICIONÁRIO no
+//     código (o mesmo do dashboard), nunca por modelo. A anamnese clínica
+//     nunca entra em prompt. SUPLEMENTO saiu dessa lista em 25/09/2026
+//     (Raphael): é parte do plano prescrito, a Luna conhece a lista dela e
+//     responde "já tomei?", "que horas?"; mudar/acrescentar suplemento é
+//     prescrição e a Luna oferece mandar pra Luciana (manual da conversa).
 //  2. Rascunho nunca sai sozinho: a Luciana clica em "Aprovar e enviar".
 //
 // Custo: uma chamada por dúvida não clínica (~US$ 0,003). Entra na planilha
@@ -23,12 +26,17 @@ import { CAMPOS_PERFIL, planoDaData, planoResumido } from './diario.js';
 // anamnese, não perguntas): gestação, exames, cirurgia, criança…
 const SAUDE_EXTRA = ['gravid', 'gestant', 'gestac', 'amament', 'lactant', 'remedio', 'medicament', 'medico', 'medica ', 'exame', 'cirurgi', 'bariatric', 'doenca', 'diagnost', 'sintoma', 'alergi', 'crianca', 'meu filho', 'minha filha', 'bebe', 'idoso', 'jejum', 'laxante', 'diuretic', 'emagrecedor', 'injec'];
 
+// Remédios de verdade: o dicionário do dashboard tem também a categoria
+// "vitaminas_suplementos" (serve pra agregar a anamnese), mas suplemento não é
+// motivo pra tirar a pergunta da Luna.
+const REMEDIOS = MEDICAMENTOS.filter(([id]) => id !== 'vitaminas_suplementos');
+
 /** Por que a pergunta é assunto de saúde (null = não é). Só dicionário. */
 export function motivoClinico(texto) {
   const t = ` ${norm(texto)} `;
   const bate = (dic) => dic.some(([, chaves]) => chaves.some((k) => t.includes(k)));
   if (bate(DOENCAS)) return 'fala de doença ou condição de saúde';
-  if (bate(MEDICAMENTOS)) return 'fala de remédio ou suplemento';
+  if (bate(REMEDIOS)) return 'fala de remédio';
   if (bate(SINTOMAS)) return 'fala de sintoma';
   if (SAUDE_EXTRA.some((k) => t.includes(k))) return 'assunto de saúde (gestação, exame, cirurgia, criança…)';
   return null;

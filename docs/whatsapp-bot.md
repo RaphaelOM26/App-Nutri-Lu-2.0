@@ -187,6 +187,9 @@ Usado em: primeiro passo pós-compra (`/comecar`), lista (`/lista`), plano
 - **Anamnese clínica nunca é lida** pelo bot nem entra em prompt.
 - **Foto de corpo nunca vai pra IA**: sem legenda clara, o bot pergunta antes.
 - **Saúde não chega em modelo**: `services/triagem.js` (dicionário) decide.
+  **Suplemento não é saúde** (25/09): é parte do plano prescrito. A Luna
+  conhece a lista dela (nome, dose, horário, se já marcou hoje), responde e
+  marca "tomei"; acrescentar ou mudar dose é prescrição e vai pra Luciana.
 - **Suporte não vê saúde**: mensagem marcada como saúde aparece oculta pra
   quem não é `nutri`; o papel `suporte` só vê a conversa durante o
   atendimento humano, nunca o que a paciente falou com a Luna.
@@ -296,9 +299,22 @@ mensagens com IA, ~3.100 tokens de entrada cada, 60% em cache).
 
 Regra: **toda mudança no manual da Luna (conversa.js), no contexto ou no
 modelo de conversa roda o harness antes e depois**, e o commit traz os dois
-números. Linha de base de 25/09 (gpt-5.4-mini): 132/132. Isso significa que
-hoje a régua mede "não piorou"; pra medir "melhorou" é preciso acrescentar
-casos mais difíceis, tirados de conversas reais que a Luna errou.
+números. Histórico (gpt-5.4-mini, 3 rodadas):
+
+| Quando | Mudança | Resultado |
+|---|---|---|
+| 25/09 | régua criada, 44 casos | 132/132 |
+| 25/09 | + 6 casos de contexto (evolução, sequência, recado, dúvida, suplemento, semana), ANTES do contexto novo | 140/150 (contexto 8/18) |
+| 25/09 | contexto novo na conversa | 143/150 (contexto 15/18; água virou refeição, regressão) |
+| 25/09 | suplemento sai da saúde + ações registrar_agua e marcar_suplemento + manual (pergunta × afirmação; estado de hoje vem do contexto) | 154/156 (contexto 19/21; os 2 "erros" eram a resposta certa, teste ajustado) |
+
+O contexto da conversa passou a trazer: peso atual, de onde começou e há uma
+semana (com a diferença), sequência de dias registrando, semana N de M do
+plano, suplementos do dia (marcou ou não), último recado da Luciana, dúvida
+dela sem resposta, e o que ela já corrigiu em registros. Custo: ~3.900 tokens
+de entrada por mensagem (era 3.100), a maior parte em cache.
+Pra medir "melhorou" de novo é preciso acrescentar casos mais difíceis,
+tirados de conversas reais que a Luna errou.
 O `dev-local.mjs` afrouxa os tetos de IA (1.000/dia) só localmente, senão a
 3ª rodada falha por limite, não por inteligência.
 

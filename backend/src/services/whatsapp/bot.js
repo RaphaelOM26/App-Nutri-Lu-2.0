@@ -523,8 +523,13 @@ async function registrarRefeicaoTexto(contato, descricao, slot) {
   const dito = String(descricao || '').trim();
   if (!dito) return;
   const r = await comContextoDeUso({ rota: '/whatsapp/chat', userId: contato.user_id }, () => estruturarRefeicaoFalada(dito));
-  const itens = itensDoDiario(r.items);
-  if (!itens.length) return mandar(contato, { texto: 'Não consegui montar a refeição com isso. Me conta de novo com as quantidades? Ex.: "2 ovos mexidos e um pão francês".' });
+  // Água não é refeição: se só sobrou água, é o copo do dia (registrar_agua).
+  const itens = itensDoDiario(r.items).filter((i) => !/^[áa]gua\b/i.test(i.name));
+  if (!itens.length) {
+    const ml = /(\d{2,4})\s*ml/i.exec(dito);
+    if (ml) return registrarAgua(contato, Number(ml[1]));
+    return mandar(contato, { texto: 'Não consegui montar a refeição com isso. Me conta de novo com as quantidades? Ex.: "2 ovos mexidos e um pão francês".' });
+  }
   const quando = new Date();
   const entry = await gravarRefeicao(contato.user_id, { quando, slot: (SLOTS.includes(slot) && slot) || SLOT_DA_VOZ[r.mealType] || slotPelaHora(quando), itens, confidence: r.confidence, nota: `texto pelo WhatsApp: ${dito}`.slice(0, 500) });
   await confirmarRegistro(contato, entry, r.confidence === 'low');
@@ -725,6 +730,40 @@ async function registrarPeso(contato, kg) {
   await mandar(contato, { texto: `Anotado: *${f(kg)} kg*.${variacao}` }, { autor: 'sistema' });
 }
 
+/**
+ * "Tomei a creatina" → marca o suplemento PRESCRITO de hoje (mesma tabela do
+ * botão da área de membros). Suplemento é parte do plano da nutri (25/09):
+ * a Luna conhece a lista; só não acrescenta nem muda dose.
+ */
+async function marcarSuplemento(contato, nome, tomado = true) {
+  const hoje = dataBR();
+  const { rows } = await getPool().query(`SELECT id, name FROM supplements WHERE user_id = $1 AND active ORDER BY sort`, [contato.user_id]);
+  if (!rows.length) return mandar(contato, { texto: 'Você não tem suplemento cadastrado no plano. Se a Nutri Luciana te passou algum, escreve *dúvida pra nutri* que ela inclui.' }, { autor: 'sistema' });
+  const alvo = norm(nome || '');
+  const s = rows.find((r) => norm(r.name).includes(alvo) || alvo.includes(norm(r.name))) || (rows.length === 1 ? rows[0] : null);
+  if (!s) return mandar(contato, { texto: `Qual deles? No seu plano tem: ${rows.map((r) => r.name).join(', ')}.` }, { autor: 'sistema' });
+  if (tomado) await getPool().query(`INSERT INTO supplement_intake (user_id, date, supplement_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [contato.user_id, hoje, s.id]);
+  else await getPool().query(`DELETE FROM supplement_intake WHERE user_id = $1 AND date = $2 AND supplement_id = $3`, [contato.user_id, hoje, s.id]);
+  const { rows: [pend] } = await getPool().query(
+    `SELECT COUNT(*)::int AS n FROM supplements s WHERE s.user_id = $1 AND s.active
+        AND NOT EXISTS (SELECT 1 FROM supplement_intake i WHERE i.user_id = s.user_id AND i.supplement_id = s.id AND i.date = $2)`, [contato.user_id, hoje]);
+  await mandar(contato, { texto: tomado
+    ? `Marquei *${s.name}* de hoje. ✅${pend.n ? ` Falta${pend.n > 1 ? 'm' : ''} ${pend.n} hoje.` : ' Suplementos do dia completos.'}`
+    : `Desmarquei *${s.name}* de hoje.` }, { autor: 'sistema' });
+}
+
+/** "Anota 500 ml de água" → soma no copo do dia (mesma tabela do botão da área de membros). Água nunca vira refeição. */
+async function registrarAgua(contato, ml) {
+  if (!Number.isFinite(ml) || ml <= 0 || ml > 5000) return mandar(contato, { texto: 'Quanto de água? Manda em ml, tipo *500 ml*.' }, { autor: 'sistema' });
+  const hoje = dataBR();
+  const { rows: [r] } = await getPool().query(
+    `INSERT INTO water_log (user_id, date, ml) VALUES ($1, $2, $3)
+     ON CONFLICT (user_id, date) DO UPDATE SET ml = water_log.ml + $3, updated_at = NOW() RETURNING ml`, [contato.user_id, hoje, Math.round(ml)]);
+  const dia = await montarDia(contato.user_id, hoje);
+  const meta = dia.targets?.water_ml;
+  await mandar(contato, { texto: `Anotei *${n0(ml)} ml* de água. 💧 Hoje: ${n0(r.ml)} ml${meta ? ` de ${n0(meta)}${r.ml >= meta ? ' ✅' : ` (faltam ${n0(meta - r.ml)})`}` : ''}.` }, { autor: 'sistema' });
+}
+
 async function resumoDoDia(contato) {
   const hoje = dataBR();
   const dia = await montarDia(contato.user_id, hoje);
@@ -857,6 +896,8 @@ async function conversarComLuna(contato, texto, msg) {
       await mandar(contato, { texto: 'Quer que eu mande essa pergunta pra Nutri Luciana? Ela responde em até 2 dias úteis.', botoes: [{ id: 'nutri:enviar', titulo: 'Mandar pra nutri' }, { id: 'nutri:nao', titulo: 'Não precisa' }] });
     },
     chamar_atendente: () => irPraEquipe(contato, 'suporte'),
+    marcar_suplemento: ({ nome, tomado }) => marcarSuplemento(contato, nome, tomado !== false),
+    registrar_agua: ({ ml }) => registrarAgua(contato, Number(ml)),
     mudar_apelido: async ({ nome }) => {
       const limpo = apelidoDoTexto(String(nome || ''));
       if (!limpo) return mandar(contato, { texto: 'Não consegui entender o nome. Manda só o primeiro nome?' });
