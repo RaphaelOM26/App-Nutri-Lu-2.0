@@ -302,7 +302,7 @@ try {
   await botao(WA, `ing:${regId}:1:abobora`, 'Abóbora');
   const { rows: [aposIng] } = await pool.query(`SELECT items, kcal FROM meal_entries WHERE id = $1`, [regId]);
   check(aposIng.items[1].name === 'Abóbora' && Math.round(Number(aposIng.items[1].kcal)) === 58 && aposIng.items[1].medida === '3 pedaços' && Math.round(Number(aposIng.kcal)) === 248, 'botão "Abóbora" troca o ingrediente e recalcula pelas gramas (120 g × 48 kcal/100 g = 58), mantendo a medida caseira');
-  check(/Troquei pra \*abóbora\*, 3 pedaços · 58 kcal\. Almoço agora: \*248 kcal\*/.test((await ultima(WA)).texto), 'resposta da troca em medida caseira, sem gramas');
+  check(/Troquei pra \*abóbora\*, 3 pedaços · 120 g · 58 kcal\. Almoço agora: \*248 kcal\*/.test((await ultima(WA)).texto), 'resposta da troca traz medida caseira E gramas');
   const { rows: [memoria] } = await pool.query(`SELECT data->'correcoes_foto' AS c FROM client_profiles WHERE user_id = $1`, [cli.user.id]);
   check(Array.isArray(memoria.c) && memoria.c.length === 1 && memoria.c[0].tipo === 'nome' && memoria.c[0].para === 'Abóbora', 'a correção vira memória da paciente (correcoes_foto)');
   await botao(WA, `ing:${regId}:1:abobora`, 'Abóbora');
@@ -333,7 +333,7 @@ try {
     check(ref?.source === 'whatsapp' && Number(ref.kcal) > 50 && ref.itens > 0 && ref.photo_key, `foto → IA → diário (${ref?.itens} itens, ${Math.round(ref?.kcal)} kcal, em ${ref?.slot})`);
     // A confirmação pode vir seguida de UMA pergunta (ingrediente ou plano): procura a de registro.
     const confirmacao = (await saidas(WA, 3)).find((m) => /registrado\* ✅/.test(m.texto));
-    check(Boolean(confirmacao) && !/\d+ g\b/.test(confirmacao.texto.split('\n\n')[0]), 'confirmação com itens em medida caseira (sem gramas), total do dia e botões');
+    check(Boolean(confirmacao) && / · \d+ g · /.test(confirmacao.texto), 'confirmação com itens em medida caseira E gramas, total do dia e botões');
     await botao(WA, `foto:r:${foto.id}`, 'Refeição');
     const { rows: [qt] } = await pool.query(`SELECT COUNT(*)::int AS n FROM meal_entries e JOIN users u ON u.id = e.user_id WHERE u.email = $1`, [CLIENTE]);
     check(qt.n === 1, 'toque duplo no botão não registra a refeição duas vezes');
@@ -345,6 +345,12 @@ try {
     check(/Corrigi: /.test((await ultima(WA)).texto), 'resposta "Corrigi: …" com o novo total');
     const { rows: [memCorr] } = await pool.query(`SELECT data->'correcoes_foto' AS c FROM client_profiles WHERE user_id = $1`, [cli.user.id]);
     check(Array.isArray(memCorr.c) && memCorr.c.some((c) => c.tipo === 'porcao' && /3 colheres/.test(c.para)), 'a correção de porção também vira memória');
+    // Em gramas: conta direta, sem IA de texto; a medida caseira antiga sai.
+    await texto(WA, 'o arroz eram 150 g');
+    const { rows: [corrG] } = await pool.query(`SELECT items FROM meal_entries WHERE id = $1`, [ref.id]);
+    const arrozG = (corrG?.items || []).find((i) => /arroz/i.test(i.name));
+    check(Boolean(arrozG) && Math.round(Number(arrozG.grams)) === 150 && !arrozG.medida && arrozG.portion === '150 g', `"eram 150 g" → gramas viram 150 e a colher some (${arrozG ? `${arrozG.portion}, ${Math.round(arrozG.kcal)} kcal` : 'não achou arroz'})`);
+    check(/Corrigi: .*150 g/.test((await ultima(WA)).texto), 'resposta mostra a porção em gramas');
     await botao(WA, `slotset:${ref.id}:jantar`, 'Jantar');
     const { rows: [mud] } = await pool.query(`SELECT slot FROM meal_entries WHERE id = $1`, [ref.id]);
     check(mud.slot === 'jantar', 'botão "Mudar refeição" troca o slot');

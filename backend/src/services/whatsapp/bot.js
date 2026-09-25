@@ -40,7 +40,7 @@ import { gerarPdfLista, nomeDoArquivo } from '../plano/listaPdf.js';
 import { criarLink } from '../loginPorLink.js';
 import { conversar, bonito } from './conversa.js';
 import { PRATICA_POR_CODIGO } from '../plano/receitas.js';
-import { perguntasAposFoto, refeicaoDoPlanoDe, aplicarPlano, itensComTroca, atualizarRegistro, pistasDaPaciente, guardarCorrecao, medidaDe, membroDoPar } from './confirmacao.js';
+import { perguntasAposFoto, refeicaoDoPlanoDe, aplicarPlano, itensComTroca, atualizarRegistro, pistasDaPaciente, guardarCorrecao, medidaDe, porcaoTexto, gramasDoTexto, itemEmGramas, membroDoPar } from './confirmacao.js';
 
 const MEMBROS = (process.env.MEMBROS_URL || 'https://nutrilualves.com.br/membros').replace(/\/$/, '');
 const ROTULO = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã', almoco: 'Almoço', lanche_tarde: 'Lanche da tarde', jantar: 'Jantar', ceia: 'Ceia' };
@@ -390,12 +390,14 @@ async function linhaDoDia(userId, date) {
 
 // Padrão de mensagem "registro" (23/09): título curto, um item por linha com
 // porção e kcal, totais numa linha, e o dia numa linha. Sem repetir rótulo.
-// A porção sai em MEDIDA CASEIRA ("2 colheres de servir"), nunca em gramas:
-// é o que a paciente reconhece no prato e consegue corrigir (25/09).
+// A porção sai nos DOIS jeitos ("2 colheres de servir · 120 g"): quem pesa
+// confere pelas gramas, quem não pesa se acha pela colher; e a correção
+// pode vir em qualquer um dos dois (25/09).
+const DICA_CORRIGIR = '_Se algo estiver diferente, me diz em medida caseira ou em gramas (tipo "eram 3 colheres de arroz" ou "o arroz eram 150 g") que eu corrijo._';
 async function confirmarRegistro(contato, entry, poucaConfianca) {
-  const itens = entry.items.map((i) => { const m = medidaDe(i); return `• ${bonito(i.name)}${m ? `, ${m}` : ''} · ${n0(i.kcal)} kcal`; }).join('\n');
+  const itens = entry.items.map((i) => { const m = porcaoTexto(i); return `• ${bonito(i.name)}${m ? `, ${m}` : ''} · ${n0(i.kcal)} kcal`; }).join('\n');
   await mandar(contato, {
-    texto: `*${ROTULO[entry.slot]} registrado* ✅\n${itens}\n\n*${n0(entry.kcal)} kcal* · P ${n0(entry.p)} · C ${n0(entry.c)} · G ${n0(entry.f)}\n${await linhaDoDia(contato.user_id, entry.date)}${poucaConfianca ? '\n\n_Se algo estiver diferente, me diz (tipo "eram 3 colheres de arroz") que eu corrijo._' : ''}`,
+    texto: `*${ROTULO[entry.slot]} registrado* ✅\n${itens}\n\n*${n0(entry.kcal)} kcal* · P ${n0(entry.p)} · C ${n0(entry.c)} · G ${n0(entry.f)}\n${await linhaDoDia(contato.user_id, entry.date)}${poucaConfianca ? `\n\n${DICA_CORRIGIR}` : ''}`,
     botoes: [{ id: `slot:${entry.id}`, titulo: 'Mudar refeição' }, { id: `del:${entry.id}`, titulo: 'Apagar' }],
   });
 }
@@ -422,7 +424,7 @@ async function perguntarSePrecisar(contato, entry, confidence) {
     const m = q.plano.meal;
     const quando = entry.date === dataBR() ? 'de hoje' : `de ${dataCurta(entry.date)}`;
     return mandar(contato, {
-      texto: `No plano, ${artigoDe(entry.slot)} ${ROTULO[entry.slot].toLowerCase()} ${quando} era *${bonito(m.name)}* (${n0(m.kcal)} kcal). Pela foto ficou ${q.plano.direcao} disso. Se foi o do plano, me diz quanto:`,
+      texto: `No plano, ${artigoDe(entry.slot)} ${ROTULO[entry.slot].toLowerCase()} ${quando} era *${bonito(m.name)}* (${n0(m.kcal)} kcal). Pela foto ficou ${q.plano.direcao} disso. Se foi o do plano, me diz quanto:\n\n_Ou me escreve a quantidade, em medida caseira ou em gramas._`,
       botoes: [{ id: `plano:${entry.id}:menos`, titulo: 'Menos que o plano' }, { id: `plano:${entry.id}:igual`, titulo: 'Igual ao plano' }, { id: `plano:${entry.id}:mais`, titulo: 'Mais que o plano' }],
     });
   }
@@ -455,7 +457,7 @@ async function confirmarIngrediente(contato, entryId, idx, slug) {
   const novo = await atualizarRegistro(e.id, contato.user_id, itensComTroca(e.items, idx, membro), `ingrediente confirmado: ${membro.nome}`);
   await guardarCorrecao(contato.user_id, { tipo: 'nome', item: antes.name, de: antes.name, para: membro.nome });
   const it = novo.items[idx];
-  const m = medidaDe(it);
+  const m = porcaoTexto(it);
   await mandar(contato, { texto: `Troquei pra *${membro.nome.toLowerCase()}*${m ? `, ${m}` : ''} · ${n0(it.kcal)} kcal. ${ROTULO[novo.slot]} agora: *${n0(novo.kcal)} kcal*. ✅` }, { autor: 'sistema' });
 }
 
@@ -494,17 +496,25 @@ async function corrigirUltimaRefeicao(contato, { item, novo_nome, quantidade } =
     }
   }
   if (qtd && !(nomeNovo && !membroDoPar(nomeNovo))) {
-    const r = await comContextoDeUso({ rota: '/whatsapp/chat', userId: contato.user_id }, () => estruturarRefeicaoFalada(`${qtd} de ${itens[idx].name}`));
-    const it0 = itensDoDiario(r.items)[0];
-    if (!it0 || !(it0.grams > 0)) return mandar(contato, { texto: `Não consegui entender a quantidade "${qtd}". Me diz de outro jeito, tipo "3 colheres de servir"?` });
-    itens[idx] = { ...itens[idx], grams: it0.grams, portion: it0.portion, medida: qtd, kcal: it0.kcal, p: it0.p, c: it0.c, f: it0.f };
+    // Em GRAMAS ("150 g") a conta é direta, sem IA: mesma comida, outra
+    // gramatura, macros na proporção. Em medida caseira a IA de texto estima.
+    const gramas = gramasDoTexto(qtd);
+    const direto = gramas ? itemEmGramas(itens[idx], gramas) : null;
+    if (direto) itens[idx] = direto;
+    else {
+      const r = await comContextoDeUso({ rota: '/whatsapp/chat', userId: contato.user_id }, () => estruturarRefeicaoFalada(`${qtd} de ${itens[idx].name}`));
+      const it0 = itensDoDiario(r.items)[0];
+      if (!it0 || !(it0.grams > 0)) return mandar(contato, { texto: `Não consegui entender a quantidade "${qtd}". Me diz de outro jeito, tipo "3 colheres de servir" ou "150 g"?` });
+      itens[idx] = { ...itens[idx], grams: it0.grams, portion: it0.portion, ...(gramas ? {} : { medida: qtd }), kcal: it0.kcal, p: it0.p, c: it0.c, f: it0.f };
+      if (gramas) delete itens[idx].medida;
+    }
   }
   const novo = await atualizarRegistro(e.id, contato.user_id, itens, `corrigido: ${[nomeNovo, qtd].filter(Boolean).join(', ')}`);
   await guardarCorrecao(contato.user_id, nomeNovo
     ? { tipo: 'nome', item: antes.name, de: antes.name, para: itens[idx].name }
     : { tipo: 'porcao', item: antes.name, de: medidaDe(antes), para: qtd });
   const it = novo.items[idx];
-  const m = medidaDe(it);
+  const m = porcaoTexto(it);
   await mandar(contato, { texto: `Corrigi: ${bonito(it.name)}${m ? `, ${m}` : ''} · ${n0(it.kcal)} kcal. ${ROTULO[novo.slot]} agora: *${n0(novo.kcal)} kcal*. ✅\n${await linhaDoDia(contato.user_id, novo.date)}` }, { autor: 'sistema' });
 }
 

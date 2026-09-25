@@ -95,11 +95,15 @@ decide se vale UMA pergunta:
 | Refeição da foto difere >25% da refeição do **plano** naquele horário | "No plano, o almoço de hoje era X (520 kcal). Pela foto ficou abaixo. Se foi o do plano, me diz quanto:" (Menos / Igual / Mais que o plano) | igual → itens do plano; mais/menos → a foto, se ela já apontava pra esse lado; senão o plano × 1,25 / × 0,75 |
 | Nenhum | nada (silêncio = está certo) | — |
 
-- A porção sai como o modelo devolve em `medida_caseira` ("2 colheres de
-  servir"); as gramas ficam em `grams`/`portion` pra área de membros.
-- **Correção por texto** ("eram 3 colheres de arroz", "era batata-doce"): a
-  conversa chama `corrigir_refeicao`, que age no último registro (até 8 h).
-  Par conhecido recalcula pela tabela; o resto passa pela IA de texto do áudio.
+- A porção sai nos **dois jeitos** ("2 colheres de servir · 120 g"): a medida
+  caseira vem do modelo em `medida_caseira` (guardada em `medida`), as gramas
+  em `grams`/`portion`. Quem pesa confere pelas gramas; quem não pesa, pela
+  colher. Nenhuma pergunta exige um dos dois.
+- **Correção por texto** ("eram 3 colheres de arroz", "o arroz eram 150 g",
+  "era batata-doce"): a conversa chama `corrigir_refeicao`, que age no último
+  registro (até 8 h). Gramas é conta direta (mesma comida, macros na
+  proporção, sem IA); medida caseira passa pela IA de texto do áudio; par
+  conhecido recalcula pela tabela.
 - **Memória**: cada correção entra em `client_profiles.data.correcoes_foto`
   (até 20) e vira "Pistas da pessoa" nas próximas fotos dela, junto com a
   legenda da foto. Só comida; nunca dado clínico.

@@ -62,6 +62,34 @@ export function membroDoPar(chave) {
 /** Como a Luna fala da porção: medida caseira quando existe, senão o que houver. */
 export const medidaDe = (item) => String(item?.medida || item?.portion || '').trim();
 
+/**
+ * Porção como sai na mensagem: os DOIS jeitos quando há os dois ("2 colheres
+ * de servir · 120 g"). Quem pesa se guia pelas gramas; quem não pesa, pela
+ * colher (pedido do Raphael, 25/09: não confiar só na colher de servir).
+ */
+export function porcaoTexto(item) {
+  const m = String(item?.medida || '').trim();
+  const g = Number(item?.grams) > 0 ? `${Math.round(item.grams)} g` : '';
+  if (m && g) return `${m} · ${g}`;
+  return m || g || String(item?.portion || '').trim();
+}
+
+/** "150 g" / "150g" / "150 gramas" → 150; senão null. */
+export function gramasDoTexto(s) {
+  const m = /^\s*(\d+(?:[.,]\d+)?)\s*(g|gr|gramas?)\s*$/i.exec(String(s || ''));
+  const g = m ? Number(m[1].replace(',', '.')) : NaN;
+  return g > 0 && g <= 5000 ? g : null;
+}
+
+/** Item com outra gramatura, macros na mesma proporção. Sem gramas de base não dá pra escalar: devolve null. */
+export function itemEmGramas(item, gramas) {
+  const base = Number(item?.grams);
+  if (!(base > 0)) return null;
+  const f = gramas / base;
+  const { medida, ...resto } = item; // a medida caseira antiga não vale mais
+  return { ...resto, grams: gramas, portion: `${Math.round(gramas)} g`, kcal: item.kcal * f, p: item.p * f, c: item.c * f, f: item.f * f };
+}
+
 // ─── Decidir o que perguntar ──────────────────────────────────────────────
 
 const HESITANTE = /\/| ou /;

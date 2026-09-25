@@ -28,3 +28,7 @@ const troca = C.itensComTroca(itens, 1, C.membroDoPar('abobora'));
 console.log('troca →', troca[1].name, Math.round(troca[1].kcal), 'kcal (120 g × 48/100 = 58)', 'medida', troca[1].medida);
 console.log('membroDoPar("era batata doce") →', C.membroDoPar('era batata doce')?.nome, '| "aipim" →', C.membroDoPar('aipim')?.nome, '| "purê de batata" →', C.membroDoPar('purê de batata')?.nome, '| "carne moída" →', C.membroDoPar('carne moída')?.nome);
 console.log('medidaDe →', C.medidaDe(itens[0]), '|', C.medidaDe({ portion: '80 g' }));
+console.log('porcaoTexto →', C.porcaoTexto(itens[0]), '|', C.porcaoTexto({ portion: '80 g', grams: 80 }), '|', C.porcaoTexto({ portion: '1 porção' }));
+console.log('gramasDoTexto →', C.gramasDoTexto('150 g'), C.gramasDoTexto('150g'), C.gramasDoTexto('1,5 gramas'), C.gramasDoTexto('3 colheres'), C.gramasDoTexto('9000 g'));
+const g = C.itemEmGramas(itens[0], 225);
+console.log('itemEmGramas 150→225 →', g.grams, g.portion, Math.round(g.kcal), 'kcal (190 × 1,5 = 285)', 'medida?', 'medida' in g, '| sem base →', C.itemEmGramas({ name: 'x', kcal: 100 }, 50));
