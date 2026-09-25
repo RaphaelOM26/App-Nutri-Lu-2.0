@@ -111,7 +111,10 @@ export function perguntasAposFoto({ itens, confidence, refeicaoDoPlano, kcal }) 
     const achou = parDoNome(n);
     if (!achou) continue;
     const outro = achou.par[achou.lado === 'a' ? 'b' : 'a'];
-    const sinal = confidence === 'low' || HESITANTE.test(n) || (textoDoPlano && outro.re.test(textoDoPlano) && !achou.par[achou.lado].re.test(textoDoPlano));
+    // Hesitação conta só quando o nome traz os DOIS lados do par ("abóbora/
+    // batata-doce"); "frango grelhado/assado" é dúvida de preparo, não de comida.
+    const hesitou = HESITANTE.test(n) && outro.re.test(n);
+    const sinal = confidence === 'low' || hesitou || (textoDoPlano && outro.re.test(textoDoPlano) && !achou.par[achou.lado].re.test(textoDoPlano));
     if (sinal) { saida.ingrediente = { idx, par: achou.par, atual: achou.lado }; break; }
   }
   if (saida.ingrediente) return saida;

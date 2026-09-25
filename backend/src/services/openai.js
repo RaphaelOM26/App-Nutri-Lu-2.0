@@ -19,6 +19,10 @@ export const MODEL = process.env.OPENAI_MODEL || 'gpt-5.4-mini';
 // pesadas dos testers): gpt-5.4 completo = 11-13% de erro médio ESTÁVEL;
 // gpt-5.4-mini = 15-24% (instável entre rodadas). A Foto IA é a feature nº 1
 // do app — vale o modelo mais forte só nela, sem encarecer os outros endpoints.
+// 25/09/2026: produção passou a gpt-5.4 (OPENAI_FOOD_MODEL no Railway). Com o
+// harness POR ITEM (scripts/test-analyze-food.mjs, 12 fotos × 2 rodadas):
+// gpt-5.4 + regras de identificação/densidade = total 11%, identificação
+// 100%, 66% dos itens dentro de ±25% (antes das regras: 16% / 95% / 62%).
 export const FOOD_MODEL = process.env.OPENAI_FOOD_MODEL || MODEL;
 
 // ─── JSON Schema da receita extraída ─────────────────────────────
@@ -334,16 +338,24 @@ CALIBRAÇÃO de pesos típicos (âncoras):
 - Feijão: 1 concha ≈ 130 g (com caldo).
 - Frango/carne grelhada: 1 filé do tamanho da palma ≈ 100–140 g. Frango desfiado: 1 xícara solta ≈ 70–90 g (desfiado é AERADO — parece mais volume do que pesa).
 - Carne moída refogada: 1 xícara ≈ 110–130 g.
-- Ovo: 1 un ≈ 50 g. Ovos mexidos de 2 ovos ≈ 100–120 g. Cebola média ≈ 110 g. Batata média ≈ 130 g. Tomate médio ≈ 100 g (3–4 fatias ≈ 50 g).
+- Ovo: 1 un ≈ 50 g. Ovos mexidos de 2 ovos ≈ 100–120 g. Cebola média ≈ 110 g. Batata média ≈ 130 g. Tomate médio ≈ 100 g; 1 fatia/gomo médio ≈ 18–20 g (4 gomos ≈ 75 g); tomate picado 1/2 xícara ≈ 90 g — tomate é denso e cheio de água: pesa MAIS do que parece.
 - Legumes assados (abóbora, batata-doce): 1 fatia/cunha média ≈ 30–50 g; porção típica ≈ 80–150 g. Assado PERDE água: parece grande mas pesa menos.
-- Purê de batata: 1 xícara rasa ≈ 150 g. Lentilha/grão cozido: 1/2 xícara ≈ 60–80 g.
+- Purê de batata: 1 colher de servir ≈ 60–80 g; 1 xícara rasa ≈ 150 g; como guarnição espalhada no prato ≈ 90–130 g.
+- Leguminosa SOLTA no prato (lentilha, grão-de-bico, feijão sem caldo): 1 colher de sopa cheia ≈ 20–25 g; um montinho de guarnição ≈ 40–60 g; raramente passa de 80 g. É o item mais superestimado: grão pequeno espalhado parece muito e pesa pouco.
+- Peixe grelhado/assado: 1 filé médio ≈ 120–150 g; 2 filés pequenos, ou 1 grande cobrindo metade de uma marmita, ≈ 180–220 g. Peixe é denso: filé fino ainda pesa.
 - Cuscuz nordestino: 1 porção média ≈ 80–120 g.
 - Macarrão cozido: prato cheio ≈ 200–250 g.
 - Pão de forma: 1 fatia ≈ 25 g; pão francês ≈ 50 g.
 - Salada de folhas: porção ≈ 40–60 g. Legumes cozidos: ≈ 80–100 g/porção.
 - Fruta média (maçã, banana, laranja) ≈ 120–150 g.
 
+IDENTIFICAÇÃO — pares que a foto confunde (comida brasileira):
+- ABÓBORA (cabotiá/japonesa) assada ou cozida: pedaços em cunha ou cubo, polpa laranja-amarelada FOSCA e fibrosa, casca verde-escura fina muitas vezes ainda presa. BATATA-DOCE assada: rodelas/bastões, polpa amarelo-clara a bege (ou roxa), lisa e uniforme, casca rosada/bege. BERINJELA assada: fatias com casca roxa-escura BRILHANTE e polpa esbranquiçada com sementes. Em marmita/prato caseiro brasileiro, abóbora é muito mais comum que berinjela como legume assado.
+- BATATA cozida/assada (polpa amarelo-clara lisa, pedaços irregulares) × MANDIOCA/AIPIM (bastões fibrosos, brancos, com fio central). FRANGO desfiado (fibras claras, finas) × CARNE desfiada (fibras escuras, marrom-avermelhadas).
+- Se não der pra distinguir entre dois ALIMENTOS de um par, escreva os DOIS no nome separados por "/" (ex.: "abóbora/batata-doce assada") e use os macros do mais provável. Só faça isso quando houver dúvida real: nome hesitante gera uma pergunta pra pessoa. Nunca use "/" pra método de preparo: escolha um ("frango grelhado", não "frango grelhado/assado").
+
 Regras finais:
+- Liste só o que é claramente visível e relevante (≈ 10 g ou mais). Tempero, sementes polvilhadas, lâminas de cebola sobre a carne, folhinha de decoração: NÃO viram item separado — se quiser, cite no size_estimate do item principal. Item inventado custa mais que item omitido.
 - Responda em português brasileiro.
 - Confidence "high" só com referência de escala clara (balança legível conta) E alimentos bem visíveis.
 - Se a foto não mostrar comida claramente, retorne items: [], total zerado e confidence "low".`;

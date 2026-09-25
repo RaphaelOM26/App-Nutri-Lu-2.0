@@ -109,6 +109,12 @@ decide se vale UMA pergunta:
   legenda da foto. Só comida; nunca dado clínico.
 - A taxa de correção é a métrica de precisão real em produção: se cair com o
   tempo, a foto está melhorando sem ninguém pesar prato.
+- Prompt (25/09, tarde): pistas de identificação dos pares (casca, cor,
+  textura), densidade de leguminosa solta, purê, tomate e peixe, e "só item
+  visível e relevante". Com gpt-5.4, 12 fotos × 2 rodadas: erro do total 16%
+  → **11%**, identificação 95% → **100%**, itens inventados 6 → 2, itens
+  dentro de ±25% 62% → 66%. Arroz segue em ~35% pros dois lados (é
+  imprecisão, não viés): daí a confirmação pela conversa.
 
 ## Lista de compras
 

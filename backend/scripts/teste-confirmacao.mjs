@@ -17,6 +17,8 @@ const q3 = C.perguntasAposFoto({ itens: [itens[0]], confidence: 'medium', refeic
 console.log('480 vs 520 (dentro de 25%) →', JSON.stringify(q3));
 const q4 = C.perguntasAposFoto({ itens: [{ name: 'Legumes assados (abóbora/batata-doce)', grams: 100, kcal: 60, p: 1, c: 12, f: 0.5 }], confidence: 'high', refeicaoDoPlano: null, kcal: 60 });
 console.log('nome hesitante sem plano →', q4.ingrediente ? 'pergunta' : 'não');
+const q4b = C.perguntasAposFoto({ itens: [{ name: 'Frango grelhado/assado', grams: 100, kcal: 160, p: 30, c: 0, f: 3 }], confidence: 'medium', refeicaoDoPlano: null, kcal: 160 });
+console.log('"frango grelhado/assado" (hesitação de preparo, não de comida) →', q4b.ingrediente ? 'pergunta (RUIM)' : 'silêncio (ok)');
 const q5 = C.perguntasAposFoto({ itens: [{ name: 'Batata-doce assada', grams: 100, kcal: 77, p: 1, c: 18, f: 0 }], confidence: 'medium', refeicaoDoPlano: null, kcal: 77 });
 console.log('batata-doce, confiança média, sem plano →', q5.ingrediente ? 'pergunta (RUIM)' : 'silêncio (ok)');
 const q6 = C.perguntasAposFoto({ itens: [{ name: 'Purê de batata', grams: 100, kcal: 90, p: 1, c: 18, f: 0 }], confidence: 'low', refeicaoDoPlano: null, kcal: 90 });
