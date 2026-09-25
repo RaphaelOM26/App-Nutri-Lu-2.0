@@ -115,7 +115,8 @@ const rec = await chamar(tCli, 'GET', '/me/recados');
 check(rec.mensagens.some((m) => m.kind === 'recado' && m.text === 'Plano no ar!'), 'recado de abertura chegou');
 const perfilCli = await chamar(tCli, 'GET', '/me/perfil');
 check(perfilCli.perfil.meta_kg === 61 && perfilCli.plano?.week_index === 1, 'perfil recebeu meta e plano');
-const lista2 = await chamar(tN, 'GET', '/nutri/pacientes');
+// Busca pelo e-mail: no banco de dev a paciente nova cai fora da 1ª página de 50.
+const lista2 = await chamar(tN, 'GET', `/nutri/pacientes?q=${encodeURIComponent(CLIENTE)}`);
 const pac2 = lista2.pacientes.find((p) => p.email === CLIENTE);
 const quintaOuDepois = new Date(`${HOJE}T12:00:00Z`).getUTCDay() >= 4;
 check(pac2.situacoes.includes('plano_ativo') && pac2.situacoes.includes('plano_vencendo') === quintaOuDepois && !pac2.situacoes.includes('aguardando_plano'), `situação virou plano ativo${quintaOuDepois ? ' + vencendo (sem próxima semana)' : ' (vencendo só de quinta em diante)'}`);

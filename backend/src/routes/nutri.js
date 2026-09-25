@@ -26,6 +26,8 @@ import { gerarRascunho } from '../services/triagem.js';
 import { avisarMensagemDaNutri, avisarPlanoPronto } from '../services/whatsapp/avisos.js';
 import { travarLote } from './lote.js';
 import { notificar } from '../services/notificacoes.js';
+import { validar } from '../utils/validar.js';
+import * as P from '../schemas/painel.js';
 
 const router = Router();
 const equipe = requirePapel('nutri', 'admin');
@@ -310,7 +312,7 @@ router.get('/pacientes/:id/mes', equipe, async (req, res, next) => {
 // A Lu pode corrigir o que é dela decidir: restrições (filtro duro do plano),
 // alergias, meta de peso e metas. O resto do perfil é da cliente.
 const CAMPOS_NUTRI = new Set(['restricoes', 'alergias', 'meta_kg', 'targets', 'nome']);
-router.put('/pacientes/:id/perfil', soNutri, async (req, res, next) => {
+router.put('/pacientes/:id/perfil', soNutri, validar(P.perfilNutri), async (req, res, next) => {
   try {
     const u = await exigirCliente(req.params.id);
     const dados = req.body?.perfil;
@@ -434,7 +436,7 @@ router.get('/pacientes/:id/plano-mes', equipe, async (req, res, next) => {
 // Salva (rascunho) ou publica o mês inteiro numa transação só. `weeks` é a
 // lista de semanas, cada uma com seus `days`; metas, nota, suplementos, meta
 // de peso e recado valem pro mês. Publicar exige as N semanas completas.
-router.put('/pacientes/:id/plano-mes', soNutri, async (req, res, next) => {
+router.put('/pacientes/:id/plano-mes', soNutri, validar(P.planoMes), async (req, res, next) => {
   const c = await getPool().connect();
   try {
     const u = await exigirCliente(req.params.id);
@@ -527,7 +529,7 @@ router.put('/pacientes/:id/plano-mes', soNutri, async (req, res, next) => {
 
 // Salva (rascunho) ou publica o plano de UMA semana. Continua existindo pra
 // ajuste pontual e pros scripts; o painel usa o /plano-mes acima.
-router.put('/pacientes/:id/plano', soNutri, async (req, res, next) => {
+router.put('/pacientes/:id/plano', soNutri, validar(P.plano), async (req, res, next) => {
   const c = await getPool().connect();
   try {
     const u = await exigirCliente(req.params.id);
@@ -596,11 +598,11 @@ router.delete('/pacientes/:id/planos/:planoId', soNutri, async (req, res, next) 
 
 // Copia uma semana pra outra (rascunho), com o contador avançado. É o gesto
 // de toda semana: "repete a semana passada" e ajusta o que mudou.
-router.post('/pacientes/:id/planos/:planoId/copiar', soNutri, async (req, res, next) => {
+router.post('/pacientes/:id/planos/:planoId/copiar', soNutri, validar(P.copiarPlano), async (req, res, next) => {
   try {
     const u = await exigirCliente(req.params.id);
-    const ws = req.body?.week_start;
-    if (!dataValida(ws) || new Date(`${ws}T00:00:00Z`).getUTCDay() !== 1) throw erro('week_start precisa ser uma segunda-feira');
+    const ws = req.body.week_start;
+    if (new Date(`${ws}T00:00:00Z`).getUTCDay() !== 1) throw erro('week_start precisa ser uma segunda-feira');
     const { rows } = await getPool().query(`SELECT * FROM meal_plans WHERE id = $1 AND user_id = $2`, [req.params.planoId, u.id]);
     if (!rows[0]) throw erro('plano não encontrado', 404, 'NOT_FOUND');
     const o = rows[0];
@@ -616,11 +618,11 @@ router.post('/pacientes/:id/planos/:planoId/copiar', soNutri, async (req, res, n
   } catch (e) { next(e); }
 });
 
-router.put('/pacientes/:id/suplementos', soNutri, async (req, res, next) => {
+router.put('/pacientes/:id/suplementos', soNutri, validar(P.suplementos), async (req, res, next) => {
   const c = await getPool().connect();
   try {
     const u = await exigirCliente(req.params.id);
-    const sups = validarSuplementos(req.body?.supplements);
+    const sups = validarSuplementos(req.body.supplements);
     await c.query('BEGIN');
     await c.query(`UPDATE supplements SET active = FALSE WHERE user_id = $1`, [u.id]);
     for (const s of sups) await c.query(`INSERT INTO supplements (user_id, name, dose, time, with_meal, sort) VALUES ($1, $2, $3, $4, $5, $6)`, [u.id, s.name, s.dose, s.time, s.with_meal, s.sort]);
@@ -643,15 +645,12 @@ router.get('/pacientes/:id/recados', equipe, async (req, res, next) => {
 
 // Recado (sem reply_to) ou resposta a uma pergunta (com reply_to). Admin pode
 // responder também: é dúvida de navegação tanto quanto de plano.
-router.post('/pacientes/:id/recados', equipe, async (req, res, next) => {
+router.post('/pacientes/:id/recados', equipe, validar(P.recadoPaciente), async (req, res, next) => {
   try {
     const u = await exigirCliente(req.params.id);
-    const text = String(req.body?.text || '').trim();
-    if (text.length < 2) throw erro('Escreve o recado antes de mandar.');
-    if (text.length > 2000) throw erro('O recado está longo demais (máximo 2.000 caracteres).');
+    const { text } = req.body;
     let replyTo = null;
-    if (req.body?.reply_to) {
-      if (!uuid(req.body.reply_to)) throw erro('reply_to inválido');
+    if (req.body.reply_to) {
       const { rows } = await getPool().query(`SELECT id FROM lu_messages WHERE id = $1 AND user_id = $2 AND kind = 'pergunta'`, [req.body.reply_to, u.id]);
       if (!rows[0]) throw erro('A pergunta não é desta paciente.', 404, 'NOT_FOUND');
       replyTo = rows[0].id;
@@ -698,11 +697,9 @@ router.post('/duvidas/:id/rascunho', soNutri, async (req, res, next) => {
 });
 
 // Recado pra todo mundo que já passou pelo onboarding.
-router.post('/recados/todos', soNutri, async (req, res, next) => {
+router.post('/recados/todos', soNutri, validar(P.recadoTodos), async (req, res, next) => {
   try {
-    const text = String(req.body?.text || '').trim();
-    if (text.length < 2) throw erro('Escreve o recado antes de mandar.');
-    if (text.length > 2000) throw erro('O recado está longo demais (máximo 2.000 caracteres).');
+    const { text } = req.body;
     const { rows } = await getPool().query(
       `INSERT INTO lu_messages (user_id, kind, author, text)
        SELECT u.id, 'recado', 'nutri', $1 FROM users u JOIN client_profiles c ON c.user_id = u.id
@@ -738,14 +735,15 @@ router.get('/materiais', equipe, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/materiais/upload-url', soNutri, async (req, res, next) => {
+router.post('/materiais/upload-url', soNutri, validar(P.uploadUrlMaterial), async (req, res, next) => {
   try {
-    const key = novaChaveArquivo('materiais', req.body?.content_type, Number(req.body?.size) || 0);
-    res.json(await urlDeUpload({ key, contentType: req.body.content_type, tamanho: Number(req.body?.size) || 0 }));
+    const { content_type, size = 0 } = req.body;
+    const key = novaChaveArquivo('materiais', content_type, size);
+    res.json(await urlDeUpload({ key, contentType: content_type, tamanho: size }));
   } catch (e) { next(e); }
 });
 
-router.post('/materiais', soNutri, async (req, res, next) => {
+router.post('/materiais', soNutri, validar(P.material), async (req, res, next) => {
   try {
     const m = validarMaterial(req.body);
     const { rows } = await getPool().query(
@@ -755,7 +753,7 @@ router.post('/materiais', soNutri, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.put('/materiais/:id', soNutri, async (req, res, next) => {
+router.put('/materiais/:id', soNutri, validar(P.material), async (req, res, next) => {
   try {
     if (!uuid(req.params.id)) throw erro('material não encontrado', 404, 'NOT_FOUND');
     const m = validarMaterial(req.body);

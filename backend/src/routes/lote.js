@@ -24,6 +24,8 @@ import { avaliarPaciente, checarPlano } from '../services/lote/elegibilidade.js'
 import { REGRAS, VERSAO } from '../services/lote/regras.js';
 import { pedirGeracao } from '../services/lote/gerar.js';
 import { notificar } from '../services/notificacoes.js';
+import { validar } from '../utils/validar.js';
+import { abrirLote, conferirLote } from '../schemas/painel.js';
 
 const router = Router();
 const equipe = requirePapel('nutri', 'admin');
@@ -121,10 +123,10 @@ router.get('/lotes/:id', equipe, async (req, res, next) => {
 });
 
 /** Abre um lote: até N pacientes do MESMO perfil, todas aptas, perfil liberado pela calibração. */
-router.post('/lotes', soNutri, async (req, res, next) => {
+router.post('/lotes', soNutri, validar(abrirLote), async (req, res, next) => {
   const c = await getPool().connect();
   try {
-    const ids = [...new Set((Array.isArray(req.body?.user_ids) ? req.body.user_ids : []).filter(uuid))];
+    const ids = [...new Set(req.body.user_ids)];
     if (!ids.length) throw erro('Escolha ao menos uma paciente.');
     if (ids.length > REGRAS.tamanhoLote) throw erro(`Um lote tem no máximo ${REGRAS.tamanhoLote} planos.`);
     await c.query('BEGIN');
@@ -157,11 +159,11 @@ router.post('/lotes', soNutri, async (req, res, next) => {
 });
 
 /** Ela abriu um plano da amostra e achou bom. */
-router.post('/lotes/:id/conferir', soNutri, async (req, res, next) => {
+router.post('/lotes/:id/conferir', soNutri, validar(conferirLote), async (req, res, next) => {
   try {
     const l = await carregarLote(req.params.id);
     if (l.status !== 'aberto') throw erro('Este lote já foi fechado.', 409, 'LOTE_FECHADO');
-    const uid = req.body?.user_id;
+    const uid = req.body.user_id;
     if (!l.amostra.includes(uid)) throw erro('Esta paciente não está na amostra do lote.');
     const conferidos = [...new Set([...l.conferidos, uid])];
     await getPool().query(`UPDATE planos_lotes SET conferidos = $2 WHERE id = $1`, [l.id, JSON.stringify(conferidos)]);
