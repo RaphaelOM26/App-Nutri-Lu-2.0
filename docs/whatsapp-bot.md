@@ -109,6 +109,21 @@ decide se vale UMA pergunta:
   legenda da foto. Só comida; nunca dado clínico.
 - A taxa de correção é a métrica de precisão real em produção: se cair com o
   tempo, a foto está melhorando sem ninguém pesar prato.
+- **Calibração do prato e da marmita (26/09)**: o erro do arroz não era
+  aleatório, era de ESCALA por foto (o modelo chuta o mesmo prato pra todo
+  mundo: pela metade no prato de 28 cm, pelo dobro na marmita). Depois da
+  primeira foto de comida, a Luna pede UMA vez a foto do prato vazio com a
+  mão aberta em cima e, se ela usa, da marmita (`services/whatsapp/calibracao.js`,
+  mede com a mão ≈ 18 cm; a foto da mão não fica guardada). Fica em
+  `client_profiles.data.recipientes` e entra como pista de escala principal
+  em toda foto dela. "medir prato" / "medir marmita" refazem; "depois" e
+  "não uso" encerram sem insistir. Medição no harness com `--recipiente`
+  (tamanhos das 12 fotos estimados a olho por mim), gpt-5.4, 2 rodadas: total
+  11% → 12%, itens ±25% 66% → 67% — sem ganho geral; o arroz do prato de
+  28 cm foi de 70–75 g pra 120–135 g (real 159) numa foto e não mudou na
+  outra. Ressalva importante: 8 das 12 fotos têm BALANÇA no quadro, e o
+  protocolo do visor domina a escala; paciente real quase nunca tem balança.
+  O efeito de verdade se mede com a taxa de correção em produção.
 - Prompt (25/09, tarde): pistas de identificação dos pares (casca, cor,
   textura), densidade de leguminosa solta, purê, tomate e peixe, e "só item
   visível e relevante". Com gpt-5.4, 12 fotos × 2 rodadas: erro do total 16%

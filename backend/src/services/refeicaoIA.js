@@ -8,6 +8,13 @@ import { sanitizeText } from '../utils/recipeSanity.js';
 
 const erroIA = () => Object.assign(new Error('Resposta vazia da IA.'), { status: 502, code: 'AI_EMPTY_RESPONSE' });
 
+/** O texto do pedido da Foto IA, com as pistas. Exportado pra o harness mandar EXATAMENTE o mesmo. */
+export function textoDoPedido(pistas = []) {
+  const limpas = (Array.isArray(pistas) ? pistas : []).map((p) => sanitizeText(String(p || '')).trim().slice(0, 200)).filter(Boolean).slice(0, 8);
+  return 'Identifique os alimentos neste prato e estime os macros conforme o schema.'
+    + (limpas.length ? `\n\nPistas da pessoa:\n${limpas.map((p) => `- ${p}`).join('\n')}` : '');
+}
+
 /**
  * @param {string} dataUrl  imagem como data URL (data:image/jpeg;base64,...)
  * @param {{ pistas?: string[] }} [opts]  frases sobre ESTE prato ou sobre a
@@ -15,9 +22,7 @@ const erroIA = () => Object.assign(new Error('Resposta vazia da IA.'), { status:
  *   pessoa" e valem mais que a impressão visual. Nunca dado clínico.
  */
 export async function analisarPrato(dataUrl, { pistas = [] } = {}) {
-  const limpas = (Array.isArray(pistas) ? pistas : []).map((p) => sanitizeText(String(p || '')).trim().slice(0, 200)).filter(Boolean).slice(0, 8);
-  const texto = 'Identifique os alimentos neste prato e estime os macros conforme o schema.'
-    + (limpas.length ? `\n\nPistas da pessoa:\n${limpas.map((p) => `- ${p}`).join('\n')}` : '');
+  const texto = textoDoPedido(pistas);
   const completion = await openai.chat.completions.create({
     model: FOOD_MODEL,
     messages: [

@@ -321,6 +321,23 @@ try {
   check(/Não achei mais esse registro/.test((await ultima(WA)).texto), 'botão de registro que não é dela (ou sumiu) não mexe em nada');
   await chamar(tCli, 'DELETE', `/me/refeicoes/${regId}`);
 
+  // 10d. Calibração do prato/marmita (26/09), sem IA: o fluxo de estado.
+  await texto(WA, 'medir prato');
+  const { rows: [cal1] } = await pool.query(`SELECT estado FROM whatsapp_contatos WHERE wa_id = $1`, [WA]);
+  check(cal1.estado?.calibrando === 'prato' && /prato vazio/.test((await ultima(WA)).texto) && /mão aberta/.test((await ultima(WA)).texto), '"medir prato" → pede a foto do prato vazio com a mão');
+  await texto(WA, 'depois');
+  const { rows: [cal2] } = await pool.query(`SELECT estado FROM whatsapp_contatos WHERE wa_id = $1`, [WA]);
+  check(!cal2.estado?.calibrando && cal2.estado?.calibracao_pedida === true && /fica pra depois/.test((await ultima(WA)).texto), '"depois" encerra sem insistir (e não pede de novo sozinha)');
+  await texto(WA, 'medir marmita');
+  const { rows: [cal3] } = await pool.query(`SELECT estado FROM whatsapp_contatos WHERE wa_id = $1`, [WA]);
+  check(cal3.estado?.calibrando === 'marmita' && /marmita vazia/.test((await ultima(WA)).texto), '"medir marmita" → pede a marmita direto');
+  await texto(WA, 'não uso');
+  const { rows: [cal4] } = await pool.query(`SELECT estado FROM whatsapp_contatos WHERE wa_id = $1`, [WA]);
+  check(!cal4.estado?.calibrando, '"não uso" encerra a marmita');
+  // Com recipiente já medido, a foto de comida recebe a pista (conferido pela função pura).
+  const { pistaDosRecipientes } = await import('../src/services/whatsapp/calibracao.js');
+  check(/prato de ~26 cm de diâmetro; marmita de ~17 × 12 cm/.test(pistaDosRecipientes({ prato: { largura: 26, comprimento: 26 }, marmita: { largura: 12, comprimento: 17 } })), 'pista de escala: "prato de ~26 cm; marmita de ~17 × 12 cm"');
+
   // 11. Com IA de verdade
   if (COM_IA) {
     console.log('\n— Com IA (foto real de scripts/food-test)\n');
@@ -334,6 +351,11 @@ try {
     // A confirmação pode vir seguida de UMA pergunta (ingrediente ou plano): procura a de registro.
     const confirmacao = (await saidas(WA, 3)).find((m) => /registrado\* ✅/.test(m.texto));
     check(Boolean(confirmacao) && / · \d+ g · /.test(confirmacao.texto), 'confirmação com itens em medida caseira E gramas, total do dia e botões');
+    // Primeira foto de comida sem prato medido: a Luna pede a calibração (uma vez), depois do registro.
+    const pedidoCal = (await saidas(WA, 4)).find((m) => /prato vazio/.test(m.texto) && /mão aberta/.test(m.texto));
+    const { rows: [estCal] } = await pool.query(`SELECT estado FROM whatsapp_contatos WHERE wa_id = $1`, [WA]);
+    check(Boolean(pedidoCal) && estCal.estado?.calibrando === 'prato', 'depois da 1ª foto de comida, pede a foto do prato vazio com a mão (uma vez)');
+    await texto(WA, 'depois');
     await botao(WA, `foto:r:${foto.id}`, 'Refeição');
     const { rows: [qt] } = await pool.query(`SELECT COUNT(*)::int AS n FROM meal_entries e JOIN users u ON u.id = e.user_id WHERE u.email = $1`, [CLIENTE]);
     check(qt.n === 1, 'toque duplo no botão não registra a refeição duas vezes');

@@ -24,6 +24,9 @@ import { join, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { openai, FOOD_MODEL as MODEL, FOOD_SYSTEM_PROMPT, FOOD_ANALYSIS_SCHEMA } from '../src/services/openai.js';
+import { textoDoPedido } from '../src/services/refeicaoIA.js';
+import { pistaDosRecipientes } from '../src/services/whatsapp/calibracao.js';
+
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -31,9 +34,13 @@ const opt = (nome, padrao) => { const i = args.indexOf(nome); return i >= 0 ? ar
 const DIR = args.find((a) => !a.startsWith('--') && args[args.indexOf(a) - 1] !== '--rodadas' && args[args.indexOf(a) - 1] !== '--json') || join(__dirname, 'food-test');
 const RODADAS = Math.max(1, parseInt(opt('--rodadas', '1'), 10) || 1);
 const SAIDA = opt('--json', null);
+// --recipiente: manda o tamanho do prato/marmita anotado no expected.json
+// ("recipiente": "prato de ~26 cm") como pista, do jeito que a calibração da
+// paciente faz em produção. Sem a flag, a foto vai "cega", como antes.
+const COM_RECIPIENTE = args.includes('--recipiente');
 const MIME = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
 
-async function analyze(imgPath) {
+async function analyze(imgPath, pistas = []) {
   const buf = await readFile(imgPath);
   const ext = extname(imgPath).toLowerCase();
   const dataUrl = `data:${MIME[ext] || 'image/jpeg'};base64,${buf.toString('base64')}`;
@@ -45,7 +52,7 @@ async function analyze(imgPath) {
       {
         role: 'user',
         content: [
-          { type: 'text', text: 'Identifique os alimentos neste prato e estime os macros conforme o schema.' },
+          { type: 'text', text: textoDoPedido(pistas) },
           { type: 'image_url', image_url: { url: dataUrl } },
         ],
       },
@@ -85,7 +92,7 @@ function casarItens(esperados, itens) {
 }
 
 async function main() {
-  console.log(`\n🍽  Teste de precisão da Foto IA — modelo: ${MODEL} · rodadas: ${RODADAS}\n   Pasta: ${DIR}\n`);
+  console.log(`\n🍽  Teste de precisão da Foto IA — modelo: ${MODEL} · rodadas: ${RODADAS}${COM_RECIPIENTE ? ' · COM tamanho do recipiente como pista' : ''}\n   Pasta: ${DIR}\n`);
 
   let expected = {};
   try {
@@ -113,7 +120,8 @@ async function main() {
     const acc = { total: [], item: [], identificados: 0, esperados: 0, sobras: 0, tokensIn: [], tokensOut: [], reasoning: [], ms: [] };
     if (RODADAS > 1) console.log(`━━━━━━━━━━━━━━━━━━━━ RODADA ${rodada} ━━━━━━━━━━━━━━━━━━━━\n`);
     for (const file of files) {
-      const { r, ms, tokens } = await analyze(join(DIR, file));
+      const pistas = COM_RECIPIENTE && expected[file]?.recipiente ? [pistaDosRecipientes({ texto: expected[file].recipiente })] : [];
+      const { r, ms, tokens } = await analyze(join(DIR, file), pistas);
       const itens = Array.isArray(r.items) ? r.items : [];
       const gramsTotal = itens.reduce((s, it) => s + (it.portion_grams || 0), 0);
       acc.tokensIn.push(tokens.in); acc.tokensOut.push(tokens.out); acc.reasoning.push(tokens.reasoning); acc.ms.push(ms);

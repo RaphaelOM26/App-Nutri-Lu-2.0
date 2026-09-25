@@ -332,6 +332,7 @@ PROTOCOLO OBRIGATÓRIO do campo "scale_reference" (preencha nesta ordem, como um
 7) MEDIDA CASEIRA — em "medida_caseira", traduza a porção pra medida que a pessoa reconhece no próprio prato (colher de servir, concha, filé, fatia, unidade, pedaço, xícara, punhado), coerente com as gramas: 2 colheres de servir de arroz ≈ 120–160 g; 1 concha de feijão ≈ 130 g; 1 filé médio ≈ 120 g.
 
 PISTAS DA PESSOA — se o pedido trouxer "Pistas da pessoa", são fatos sobre este prato ou sobre como ela costuma comer (o que ela disse na legenda, correções que já fez antes). Valem MAIS do que a sua impressão visual pra identificar o alimento e pra calibrar a porção; mas nunca acrescente um item que não esteja visível na foto só porque a pista citou.
+Se a pista trouxer o TAMANHO do recipiente dela (prato de X cm, marmita de X × Y cm, medidos com a mão dela), ele é a referência de escala PRINCIPAL, acima do "prato raso ≈ 26 cm" da tabela: se o recipiente da foto for aquele, converta a fração ocupada em cm² reais. Num prato de 28 cm um monte de arroz "de 1/6 do prato" pesa quase o dobro do que num prato de 20 cm; numa marmita de 17 × 12 cm a comida parece maior do que é.
 
 CALIBRAÇÃO de pesos típicos (âncoras):
 - Arroz cozido: 1 colher de servir ≈ 60–80 g; monte de 1/4 do prato raso ≈ 100–150 g; metade de prato bem cheio ≈ 200 g.

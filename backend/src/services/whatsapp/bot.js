@@ -41,6 +41,7 @@ import { criarLink } from '../loginPorLink.js';
 import { conversar, bonito } from './conversa.js';
 import { PRATICA_POR_CODIGO } from '../plano/receitas.js';
 import { perguntasAposFoto, refeicaoDoPlanoDe, aplicarPlano, itensComTroca, atualizarRegistro, pistasDaPaciente, guardarCorrecao, medidaDe, porcaoTexto, gramasDoTexto, itemEmGramas, membroDoPar } from './confirmacao.js';
+import { medirRecipiente, recipientesDe, guardarRecipiente, descreverRecipiente, pistaDosRecipientes } from './calibracao.js';
 
 const MEMBROS = (process.env.MEMBROS_URL || 'https://nutrilualves.com.br/membros').replace(/\/$/, '');
 const ROTULO = { cafe: 'Café da manhã', lanche_manha: 'Lanche da manhã', almoco: 'Almoço', lanche_tarde: 'Lanche da tarde', jantar: 'Jantar', ceia: 'Ceia' };
@@ -312,6 +313,8 @@ async function receberFoto(contato, msg, mensagemId) {
     if (e.code === 'MIDIA_GRANDE' || e.code === 'TIPO') return mandar(contato, { texto: 'Não consegui abrir essa imagem. Manda como *foto* (não como arquivo), por favor. 📸' });
     throw e;
   }
+  // Ela está calibrando o prato/marmita: a foto é do recipiente vazio com a mão.
+  if (contato.estado?.calibrando) return calibrarComFoto(contato, mensagemId, msg);
   // A legenda decide por DICIONÁRIO quando deixa claro. Na dúvida, pergunta:
   // foto de corpo nunca pode cair na IA de comida por engano.
   const legenda = norm(msg.image?.caption || '');
@@ -345,6 +348,11 @@ async function registrarFoto(contato, mensagemId, { msg, slot } = {}) {
     // corrigiu em fotos anteriores. Valem mais que a impressão visual.
     const pistas = [];
     if (foto.legenda) pistas.push(`Legenda da foto: "${foto.legenda.slice(0, 160)}"`);
+    // O tamanho do prato/marmita dela (medido com a mão) é a pista de escala
+    // mais forte que existe: é o que tira o erro "pela metade no prato grande".
+    const recipientes = await recipientesDe(contato.user_id);
+    const pistaRecipiente = pistaDosRecipientes(recipientes);
+    if (pistaRecipiente) pistas.push(pistaRecipiente);
     pistas.push(...await pistasDaPaciente(contato.user_id));
     const analise = await comContextoDeUso({ rota: '/whatsapp/foto', userId: contato.user_id }, () =>
       analisarPrato(`data:${foto.media_mime || 'image/jpeg'};base64,${buffer.toString('base64')}`, { pistas }));
@@ -356,8 +364,58 @@ async function registrarFoto(contato, mensagemId, { msg, slot } = {}) {
     const entry = await gravarRefeicao(contato.user_id, { quando, slot: slot || slotPelaHora(quando), itens: itensIA, photoKey: foto.media_key, confidence: analise.confidence, nota: 'foto pelo WhatsApp' });
     await confirmarRegistro(contato, entry, analise.confidence === 'low');
     await perguntarSePrecisar(contato, entry, analise.confidence);
+    // Primeira foto de comida sem recipiente medido: pede a calibração UMA vez
+    // (depois do registro, nunca antes — a foto dela já está anotada).
+    if (!pistaRecipiente && !contato.estado?.calibracao_pedida) await pedirCalibracao(contato, 'primeira');
   } catch (e) {
     // Devolve a foto pra "recebida": a nova tentativa da fila precisa achá-la.
+    await getPool().query(`UPDATE whatsapp_mensagens SET status = 'recebida' WHERE id = $1`, [mensagemId]).catch(() => {});
+    throw e;
+  }
+}
+
+// ─── Calibração do prato e da marmita (26/09) ─────────────────────────────
+
+const RE_CALIBRAR = /^(medir|calibrar|cadastrar|registrar) (o |a |meu |minha )?(prato|marmita|recipiente)s?$|^(meu prato|minha marmita)( mudou| e outro| e outra)?$/;
+const RE_SEM_MARMITA = /^(nao uso|não uso|nao tenho|não tenho|nao|não|pular|depois|cancelar|deixa|so prato|só prato|pronto)( marmita)?$/;
+
+/** Pede a foto do prato vazio com a mão. `motivo`: 'primeira' (depois da 1ª foto de comida) ou 'pedido' (ela mandou "medir prato"). */
+async function pedirCalibracao(contato, motivo) {
+  await atualizarEstado(contato, { calibrando: 'prato', calibracao_pedida: true });
+  const abertura = motivo === 'primeira'
+    ? 'Uma coisa que me ajuda a acertar as porções nas suas fotos, só uma vez: '
+    : 'Bora medir. ';
+  await mandar(contato, { texto: `${abertura}me manda uma foto do seu *prato vazio* com a sua *mão aberta* em cima, tirada de cima. 📏 Se você usa marmita, depois eu peço ela também.\n\n_Se não quiser agora, escreve *depois*._` }, { autor: 'sistema' });
+}
+
+/** A foto do recipiente vazio com a mão: mede, guarda e passa pro próximo (prato → marmita → fim). */
+async function calibrarComFoto(contato, mensagemId, msg) {
+  const foto = await pegarFoto(contato, mensagemId);
+  if (!foto) return;
+  const etapa = contato.estado.calibrando;
+  try {
+    if (!(await podeUsarIA(contato, 'foto-ia'))) return;
+    await marcarLida(msg?.id, true);
+    const buffer = await ler(foto.media_key);
+    const medida = await comContextoDeUso({ rota: '/whatsapp/calibracao', userId: contato.user_id }, () =>
+      medirRecipiente(`data:${foto.media_mime || 'image/jpeg'};base64,${buffer.toString('base64')}`));
+    // A foto do recipiente com a mão não fica guardada.
+    await getPool().query(`UPDATE whatsapp_mensagens SET media_key = NULL WHERE id = $1`, [mensagemId]);
+    apagar(foto.media_key).catch(() => {});
+    if (medida.tipo === 'nenhum' || !medida.largura) {
+      return mandar(contato, { texto: `Não consegui medir por essa foto. 🤔 Tenta assim: ${etapa === 'marmita' ? 'marmita' : 'prato'} *vazio*, sua mão aberta *dentro/em cima* dele, foto de cima. Ou escreve *depois*.` }, { autor: 'sistema' });
+    }
+    // Ela mandou marmita quando eu pedi prato (ou vice-versa): vale do mesmo jeito.
+    const chave = medida.tipo === 'marmita' ? 'marmita' : 'prato';
+    const rec = await guardarRecipiente(contato.user_id, medida);
+    const feito = `Anotei: *${descreverRecipiente(chave, rec[chave])}*.${medida.confianca === 'low' ? ' (Ficou meio incerto; se quiser, manda outra com a mão bem em cima do prato.)' : ''} 📏`;
+    if (etapa === 'prato' && chave === 'prato') {
+      await atualizarEstado(contato, { calibrando: 'marmita' });
+      return mandar(contato, { texto: `${feito}\n\nVocê usa *marmita*? Manda uma foto dela vazia com a mão dentro. Se não usa, escreve *não uso*.` }, { autor: 'sistema' });
+    }
+    await atualizarEstado(contato, { calibrando: null });
+    await mandar(contato, { texto: `${feito}\n\nPronto! Agora eu acerto melhor as porções nas suas fotos. Se trocar de prato ou marmita, escreve *medir prato* que a gente refaz.` }, { autor: 'sistema' });
+  } catch (e) {
     await getPool().query(`UPDATE whatsapp_mensagens SET status = 'recebida' WHERE id = $1`, [mensagemId]).catch(() => {});
     throw e;
   }
@@ -597,6 +655,17 @@ async function tratarTexto(contato, texto, { msg, entregues = 0 } = {}) {
       await mandar(contato, { texto: 'Não consegui entender o nome. 😅 Por enquanto sigo com o que está no seu cadastro — quando quiser, escreve *meu nome é ...* que eu troco na hora.' }, { autor: 'sistema' });
       return;
     }
+  }
+
+  // Calibração do prato/marmita: "não uso", "depois" encerram; o resto segue normal (ela pode conversar no meio).
+  if (contato.estado?.calibrando && RE_SEM_MARMITA.test(t)) {
+    const tinhaPrato = contato.estado.calibrando === 'marmita';
+    await atualizarEstado(contato, { calibrando: null });
+    return mandar(contato, { texto: tinhaPrato ? 'Fechou, só o prato então. ✅ Se um dia usar marmita, escreve *medir marmita*.' : 'Tudo bem, fica pra depois. Quando quiser, escreve *medir prato*. 😊' }, { autor: 'sistema' });
+  }
+  if (RE_CALIBRAR.test(t)) {
+    if (/marmita/.test(t)) { await atualizarEstado(contato, { calibrando: 'marmita', calibracao_pedida: true }); return mandar(contato, { texto: 'Bora medir. Me manda uma foto da sua *marmita vazia* com a sua *mão aberta* dentro, tirada de cima. 📏' }, { autor: 'sistema' }); }
+    return pedirCalibracao(contato, 'pedido');
   }
 
   // A pessoa está respondendo ao "escreve a pergunta que eu mando pra Nutri Luciana".
